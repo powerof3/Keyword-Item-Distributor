@@ -1,6 +1,6 @@
-# Spell Perk Item Distributor
+# Keyword Item Distributor
 
-Distributes spells/perks/items/shouts/leveled-spells/packages/outfits/death-items to NPCs
+Distributes keywords to items (armor/weapons/ammo)
 
 ## Requirements
 * [CMake](https://cmake.org/)
@@ -21,8 +21,8 @@ Distributes spells/perks/items/shouts/leveled-spells/packages/outfits/death-item
 
 ## Building
 ```
-git clone https://github.com/powerof3/Spell-Perk-Item-Distributor.git
-cd Spell-Perk-Item-Distributor
+git clone https://github.com/powerof3/Keyword-Item-Distributor.git
+cd Keyword-Item-Distributor
 cmake -B build -S .
 ```
 ## License
