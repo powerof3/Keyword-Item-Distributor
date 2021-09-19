@@ -85,6 +85,7 @@ else ()
 endif ()
 
 find_package(spdlog REQUIRED CONFIG)
+find_package(frozen CONFIG REQUIRED)
 
 find_path(SIMPLEINI_INCLUDE_DIRS "ConvertUTF.c")
 
@@ -144,6 +145,7 @@ target_link_libraries(
 	${PROJECT_NAME}
 	PRIVATE
 		CommonLibSSE::CommonLibSSE
+		frozen::frozen
 		spdlog::spdlog
 )
 

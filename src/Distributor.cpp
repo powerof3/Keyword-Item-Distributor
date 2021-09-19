@@ -75,9 +75,19 @@ bool Lookup::GetForms()
 	if (result) {
 		logger::info("{:*^30}", "PROCESSING");
 
-		logger::info("	Adding {}/{} keywords to armors", INIs[ITEM::TYPE::kArmor].size(), Keywords[ITEM::TYPE::kArmor].size());
-		logger::info("	Adding {}/{} keywords to weapons", INIs[ITEM::TYPE::kWeapon].size(), Keywords[ITEM::TYPE::kWeapon].size());
-		logger::info("	Adding {}/{} keywords to ammo", INIs[ITEM::TYPE::kAmmo].size(), Keywords[ITEM::TYPE::kAmmo].size());
+		const auto log_addition = [](ITEM::TYPE a_type, const std::string& a_records) {
+			if (!INIs[a_type].empty()) {
+				logger::info("	Adding {}/{} keywords to {}", INIs[a_type].size(), Keywords[a_type].size(), a_records);
+			}
+		};
+		
+		log_addition(ITEM::kArmor, "armors");
+		log_addition(ITEM::kWeapon, "weapons");
+		log_addition(ITEM::kAmmo, "ammo");
+		log_addition(ITEM::kMagicEffect, "magic effects");
+		log_addition(ITEM::kPotion, "potions");
+		log_addition(ITEM::kScroll, "scrolls");
+		log_addition(ITEM::kLocation, "locations");
 	}
 	return result;
 }
@@ -85,35 +95,34 @@ bool Lookup::GetForms()
 void Distribute::AddKeywords()
 {
 	if (const auto dataHandler = RE::TESDataHandler::GetSingleton(); dataHandler) {
-		auto& armorKeywords = Keywords[ITEM::TYPE::kArmor];
-		if (!armorKeywords.empty()) {
-			for (const auto& armor : dataHandler->GetFormArray<RE::TESObjectARMO>()) {
-				if (armor) {
-					add_keyword(*armor, armorKeywords);
+		
+		const auto distribute = [&]<typename T>(ITEM::TYPE a_type, const std::string& a_record, RE::BSTArray<T*>& formArray) {
+			auto& keywords = Keywords[a_type];
+			if (!keywords.empty()) {
+				for (const auto& item : formArray) {
+					if (item) {
+						add_keyword(*item, keywords);
+					}
+				}
+				for (auto& formData : keywords) {
+					auto keyword = std::get<DATA_TYPE::kForm>(formData);
+					auto count = std::get<DATA_TYPE::kCount>(formData);
+
+					if (keyword) {
+						logger::info("{} [0x{:X}] added to {}/{} {}", keyword->GetFormEditorID(), keyword->GetFormID(), count, formArray.size(), a_record);
+					}
 				}
 			}
-		}
-		auto& weapKeywords = Keywords[ITEM::TYPE::kWeapon];
-		if (!weapKeywords.empty()) {
-			for (const auto& weapon : dataHandler->GetFormArray<RE::TESObjectWEAP>()) {
-				if (weapon) {
-					add_keyword(*weapon, weapKeywords);
-				}
-			}
-		}
-		auto& ammoKeywords = Keywords[ITEM::TYPE::kAmmo];
-		if (!ammoKeywords.empty()) {
-			for (const auto& ammo : dataHandler->GetFormArray<RE::TESAmmo>()) {
-				if (ammo) {
-					add_keyword(*ammo, ammoKeywords);
-				}
-			}
-		}
+		};
 
 		logger::info("{:*^30}", "RESULT");
 
-		list_keyword_count("armors", armorKeywords, dataHandler->GetFormArray<RE::TESObjectARMO>().size());
-		list_keyword_count("weapons", weapKeywords, dataHandler->GetFormArray<RE::TESObjectWEAP>().size());
-		list_keyword_count("ammo", ammoKeywords, dataHandler->GetFormArray<RE::TESAmmo>().size());
+		distribute(ITEM::kArmor, "armors", dataHandler->GetFormArray<RE::TESObjectARMO>());
+		distribute(ITEM::kWeapon, "weapons", dataHandler->GetFormArray<RE::TESObjectWEAP>());
+		distribute(ITEM::kAmmo, "ammo", dataHandler->GetFormArray<RE::TESAmmo>());
+		distribute(ITEM::kMagicEffect, "magic effects", dataHandler->GetFormArray<RE::EffectSetting>());
+		distribute(ITEM::kPotion, "potions", dataHandler->GetFormArray<RE::AlchemyItem>());
+		distribute(ITEM::kScroll, "scrolls", dataHandler->GetFormArray<RE::ScrollItem>());
+		distribute(ITEM::kLocation, "location", dataHandler->GetFormArray<RE::BGSLocation>());		
 	}
 }
