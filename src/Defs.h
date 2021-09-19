@@ -24,6 +24,7 @@ namespace INI
 		kFormID = kFormIDPair,
 		kType,
 		kESP = kType,
+		kStrings,
 		kFilters,
 		kTraits,
 		kChance

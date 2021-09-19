@@ -28,7 +28,7 @@ namespace INI
 			} else {
 				return std::make_pair(
 					string::lexical_cast<RE::FormID>(a_str, true),
-					std::nullopt);			
+					std::nullopt);
 			}
 		}
 
@@ -96,7 +96,7 @@ namespace INI
 		//TYPE
 		ITEM::TYPE type = ITEM::kArmor;
 		try {
-			if (const auto typeStr = sections.at(kType); !typeStr.empty() && typeStr.find("NONE"sv) == std::string::npos) {
+			if (const auto typeStr = sections.at(kType); !typeStr.empty()) {
 				if (typeStr == "Armor" || typeStr == "Armour") {
 					type = ITEM::kArmor;
 				} else if (typeStr == "Weapon") {
@@ -118,41 +118,46 @@ namespace INI
 		} catch (...) {
 		}
 
-		//FILTERS
+		//STRINGS
 		try {
 			auto& [strings_ALL, strings_NOT, strings_MATCH, strings_ANY] = strings_ini;
+
+			for (auto split_str = detail::split_sub_string(sections.at(kStrings)); auto& str : split_str) {
+				if (str.find("+"sv) != std::string::npos) {
+					auto strings = detail::split_sub_string(str, "+");
+					strings_ALL.insert(strings_ALL.end(), strings.begin(), strings.end());
+
+				} else if (str.at(0) == '-') {
+					str.erase(0, 1);
+					strings_NOT.emplace_back(str);
+
+				} else if (str.at(0) == '*') {
+					str.erase(0, 1);
+					strings_ANY.emplace_back(str);
+
+				} else {
+					strings_MATCH.emplace_back(str);
+				}
+			}
+		} catch (...) {
+		}
+
+		//FILTERS
+		try {
 			auto& [filterIDs_ALL, filterIDs_NOT, filterIDs_MATCH] = filterIDs_ini;
 
 			for (auto split_str = detail::split_sub_string(sections.at(kFilters)); auto& str : split_str) {
-				if (str.find('~') != std::string::npos || string::is_only_hex(str) || string::icontains(str, ".esp") || string::icontains(str, ".esl") || string::icontains(str, ".esm")) {
-					if (str.find("+"sv) != std::string::npos) {
-						auto splitIDs_ALL = detail::split_sub_string(str, "+");
-						for (auto& IDs_ALL : splitIDs_ALL) {
-							filterIDs_ALL.push_back(detail::get_formID(IDs_ALL));
-						}
-					} else if (str.at(0) == '-') {
-						str.erase(0, 1);
-						filterIDs_NOT.push_back(detail::get_formID(str));
-
-					} else {
-						filterIDs_MATCH.push_back(detail::get_formID(str));
+				if (str.find("+"sv) != std::string::npos) {
+					auto splitIDs_ALL = detail::split_sub_string(str, "+");
+					for (auto& IDs_ALL : splitIDs_ALL) {
+						filterIDs_ALL.push_back(detail::get_formID(IDs_ALL));
 					}
+				} else if (str.at(0) == '-') {
+					str.erase(0, 1);
+					filterIDs_NOT.push_back(detail::get_formID(str));
+
 				} else {
-					if (str.find("+"sv) != std::string::npos) {
-						auto strings = detail::split_sub_string(str, "+");
-						strings_ALL.insert(strings_ALL.end(), strings.begin(), strings.end());
-
-					} else if (str.at(0) == '-') {
-						str.erase(0, 1);
-						strings_NOT.emplace_back(str);
-
-					} else if (str.at(0) == '*') {
-						str.erase(0, 1);
-						strings_ANY.emplace_back(str);
-
-					} else {
-						strings_MATCH.emplace_back(str);
-					}
+					filterIDs_MATCH.push_back(detail::get_formID(str));
 				}
 			}
 		} catch (...) {
@@ -314,7 +319,7 @@ namespace Lookup
 							a_formVec.push_back(filterMod);
 						} else {
 							logger::error("			Filter ({}) SKIP - mod cannot be found", modName.value());
-						}						
+						}
 					} else {
 						auto formID = optFormID.value();
 						RE::TESForm* filterForm = nullptr;
@@ -332,8 +337,8 @@ namespace Lookup
 							}
 						} else {
 							logger::error("			Filter [0x{:X}] ({}) SKIP - form doesn't exist", formID, modName.has_value() ? modName.value() : "");
-						}					
-					}					
+						}
+					}
 				}
 			}
 		}
@@ -552,7 +557,7 @@ namespace Filter
 		{
 			using Archetype = RE::EffectArchetypes::ArchetypeID;
 			inline constexpr frozen::map<Archetype, std::string_view, 47> archetypeMap = {
-				{ Archetype::kNone, "None"sv },				
+				{ Archetype::kNone, "None"sv },
 				{ Archetype::kValueModifier, "ValueMod"sv },
 				{ Archetype::kScript, "Script"sv },
 				{ Archetype::kDispel, "Dispel"sv },
