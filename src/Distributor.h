@@ -208,7 +208,7 @@ namespace INI
 				case ITEM::kMagicEffect:
 					{
 						auto& [isHostile, castingType, deliveryType, skillValue] = std::get<ITEM::kMagicEffect>(traits_ini);
-						if (str.find("DT") != std::string::npos) {
+						if (str.find("D") != std::string::npos) {
 							deliveryType = detail::get_single_value<RE::MagicSystem::Delivery>(str);
 						} else if (str.find("CT") != std::string::npos) {
 							castingType = detail::get_single_value<RE::MagicSystem::CastingType>(str);
