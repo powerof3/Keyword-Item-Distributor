@@ -821,7 +821,6 @@ namespace Distribute
 			if (!Filter::strings(a_item, keywordData) || !Filter::forms(a_item, keywordData) || !Filter::secondary(a_item, keywordData)) {
 				continue;
 			}
-			logger::info("{}", a_item.GetName());
 			if (const auto keyword = std::get<DATA_TYPE::kForm>(keywordData); keyword) {
 				if (const auto keywordForm = a_item.As<RE::BGSKeywordForm>(); keywordForm && keywordForm->AddKeyword(keyword)) {
 					++std::get<DATA_TYPE::kCount>(keywordData);
