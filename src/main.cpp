@@ -6,6 +6,16 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_message)
 		if (Lookup::GetForms()) {
 			Distribute::AddKeywords();
 		}
+
+		SKSE::ModCallbackEvent modEvent{
+			"KID_KeywordDistributionDone",
+			RE::BSFixedString(),
+			0.0f,
+			nullptr
+		};
+
+		auto modCallback = SKSE::GetModCallbackEventSource();
+		modCallback->SendEvent(&modEvent);
 	}
 }
 

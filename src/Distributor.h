@@ -111,6 +111,8 @@ namespace INI
 					type = ITEM::kScroll;
 				} else if (typeStr == "Location") {
 					type = ITEM::kLocation;
+				} else if (typeStr == "Ingredient") {
+					type = ITEM::kIngredient;
 				} else {
 					type = string::lexical_cast<ITEM::TYPE>(typeStr);
 				}
@@ -118,46 +120,41 @@ namespace INI
 		} catch (...) {
 		}
 
-		//STRINGS
-		try {
-			auto& [strings_ALL, strings_NOT, strings_MATCH, strings_ANY] = strings_ini;
-
-			for (auto split_str = detail::split_sub_string(sections.at(kStrings)); auto& str : split_str) {
-				if (str.find("+"sv) != std::string::npos) {
-					auto strings = detail::split_sub_string(str, "+");
-					strings_ALL.insert(strings_ALL.end(), strings.begin(), strings.end());
-
-				} else if (str.at(0) == '-') {
-					str.erase(0, 1);
-					strings_NOT.emplace_back(str);
-
-				} else if (str.at(0) == '*') {
-					str.erase(0, 1);
-					strings_ANY.emplace_back(str);
-
-				} else {
-					strings_MATCH.emplace_back(str);
-				}
-			}
-		} catch (...) {
-		}
-
 		//FILTERS
 		try {
+			auto& [strings_ALL, strings_NOT, strings_MATCH, strings_ANY] = strings_ini;
 			auto& [filterIDs_ALL, filterIDs_NOT, filterIDs_MATCH] = filterIDs_ini;
 
 			for (auto split_str = detail::split_sub_string(sections.at(kFilters)); auto& str : split_str) {
-				if (str.find("+"sv) != std::string::npos) {
-					auto splitIDs_ALL = detail::split_sub_string(str, "+");
-					for (auto& IDs_ALL : splitIDs_ALL) {
-						filterIDs_ALL.push_back(detail::get_formID(IDs_ALL));
-					}
-				} else if (str.at(0) == '-') {
-					str.erase(0, 1);
-					filterIDs_NOT.push_back(detail::get_formID(str));
+				if (str.find('~') != std::string::npos || string::is_only_hex(str) || string::icontains(str, ".esp") || string::icontains(str, ".esl") || string::icontains(str, ".esm")) {
+					if (str.find("+"sv) != std::string::npos) {
+						auto splitIDs_ALL = detail::split_sub_string(str, "+");
+						for (auto& IDs_ALL : splitIDs_ALL) {
+							filterIDs_ALL.push_back(detail::get_formID(IDs_ALL));
+						}
+					} else if (str.at(0) == '-') {
+						str.erase(0, 1);
+						filterIDs_NOT.push_back(detail::get_formID(str));
 
+					} else {
+						filterIDs_MATCH.push_back(detail::get_formID(str));
+					}
 				} else {
-					filterIDs_MATCH.push_back(detail::get_formID(str));
+					if (str.find("+"sv) != std::string::npos) {
+						auto strings = detail::split_sub_string(str, "+");
+						strings_ALL.insert(strings_ALL.end(), strings.begin(), strings.end());
+
+					} else if (str.at(0) == '-') {
+						str.erase(0, 1);
+						strings_NOT.emplace_back(str);
+
+					} else if (str.at(0) == '*') {
+						str.erase(0, 1);
+						strings_ANY.emplace_back(str);
+
+					} else {
+						strings_MATCH.emplace_back(str);
+					}
 				}
 			}
 		} catch (...) {
@@ -170,7 +167,7 @@ namespace INI
 				switch (type) {
 				case ITEM::kArmor:
 					{
-						auto& [enchanted, templated, armorRating] = std::get<ITEM::kArmor>(traits_ini);
+						auto& [enchanted, templated, armorRating] = std::get<TRAITS::kArmor>(traits_ini);
 						if (str.find("AR") != std::string::npos) {
 							armorRating = detail::get_minmax_values<float>(str);
 						} else if (str == "E") {
@@ -186,7 +183,7 @@ namespace INI
 					break;
 				case ITEM::kWeapon:
 					{
-						auto& [enchanted, templated, weight] = std::get<ITEM::kWeapon>(traits_ini);
+						auto& [enchanted, templated, weight] = std::get<TRAITS::kWeapon>(traits_ini);
 						if (str.find("W") != std::string::npos) {
 							weight = detail::get_minmax_values<float>(str);
 						} else if (str == "E") {
@@ -202,7 +199,7 @@ namespace INI
 					break;
 				case ITEM::kAmmo:
 					{
-						auto& isBolt = std::get<ITEM::kAmmo>(traits_ini);
+						auto& isBolt = std::get<TRAITS::kAmmo>(traits_ini);
 						if (str == "B") {
 							isBolt = true;
 						} else if (str == "-B") {
@@ -212,7 +209,7 @@ namespace INI
 					break;
 				case ITEM::kMagicEffect:
 					{
-						auto& [isHostile, castingType, deliveryType, skillValue] = std::get<ITEM::kMagicEffect>(traits_ini);
+						auto& [isHostile, castingType, deliveryType, skillValue] = std::get<TRAITS::kMagicEffect>(traits_ini);
 						if (str.find("D") != std::string::npos) {
 							deliveryType = detail::get_single_value<RE::MagicSystem::Delivery>(str);
 						} else if (str.find("CT") != std::string::npos) {
@@ -239,12 +236,22 @@ namespace INI
 					break;
 				case ITEM::kPotion:
 					{
-						auto& [isPoison, isFood] = std::get<ITEM::kPotion>(traits_ini);
+						auto& [isPoison, isFood] = std::get<TRAITS::kPotion>(traits_ini);
 						if (str == "P") {
 							isPoison = true;
 						} else if (str == "-P") {
 							isPoison = false;
 						} else if (str == "F") {
+							isFood = true;
+						} else if (str == "-F") {
+							isFood = false;
+						}
+					}
+					break;
+				case ITEM::kIngredient:
+					{
+						auto& isFood = std::get<TRAITS::kIngredient>(traits_ini);
+						if (str == "F") {
 							isFood = true;
 						} else if (str == "-F") {
 							isFood = false;
@@ -277,66 +284,51 @@ namespace Lookup
 {
 	namespace detail
 	{
-		inline std::string_view lookup_form_type(const RE::FormType a_type)
-		{
-			switch (a_type) {
-			case RE::FormType::Armor:
-				return "Armor"sv;
-			case RE::FormType::Weapon:
-				return "Weapon"sv;
-			case RE::FormType::Ammo:
-				return "Ammo"sv;
-			case RE::FormType::MagicEffect:
-				return "Magic Effect"sv;
-			case RE::FormType::AlchemyItem:
-				return "Potion"sv;
-			case RE::FormType::Scroll:
-				return "Scroll"sv;
-			case RE::FormType::Location:
-				return "Location"sv;
-			case RE::FormType::EffectShader:
-				return "Effect Shader"sv;
-			case RE::FormType::ReferenceEffect:
-				return "Visual Effect"sv;
-			case RE::FormType::ArtObject:
-				return "Art Object"sv;
-			case RE::FormType::MusicType:
-				return "Music Type"sv;
-			case RE::FormType::Faction:
-				return "Faction"sv;
-			default:
-				return ""sv;
-			}
+		inline constexpr frozen::map<RE::FormType, std::string_view, 13> filterMap = {
+			{ RE::FormType::Armor, "Armor"sv },
+			{ RE::FormType::Weapon, "Weapon"sv },
+			{ RE::FormType::Ammo, "Ammo"sv },
+			{ RE::FormType::MagicEffect, "Magic Effect"sv },
+			{ RE::FormType::AlchemyItem, "Potion"sv },
+			{ RE::FormType::Scroll, "Scroll"sv },
+			{ RE::FormType::Location, "Location"sv },
+			{ RE::FormType::Ingredient, "Ingredient"sv },
+			{ RE::FormType::EffectShader, "Effect Shader"sv },
+			{ RE::FormType::ReferenceEffect, "Visual Effect"sv },
+			{ RE::FormType::ArtObject, "Art Object"sv },
+			{ RE::FormType::MusicType, "MusicType"sv },
+			{ RE::FormType::Faction, "Faction"sv }
 		};
 
 		inline void formID_to_form(RE::TESDataHandler* a_dataHandler, const FormIDPairVec& a_formIDVec, FormVec& a_formVec)
 		{
 			if (!a_formIDVec.empty()) {
-				for (auto& [optFormID, modName] : a_formIDVec) {
-					if (modName.has_value() && !optFormID.has_value()) {
-						if (const RE::TESFile* filterMod = a_dataHandler->LookupModByName(modName.value()); filterMod) {
+				constexpr auto lookup_form_type = [](const RE::FormType a_type) {
+					auto it = filterMap.find(a_type);
+					return it != filterMap.end() ? it->second : "";
+				};
+
+				for (auto& [formID, modName] : a_formIDVec) {
+					if (modName && !formID) {
+						if (const RE::TESFile* filterMod = a_dataHandler->LookupModByName(*modName); filterMod) {
 							logger::info("			Filter ({}) INFO - mod found", filterMod->fileName);
 							a_formVec.push_back(filterMod);
 						} else {
-							logger::error("			Filter ({}) SKIP - mod cannot be found", modName.value());
+							logger::error("			Filter ({}) SKIP - mod cannot be found", *modName);
 						}
-					} else {
-						auto formID = optFormID.value();
-						RE::TESForm* filterForm = nullptr;
-						if (modName.has_value()) {
-							filterForm = a_dataHandler->LookupForm(formID, modName.value());
-						} else {
-							filterForm = RE::TESForm::LookupByID(formID);
-						}
+					} else if (formID) {
+						auto filterForm = modName ?
+                                              a_dataHandler->LookupForm(*formID, *modName) :
+                                              RE::TESForm::LookupByID(*formID);
 						if (filterForm) {
 							const auto formType = filterForm->GetFormType();
 							if (const auto type = lookup_form_type(formType); !type.empty()) {
 								a_formVec.push_back(filterForm);
 							} else {
-								logger::error("			Filter [0x{:X}] ({}) SKIP - invalid formtype ({})", formID, modName.has_value() ? modName.value() : "", formType);
+								logger::error("			Filter [0x{:X}] ({}) SKIP - invalid formtype ({})", *formID, modName.value_or(""), formType);
 							}
 						} else {
-							logger::error("			Filter [0x{:X}] ({}) SKIP - form doesn't exist", formID, modName.has_value() ? modName.value() : "");
+							logger::error("			Filter [0x{:X}] ({}) SKIP - form doesn't exist", *formID, modName.value_or(""));
 						}
 					}
 				}
@@ -356,16 +348,12 @@ namespace Lookup
 			RE::BGSKeyword* keyword = nullptr;
 
 			if (std::holds_alternative<FormIDPair>(formIDPair_ini)) {
-				auto [optFormID, modName] = std::get<FormIDPair>(formIDPair_ini);
-				if (optFormID.has_value()) {
-					auto formID = optFormID.value();
-					if (modName.has_value()) {
-						keyword = a_dataHandler->LookupForm<RE::BGSKeyword>(formID, modName.value());
-					} else {
-						keyword = RE::TESForm::LookupByID<RE::BGSKeyword>(formID);
-					}
+				if (auto [formID, modName] = std::get<FormIDPair>(formIDPair_ini); formID) {
+					keyword = modName ?
+                                  a_dataHandler->LookupForm<RE::BGSKeyword>(*formID, *modName) :
+                                  RE::TESForm::LookupByID<RE::BGSKeyword>(*formID);
 					if (!keyword) {
-						logger::error("		Keyword [0x{:X}] ({}) doesn't exist", formID, modName.has_value() ? modName.value() : "");
+						logger::error("		Keyword [0x{:X}] ({}) doesn't exist", *formID, modName.value_or(""));
 						continue;
 					}
 				}
@@ -453,50 +441,48 @@ namespace Filter
 				case RE::FormType::Ammo:
 				case RE::FormType::AlchemyItem:
 				case RE::FormType::Scroll:
+				case RE::FormType::Ingredient:
+					return a_item == a_filter;
 				case RE::FormType::Location:
 					{
-						return a_item->GetFormID() == a_filter->GetFormID();
+						const auto loc = a_item->As<RE::BGSLocation>();
+						const auto filterLoc = a_filter->As<RE::BGSLocation>();
+						return loc && filterLoc && (loc == filterLoc || loc->IsChild(filterLoc));
 					}
-					break;
 				case RE::FormType::MagicEffect:
-					{
-						if (const auto spell = a_item->As<RE::MagicItem>(); spell) {
-							const auto mgef = static_cast<RE::EffectSetting*>(a_filter);
-							return mgef && has_effect(spell, mgef);
-						}
-						return a_item->GetFormID() == a_filter->GetFormID();
+					if (const auto spell = a_item->As<RE::MagicItem>(); spell) {
+						const auto mgef = static_cast<RE::EffectSetting*>(a_filter);
+						return mgef && has_effect(spell, mgef);
 					}
-					break;
+					return a_item == a_filter;
 				case RE::FormType::EffectShader:
-					if (const auto mgef = static_cast<RE::EffectSetting*>(a_item); mgef && (mgef->data.effectShader == a_filter || mgef->data.enchantShader == a_filter)) {
-						return true;
+					{
+						const auto mgef = a_item->As<RE::EffectSetting>();
+						return mgef && (mgef->data.effectShader == a_filter || mgef->data.enchantShader == a_filter);
 					}
-					break;
 				case RE::FormType::ReferenceEffect:
-					if (const auto mgef = static_cast<RE::EffectSetting*>(a_item); mgef && (mgef->data.hitVisuals == a_filter || mgef->data.enchantVisuals == a_filter)) {
-						return true;
+					{
+						const auto mgef = a_item->As<RE::EffectSetting>();
+						return mgef && (mgef->data.hitVisuals == a_filter || mgef->data.enchantVisuals == a_filter);
 					}
-					break;
 				case RE::FormType::ArtObject:
-					if (const auto mgef = static_cast<RE::EffectSetting*>(a_item); mgef && (mgef->data.castingArt == a_filter || mgef->data.hitEffectArt == a_filter || mgef->data.enchantEffectArt == a_filter)) {
-						return true;
+					{
+						const auto mgef = a_item->As<RE::EffectSetting>();
+						return mgef && (mgef->data.castingArt == a_filter || mgef->data.hitEffectArt == a_filter || mgef->data.enchantEffectArt == a_filter);
 					}
-					break;
 				case RE::FormType::MusicType:
-					if (const auto loc = static_cast<RE::BGSLocation*>(a_item); loc && loc->musicType == a_filter) {
-						return true;
+					{
+						const auto loc = a_item->As<RE::BGSLocation>();
+						return loc && loc->musicType == a_filter;
 					}
-					break;
 				case RE::FormType::Faction:
-					if (const auto loc = static_cast<RE::BGSLocation*>(a_item); loc && loc->unreportedCrimeFaction == a_filter) {
-						return true;
+					{
+						const auto loc = a_item->As<RE::BGSLocation>();
+						return loc && loc->unreportedCrimeFaction == a_filter;
 					}
-					break;
 				default:
-					break;
+					return false;
 				}
-
-				return false;
 			}
 
 			inline bool matches(RE::TESForm& a_item, const FormVec& a_forms)
@@ -604,15 +590,18 @@ namespace Filter
 				{ Archetype::kSpawnScriptedRef, "SpawnScriptedRef"sv },
 				{ Archetype::kDisguise, "Disguise"sv },
 				{ Archetype::kGrabActor, "GrabActor"sv },
-				{ Archetype::kVampireLord, "VampireLord"sv },
+				{ Archetype::kVampireLord, "VampireLord"sv }
 			};
 
 			inline bool matches(Archetype a_archetype, const StringVec& a_strings)
 			{
-				auto archetypeStr = archetypeMap.at(a_archetype);
-				return std::ranges::any_of(a_strings, [&](const auto& str) {
-					return string::iequals(archetypeStr, str);
-				});
+				if (auto it = archetypeMap.find(a_archetype); it != archetypeMap.end()) {
+					auto archetypeStr = it->second;
+					return std::ranges::any_of(a_strings, [&](const auto& str) {
+						return string::iequals(archetypeStr, str);
+					});
+				}
+				return false;
 			}
 		}
 	}
@@ -637,7 +626,7 @@ namespace Filter
 				result = true;
 			}
 			if constexpr (std::is_same_v<T, RE::EffectSetting>) {
-				if (!result && detail::archetype::matches(a_item.GetArchetype(), strings_NOT)) {
+				if (!result && detail::archetype::matches(a_item.data.archetype, strings_NOT)) {
 					result = true;
 				}
 			}
@@ -654,7 +643,7 @@ namespace Filter
 				result = true;
 			}
 			if constexpr (std::is_same_v<T, RE::EffectSetting>) {
-				if (!result && detail::archetype::matches(a_item.GetArchetype(), strings_MATCH)) {
+				if (!result && detail::archetype::matches(a_item.data.archetype, strings_MATCH)) {
 					result = true;
 				}
 			}
@@ -694,14 +683,6 @@ namespace Filter
 			return false;
 		}
 
-		auto chance = std::get<DATA_TYPE::kChance>(a_keywordData);
-		if (!numeric::essentially_equal(chance, 100.0)) {
-			const auto rng = RNG::GetSingleton()->Generate<float>(0.0, 100.0);
-			if (rng > chance) {
-				return false;
-			}
-		}
-
 		return true;
 	}
 
@@ -711,7 +692,7 @@ namespace Filter
 		const auto traits = std::get<DATA_TYPE::kTraits>(a_keywordData);
 
 		if constexpr (std::is_same_v<T, RE::TESObjectARMO>) {
-			const auto& [enchanted, templated, ARValue] = std::get<ITEM::kArmor>(traits);
+			const auto& [enchanted, templated, ARValue] = std::get<TRAITS::kArmor>(traits);
 			if (enchanted.has_value() && (a_item.formEnchanting != nullptr) != enchanted.value()) {
 				return false;
 			}
@@ -733,7 +714,7 @@ namespace Filter
 				}
 			}
 		} else if constexpr (std::is_same_v<T, RE::TESObjectWEAP>) {
-			const auto& [enchanted, templated, weightValue] = std::get<ITEM::kWeapon>(traits);
+			const auto& [enchanted, templated, weightValue] = std::get<TRAITS::kWeapon>(traits);
 			if (enchanted.has_value() && (a_item.formEnchanting != nullptr) != enchanted.value()) {
 				return false;
 			}
@@ -755,12 +736,12 @@ namespace Filter
 				}
 			}
 		} else if constexpr (std::is_same_v<T, RE::TESAmmo>) {
-			const auto isBolt = std::get<ITEM::kAmmo>(traits);
+			const auto isBolt = std::get<TRAITS::kAmmo>(traits);
 			if (isBolt.has_value() && a_item.IsBolt() != isBolt.value()) {
 				return false;
 			}
 		} else if constexpr (std::is_same_v<T, RE::EffectSetting>) {
-			const auto& [isHostile, castingType, deliveryType, skillValue] = std::get<ITEM::kMagicEffect>(traits);
+			const auto& [isHostile, castingType, deliveryType, skillValue] = std::get<TRAITS::kMagicEffect>(traits);
 			if (isHostile.has_value() && a_item.IsHostile() != isHostile.value()) {
 				return false;
 			}
@@ -791,10 +772,15 @@ namespace Filter
 				}
 			}
 		} else if constexpr (std::is_same_v<T, RE::AlchemyItem>) {
-			const auto& [isPoison, isFood] = std::get<ITEM::kPotion>(traits);
+			const auto& [isPoison, isFood] = std::get<TRAITS::kPotion>(traits);
 			if (isPoison.has_value() && a_item.IsPoison() != isPoison.value()) {
 				return false;
 			}
+			if (isFood.has_value() && a_item.IsFood() != isFood.value()) {
+				return false;
+			}
+		} else if constexpr (std::is_same_v<T, RE::IngredientItem>) {
+			const auto& isFood = std::get<TRAITS::kIngredient>(traits);
 			if (isFood.has_value() && a_item.IsFood() != isFood.value()) {
 				return false;
 			}

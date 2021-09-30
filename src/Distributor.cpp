@@ -88,6 +88,7 @@ bool Lookup::GetForms()
 		log_addition(ITEM::kPotion, "potions");
 		log_addition(ITEM::kScroll, "scrolls");
 		log_addition(ITEM::kLocation, "locations");
+		log_addition(ITEM::kIngredient, "ingredients");
 	}
 	return result;
 }
@@ -123,6 +124,7 @@ void Distribute::AddKeywords()
 		distribute(ITEM::kMagicEffect, "magic effects", dataHandler->GetFormArray<RE::EffectSetting>());
 		distribute(ITEM::kPotion, "potions", dataHandler->GetFormArray<RE::AlchemyItem>());
 		distribute(ITEM::kScroll, "scrolls", dataHandler->GetFormArray<RE::ScrollItem>());
-		distribute(ITEM::kLocation, "location", dataHandler->GetFormArray<RE::BGSLocation>());		
+		distribute(ITEM::kLocation, "locations", dataHandler->GetFormArray<RE::BGSLocation>());		
+		distribute(ITEM::kIngredient, "ingredients", dataHandler->GetFormArray<RE::IngredientItem>());	
 	}
 }

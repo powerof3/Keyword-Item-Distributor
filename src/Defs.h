@@ -11,29 +11,26 @@ namespace ITEM
 		kPotion,
 		kScroll,
 		kLocation,
+		kIngredient,
 
 		kTotal
 	};
 }
 
-namespace INI
+namespace TRAITS
 {
 	enum TYPE : std::uint32_t
 	{
-		kFormIDPair = 0,
-		kFormID = kFormIDPair,
-		kType,
-		kESP = kType,
-		kStrings,
-		kFilters,
-		kTraits,
-		kChance
-	};
-}
-using INI_TYPE = INI::TYPE;
+		kArmor = 0,
+		kWeapon,
+		kAmmo,
+		kMagicEffect,
+		kPotion,
+		kIngredient,
 
-namespace TRAITS
-{
+		kTotal
+	};
+	
 	namespace ARMOR
 	{
 		enum : std::uint32_t
@@ -106,13 +103,39 @@ namespace TRAITS
 		using Traits = std::tuple<std::optional<bool>, std::optional<bool>>;
 	}
 
+	namespace INGREDIENT
+	{
+		enum : std::uint32_t
+		{
+			kFood
+		};
+
+		using Traits = std::optional<bool>;
+	}
+
 	using Traits = std::tuple<
 		ARMOR::Traits,
 		WEAP::Traits,
 		AMMO::Traits,
 		MGEF::Traits,
-		POTION::Traits>;
+		POTION::Traits,
+		INGREDIENT::Traits>;
 }
+
+namespace INI
+{
+	enum TYPE : std::uint32_t
+	{
+		kFormIDPair = 0,
+		kFormID = kFormIDPair,
+		kType,
+		kESP = kType,
+		kFilters,
+		kTraits,
+		kChance
+	};
+}
+using INI_TYPE = INI::TYPE;
 
 namespace DATA
 {
@@ -133,11 +156,7 @@ using FormIDPair = std::pair<
 	std::optional<std::string>>;
 using FormIDPairVec = std::vector<FormIDPair>;
 using StringVec = std::vector<std::string>;
-using FormVec = std::vector<
-	std::variant<RE::TESForm*, const RE::TESFile*>>;
-
 using Chance = float;
-using Count = std::uint32_t;
 
 using INIData = std::tuple<
 	std::variant<FormIDPair, std::string>,
@@ -146,6 +165,10 @@ using INIData = std::tuple<
 	TRAITS::Traits,
 	Chance>;
 using INIDataVec = std::vector<INIData>;
+
+using FormVec = std::vector<
+	std::variant<RE::TESForm*, const RE::TESFile*>>;
+using Count = std::uint32_t;
 
 using KeywordData = std::tuple<
 	RE::BGSKeyword*,
