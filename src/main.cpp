@@ -1,21 +1,39 @@
 #include "Distributor.h"
 
-void MessageHandler(SKSE::MessagingInterface::Message* a_message)
+namespace MessageHandler
 {
-	if (a_message->type == SKSE::MessagingInterface::kDataLoaded) {
-		if (Lookup::GetForms()) {
-			Distribute::AddKeywords();
+	struct detail
+	{
+		static void send_event()
+		{
+			SKSE::ModCallbackEvent modEvent{
+				"KID_KeywordDistributionDone",
+				RE::BSFixedString(),
+				0.0f,
+				nullptr
+			};
+
+			auto modCallback = SKSE::GetModCallbackEventSource();
+			modCallback->SendEvent(&modEvent);
 		}
+	};
 
-		SKSE::ModCallbackEvent modEvent{
-			"KID_KeywordDistributionDone",
-			RE::BSFixedString(),
-			0.0f,
-			nullptr
-		};
+	void Distribute(SKSE::MessagingInterface::Message* a_message)
+	{
+		if (a_message->type == SKSE::MessagingInterface::kDataLoaded) {
+			if (Lookup::GetForms()) {
+				Distribute::AddKeywords();
+			}
 
-		auto modCallback = SKSE::GetModCallbackEventSource();
-		modCallback->SendEvent(&modEvent);
+			detail::send_event();
+		}
+	}
+
+	void NoDistribute(SKSE::MessagingInterface::Message* a_message)
+	{
+		if (a_message->type == SKSE::MessagingInterface::kDataLoaded) {
+			detail::send_event();
+		}
 	}
 }
 
@@ -63,9 +81,11 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 
 	SKSE::Init(a_skse);
 
+	auto messaging = SKSE::GetMessagingInterface();
 	if (INI::Read()) {
-		auto messaging = SKSE::GetMessagingInterface();
-		messaging->RegisterListener(MessageHandler);
+		messaging->RegisterListener(MessageHandler::Distribute);
+	} else {
+		messaging->RegisterListener(MessageHandler::NoDistribute);
 	}
 
 	return true;
