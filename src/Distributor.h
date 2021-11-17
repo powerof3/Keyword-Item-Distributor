@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Defs.h"
+#include "Cache.h"
 
 namespace INI
 {
@@ -14,6 +14,11 @@ namespace INI
 			return std::vector<std::string>();
 		}
 
+		inline bool is_mod_name(const std::string& a_str)
+		{
+			return a_str.rfind(".esp") != std::string::npos || a_str.rfind(".esl") != std::string::npos || a_str.rfind(".esm ") != std::string::npos;
+		}
+
 		inline FormIDPair get_formID(const std::string& a_str)
 		{
 			if (a_str.find("~"sv) != std::string::npos) {
@@ -21,7 +26,7 @@ namespace INI
 				return std::make_pair(
 					string::lexical_cast<RE::FormID>(splitID.at(kFormID), true),
 					splitID.at(kESP));
-			} else if (string::icontains(a_str, ".esp") || string::icontains(a_str, ".esl") || string::icontains(a_str, ".esm")) {
+			} else if (is_mod_name(a_str) || !string::is_only_hex(a_str)) {
 				return std::make_pair(
 					std::nullopt,
 					a_str);
@@ -71,7 +76,8 @@ namespace INI
 		//[FORMID/ESP] / string
 		std::variant<FormIDPair, std::string> item_ID;
 		try {
-			if (auto formSection = sections.at(kFormID); formSection.find('~') != std::string::npos || string::is_only_hex(formSection)) {
+			auto& formSection = sections.at(kFormID);
+			if (formSection.find('~') != std::string::npos || string::is_only_hex(formSection)) {
 				FormIDPair pair;
 				pair.second = std::nullopt;
 
@@ -94,28 +100,11 @@ namespace INI
 		formIDPair_ini = item_ID;
 
 		//TYPE
-		ITEM::TYPE type = ITEM::kArmor;
+		ITEM::TYPE type = ITEM::kNone;
 		try {
-			if (const auto typeStr = sections.at(kType); !typeStr.empty()) {
-				if (typeStr == "Armor" || typeStr == "Armour") {
-					type = ITEM::kArmor;
-				} else if (typeStr == "Weapon") {
-					type = ITEM::kWeapon;
-				} else if (typeStr == "Ammo") {
-					type = ITEM::kAmmo;
-				} else if (typeStr == "Magic Effect") {
-					type = ITEM::kMagicEffect;
-				} else if (typeStr == "Potion") {
-					type = ITEM::kPotion;
-				} else if (typeStr == "Scroll") {
-					type = ITEM::kScroll;
-				} else if (typeStr == "Location") {
-					type = ITEM::kLocation;
-				} else if (typeStr == "Ingredient") {
-					type = ITEM::kIngredient;
-				} else {
-					type = string::lexical_cast<ITEM::TYPE>(typeStr);
-				}
+			const auto& typeStr = sections.at(kType);
+			if (!typeStr.empty()) {
+				type = Cache::Item::GetType(typeStr);
 			}
 		} catch (...) {
 		}
@@ -125,36 +114,30 @@ namespace INI
 			auto& [strings_ALL, strings_NOT, strings_MATCH, strings_ANY] = strings_ini;
 			auto& [filterIDs_ALL, filterIDs_NOT, filterIDs_MATCH] = filterIDs_ini;
 
-			for (auto split_str = detail::split_sub_string(sections.at(kFilters)); auto& str : split_str) {
-				if (str.find('~') != std::string::npos || string::is_only_hex(str) || string::icontains(str, ".esp") || string::icontains(str, ".esl") || string::icontains(str, ".esm")) {
-					if (str.find("+"sv) != std::string::npos) {
-						auto splitIDs_ALL = detail::split_sub_string(str, "+");
-						for (auto& IDs_ALL : splitIDs_ALL) {
-							filterIDs_ALL.push_back(detail::get_formID(IDs_ALL));
-						}
-					} else if (str.at(0) == '-') {
-						str.erase(0, 1);
-						filterIDs_NOT.push_back(detail::get_formID(str));
+			auto split_str = detail::split_sub_string(sections.at(kFilters));
+			for (auto& str : split_str) {
+				if (str.find("+"sv) != std::string::npos) {
+					auto strings = detail::split_sub_string(str, "+");
 
-					} else {
-						filterIDs_MATCH.push_back(detail::get_formID(str));
-					}
+					strings_ALL.insert(strings_ALL.end(), strings.begin(), strings.end());
+
+					std::transform(strings.begin(), strings.end(), std::back_inserter(filterIDs_ALL), [](auto const& str) {
+						return detail::get_formID(str);
+					});
+
+				} else if (str.at(0) == '-') {
+					str.erase(0, 1);
+
+					strings_NOT.emplace_back(str);
+					filterIDs_NOT.emplace_back(detail::get_formID(str));
+
+				} else if (str.at(0) == '*') {
+					str.erase(0, 1);
+					strings_ANY.emplace_back(str);
+
 				} else {
-					if (str.find("+"sv) != std::string::npos) {
-						auto strings = detail::split_sub_string(str, "+");
-						strings_ALL.insert(strings_ALL.end(), strings.begin(), strings.end());
-
-					} else if (str.at(0) == '-') {
-						str.erase(0, 1);
-						strings_NOT.emplace_back(str);
-
-					} else if (str.at(0) == '*') {
-						str.erase(0, 1);
-						strings_ANY.emplace_back(str);
-
-					} else {
-						strings_MATCH.emplace_back(str);
-					}
+					strings_MATCH.emplace_back(str);
+					filterIDs_MATCH.emplace_back(detail::get_formID(str));
 				}
 			}
 		} catch (...) {
@@ -163,7 +146,8 @@ namespace INI
 		//TRAITS
 		traits_ini;
 		try {
-			for (auto split_str = detail::split_sub_string(sections.at(kTraits)); auto& str : split_str) {
+			auto split_str = detail::split_sub_string(sections.at(kTraits));
+			for (auto& str : split_str) {
 				switch (type) {
 				case ITEM::kArmor:
 					{
@@ -258,6 +242,22 @@ namespace INI
 						}
 					}
 					break;
+				case ITEM::kBook:
+					{
+						auto& [spell, skill, av] = std::get<TRAITS::kBook>(traits_ini);
+						if (str == "S") {
+							spell = true;
+						} else if (str == "-S") {
+							spell = false;
+						} else if (str == "AV") {
+							skill = true;
+						} else if (str == "-AV") {
+							skill = false;
+						} else {
+							av = string::lexical_cast<RE::ActorValue>(str);
+						}
+					}
+					break;
 				default:
 					break;
 				}
@@ -268,7 +268,8 @@ namespace INI
 		//CHANCE
 		chance_ini = 100;
 		try {
-			if (const auto chanceStr = sections.at(kChance); !chanceStr.empty() && chanceStr.find("NONE"sv) == std::string::npos) {
+			const auto& chanceStr = sections.at(kChance);
+			if (!chanceStr.empty() && chanceStr.find("NONE"sv) == std::string::npos) {
 				chance_ini = string::lexical_cast<float>(chanceStr);
 			}
 		} catch (...) {
@@ -284,37 +285,30 @@ namespace Lookup
 {
 	namespace detail
 	{
-		inline constexpr frozen::map<RE::FormType, std::string_view, 13> filterMap = {
-			{ RE::FormType::Armor, "Armor"sv },
-			{ RE::FormType::Weapon, "Weapon"sv },
-			{ RE::FormType::Ammo, "Ammo"sv },
-			{ RE::FormType::MagicEffect, "Magic Effect"sv },
-			{ RE::FormType::AlchemyItem, "Potion"sv },
-			{ RE::FormType::Scroll, "Scroll"sv },
-			{ RE::FormType::Location, "Location"sv },
-			{ RE::FormType::Ingredient, "Ingredient"sv },
-			{ RE::FormType::EffectShader, "Effect Shader"sv },
-			{ RE::FormType::ReferenceEffect, "Visual Effect"sv },
-			{ RE::FormType::ArtObject, "Art Object"sv },
-			{ RE::FormType::MusicType, "MusicType"sv },
-			{ RE::FormType::Faction, "Faction"sv }
-		};
-
 		inline void formID_to_form(RE::TESDataHandler* a_dataHandler, const FormIDPairVec& a_formIDVec, FormVec& a_formVec)
 		{
 			if (!a_formIDVec.empty()) {
-				constexpr auto lookup_form_type = [](const RE::FormType a_type) {
-					auto it = filterMap.find(a_type);
-					return it != filterMap.end() ? it->second : "";
-				};
-
 				for (auto& [formID, modName] : a_formIDVec) {
 					if (modName && !formID) {
-						if (const RE::TESFile* filterMod = a_dataHandler->LookupModByName(*modName); filterMod) {
-							logger::info("			Filter ({}) INFO - mod found", filterMod->fileName);
-							a_formVec.push_back(filterMod);
+						if (INI::detail::is_mod_name(*modName)) {
+							if (const RE::TESFile* filterMod = a_dataHandler->LookupModByName(*modName); filterMod) {
+								logger::info("			Filter ({}) INFO - mod found", filterMod->fileName);
+								a_formVec.push_back(filterMod);
+							} else {
+								logger::error("			Filter ({}) SKIP - mod cannot be found", *modName);
+							}
 						} else {
-							logger::error("			Filter ({}) SKIP - mod cannot be found", *modName);
+							auto filterForm = RE::TESForm::LookupByEditorID(*modName);
+							if (filterForm) {
+								const auto formType = filterForm->GetFormType();
+								if (const auto type = Cache::FormType::GetString(formType); !type.empty()) {
+									a_formVec.push_back(filterForm);
+								} else {
+									logger::error("			Filter ({}) SKIP - invalid formtype ({})", *modName, formType);
+								}
+							} else {
+								logger::error("			Filter ({}) SKIP - form doesn't exist", *modName);
+							}
 						}
 					} else if (formID) {
 						auto filterForm = modName ?
@@ -322,7 +316,7 @@ namespace Lookup
                                               RE::TESForm::LookupByID(*formID);
 						if (filterForm) {
 							const auto formType = filterForm->GetFormType();
-							if (const auto type = lookup_form_type(formType); !type.empty()) {
+							if (const auto type = Cache::FormType::GetString(formType); !type.empty()) {
 								a_formVec.push_back(filterForm);
 							} else {
 								logger::error("			Filter [0x{:X}] ({}) SKIP - invalid formtype ({})", *formID, modName.value_or(""), formType);
@@ -442,6 +436,7 @@ namespace Filter
 				case RE::FormType::AlchemyItem:
 				case RE::FormType::Scroll:
 				case RE::FormType::Ingredient:
+				case RE::FormType::Book:
 					return a_item == a_filter;
 				case RE::FormType::Location:
 					{
@@ -479,6 +474,11 @@ namespace Filter
 					{
 						const auto loc = a_item->As<RE::BGSLocation>();
 						return loc && loc->unreportedCrimeFaction == a_filter;
+					}
+				case RE::FormType::Spell:
+					{
+						const auto book = a_item->As<RE::TESObjectBOOK>();
+						return book && book->GetSpell() == a_filter;
 					}
 				default:
 					return false;
@@ -616,10 +616,14 @@ namespace Filter
 		}
 
 		const std::string name = a_item.GetName();
+		const std::string editorID = Cache::EditorID::GetSingleton()->GetEditorID(a_item.GetFormID());
 
 		if (!strings_NOT.empty()) {
 			bool result = false;
 			if (!name.empty() && detail::name::matches(name, strings_NOT)) {
+				result = true;
+			}
+			if (!result && !editorID.empty() && detail::name::matches(editorID, strings_NOT)) {
 				result = true;
 			}
 			if (!result && detail::keyword::matches(a_item, strings_NOT)) {
@@ -639,6 +643,9 @@ namespace Filter
 			if (!name.empty() && detail::name::matches(name, strings_MATCH)) {
 				result = true;
 			}
+			if (!result && !editorID.empty() && detail::name::matches(editorID, strings_MATCH)) {
+				result = true;
+			}
 			if (!result && detail::keyword::matches(a_item, strings_MATCH)) {
 				result = true;
 			}
@@ -654,6 +661,9 @@ namespace Filter
 		if (!strings_ANY.empty()) {
 			bool result = false;
 			if (!name.empty() && detail::name::contains(name, strings_ANY)) {
+				result = true;
+			}
+			if (!result && !editorID.empty() && detail::name::contains(editorID, strings_ANY)) {
 				result = true;
 			}
 			if (!result && detail::keyword::contains(a_item, strings_ANY)) {
@@ -689,18 +699,18 @@ namespace Filter
 	template <class T>
 	bool secondary(T& a_item, const KeywordData& a_keywordData)
 	{
-		const auto traits = std::get<DATA_TYPE::kTraits>(a_keywordData);
+		const auto& traits = std::get<DATA_TYPE::kTraits>(a_keywordData);
 
 		if constexpr (std::is_same_v<T, RE::TESObjectARMO>) {
 			const auto& [enchanted, templated, ARValue] = std::get<TRAITS::kArmor>(traits);
-			if (enchanted.has_value() && (a_item.formEnchanting != nullptr) != enchanted.value()) {
+			if (enchanted && (a_item.formEnchanting != nullptr) != *enchanted) {
 				return false;
 			}
-			if (templated.has_value() && (a_item.templateArmor != nullptr) != templated.value()) {
+			if (templated && (a_item.templateArmor != nullptr) != *templated) {
 				return false;
 			}
-			if (ARValue.has_value()) {
-				auto [min, max] = ARValue.value();
+			if (ARValue) {
+				auto& [min, max] = *ARValue;
 				auto AR = a_item.GetArmorRating();
 
 				if (min < RE::NI_INFINITY && max < RE::NI_INFINITY) {
@@ -715,14 +725,14 @@ namespace Filter
 			}
 		} else if constexpr (std::is_same_v<T, RE::TESObjectWEAP>) {
 			const auto& [enchanted, templated, weightValue] = std::get<TRAITS::kWeapon>(traits);
-			if (enchanted.has_value() && (a_item.formEnchanting != nullptr) != enchanted.value()) {
+			if (enchanted && (a_item.formEnchanting != nullptr) != *enchanted) {
 				return false;
 			}
-			if (templated.has_value() && (a_item.templateWeapon != nullptr) != templated.value()) {
+			if (templated && (a_item.templateWeapon != nullptr) != *templated) {
 				return false;
 			}
-			if (weightValue.has_value()) {
-				auto [min, max] = weightValue.value();
+			if (weightValue) {
+				auto& [min, max] = weightValue.value();
 				auto weight = a_item.weight;
 
 				if (min < RE::NI_INFINITY && max < RE::NI_INFINITY) {
@@ -736,24 +746,24 @@ namespace Filter
 				}
 			}
 		} else if constexpr (std::is_same_v<T, RE::TESAmmo>) {
-			const auto isBolt = std::get<TRAITS::kAmmo>(traits);
-			if (isBolt.has_value() && a_item.IsBolt() != isBolt.value()) {
+			const auto& isBolt = std::get<TRAITS::kAmmo>(traits);
+			if (isBolt && a_item.IsBolt() != *isBolt) {
 				return false;
 			}
 		} else if constexpr (std::is_same_v<T, RE::EffectSetting>) {
 			const auto& [isHostile, castingType, deliveryType, skillValue] = std::get<TRAITS::kMagicEffect>(traits);
-			if (isHostile.has_value() && a_item.IsHostile() != isHostile.value()) {
+			if (isHostile && a_item.IsHostile() != *isHostile) {
 				return false;
 			}
-			if (castingType.has_value() && a_item.data.castingType != castingType.value()) {
+			if (*castingType && a_item.data.castingType != *castingType) {
 				return false;
 			}
-			if (deliveryType.has_value() && a_item.data.delivery != deliveryType.value()) {
+			if (deliveryType && a_item.data.delivery != *deliveryType) {
 				return false;
 			}
-			if (skillValue.has_value()) {
-				auto [skill, minMax] = skillValue.value();
-				auto [min, max] = minMax;
+			if (skillValue) {
+				auto& [skill, minMax] = *skillValue;
+				auto& [min, max] = minMax;
 
 				if (skill != a_item.GetMagickSkill()) {
 					return false;
@@ -773,15 +783,26 @@ namespace Filter
 			}
 		} else if constexpr (std::is_same_v<T, RE::AlchemyItem>) {
 			const auto& [isPoison, isFood] = std::get<TRAITS::kPotion>(traits);
-			if (isPoison.has_value() && a_item.IsPoison() != isPoison.value()) {
+			if (isPoison && a_item.IsPoison() != *isPoison) {
 				return false;
 			}
-			if (isFood.has_value() && a_item.IsFood() != isFood.value()) {
+			if (isFood && a_item.IsFood() != *isFood) {
 				return false;
 			}
 		} else if constexpr (std::is_same_v<T, RE::IngredientItem>) {
 			const auto& isFood = std::get<TRAITS::kIngredient>(traits);
-			if (isFood.has_value() && a_item.IsFood() != isFood.value()) {
+			if (isFood && a_item.IsFood() != *isFood) {
+				return false;
+			}
+		} else if constexpr (std::is_same_v<T, RE::TESObjectBOOK>) {
+			const auto& [spell, skill, av] = std::get<TRAITS::kBook>(traits);
+			if (spell && a_item.TeachesSpell() != *spell) {
+				return false;
+			}
+			if (skill && a_item.TeachesSkill() != *skill) {
+				return false;
+			}
+			if (av && a_item.GetSkill() != *av) {
 				return false;
 			}
 		}

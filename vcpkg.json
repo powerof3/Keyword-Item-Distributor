@@ -1,12 +1,13 @@
 {
   "name": "kid",
-  "version-string": "1.0.0",
+  "version-string": "1.3.0",
   "description": "Keyword Item Distributor",
   "homepage": "https://github.com/powerof3/Keyword-Item-Distributor",
   "license": "MIT",
   "dependencies": [
     "boost-stl-interfaces",
     "frozen",
+    "robin-hood-hashing",
     "simpleini",
     "spdlog"
   ]

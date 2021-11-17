@@ -4,6 +4,7 @@ namespace ITEM
 {
 	enum TYPE : std::uint32_t
 	{
+		kNone = static_cast<std::underlying_type_t<TYPE>>(-1),
 		kArmor = 0,
 		kWeapon,
 		kAmmo,
@@ -12,6 +13,7 @@ namespace ITEM
 		kScroll,
 		kLocation,
 		kIngredient,
+		kBook,
 
 		kTotal
 	};
@@ -27,10 +29,11 @@ namespace TRAITS
 		kMagicEffect,
 		kPotion,
 		kIngredient,
+		kBook,
 
 		kTotal
 	};
-	
+
 	namespace ARMOR
 	{
 		enum : std::uint32_t
@@ -113,13 +116,26 @@ namespace TRAITS
 		using Traits = std::optional<bool>;
 	}
 
+	namespace BOOK
+	{
+		enum : std::uint32_t
+		{
+			kTeachesSpell,
+			kTeachesSkill,
+			kActorValue
+		};
+
+		using Traits = std::tuple<std::optional<bool>, std::optional<bool>, std::optional<RE::ActorValue>>;
+	}
+
 	using Traits = std::tuple<
 		ARMOR::Traits,
 		WEAP::Traits,
 		AMMO::Traits,
 		MGEF::Traits,
 		POTION::Traits,
-		INGREDIENT::Traits>;
+		INGREDIENT::Traits,
+		BOOK::Traits>;
 }
 
 namespace INI
