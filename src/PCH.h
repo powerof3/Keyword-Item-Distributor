@@ -6,9 +6,9 @@
 #include "RE/Skyrim.h"
 #include "SKSE/SKSE.h"
 
+#include <SimpleIni.h>
 #include <frozen/map.h>
 #include <robin_hood.h>
-#include <SimpleIni.h>
 #include <spdlog/sinks/basic_file_sink.h>
 
 #define DLLEXPORT __declspec(dllexport)

@@ -62,8 +62,7 @@ bool Lookup::GetForms()
 	if (const auto dataHandler = RE::TESDataHandler::GetSingleton(); dataHandler) {
 		logger::info("{:*^30}", "LOOKUP");
 
-		for (size_t i = 0; i < ITEM::TYPE::kTotal; i++) {
-			auto type = static_cast<ITEM::TYPE>(i);
+		for (auto& [type, record] : ITEM::map) {
 			get_forms(dataHandler, INIs[type], Keywords[type]);
 
 			if (!Keywords[type].empty()) {
@@ -75,20 +74,12 @@ bool Lookup::GetForms()
 	if (result) {
 		logger::info("{:*^30}", "PROCESSING");
 
-		const auto log_addition = [](ITEM::TYPE a_type, const std::string& a_records) {
-			if (!INIs[a_type].empty()) {
-				logger::info("	Adding {}/{} keywords to {}", INIs[a_type].size(), Keywords[a_type].size(), a_records);
-			}
-		};
 
-		log_addition(ITEM::kArmor, "armors");
-		log_addition(ITEM::kWeapon, "weapons");
-		log_addition(ITEM::kAmmo, "ammo");
-		log_addition(ITEM::kMagicEffect, "magic effects");
-		log_addition(ITEM::kPotion, "potions");
-		log_addition(ITEM::kScroll, "scrolls");
-		log_addition(ITEM::kLocation, "locations");
-		log_addition(ITEM::kIngredient, "ingredients");
+		for (auto& [type, record] : ITEM::map) {
+			if (!INIs[type].empty()) {
+				logger::info("	Adding {}/{} keywords to {}", INIs[type].size(), Keywords[type].size(), record);
+			}
+		}
 	}
 	return result;
 }

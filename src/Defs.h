@@ -17,6 +17,18 @@ namespace ITEM
 
 		kTotal
 	};
+
+	inline constexpr frozen::map<TYPE, const char*, ITEM::kTotal> map = {
+		{ kArmor, "armors" },
+		{ kWeapon, "weapons" },
+		{ kAmmo, "ammo" },
+		{ kMagicEffect, "magic effects" },
+		{ kPotion, "potions" },
+		{ kScroll, "scrolls" },
+		{ kLocation, "locations" },
+		{ kIngredient, "ingredients" },
+		{ kBook, "books" }
+	};
 }
 
 namespace TRAITS
