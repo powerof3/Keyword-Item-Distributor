@@ -47,4 +47,13 @@ namespace Cache
 	}
 }
 
-
+bool Cache::Archetype::Matches(Archetype a_archetype, const StringVec& a_strings)
+{
+	if (auto it = archetypeMap.find(a_archetype); it != archetypeMap.end()) {
+		auto archetypeStr = it->second;
+		return std::ranges::any_of(a_strings, [&](const auto& str) {
+			return string::iequals(archetypeStr, str);
+		});
+	}
+	return false;
+}

@@ -80,7 +80,7 @@ bool Lookup::GetForms()
 				logger::info("	Adding {}/{} keywords to {}", INIs[a_type].size(), Keywords[a_type].size(), a_records);
 			}
 		};
-		
+
 		log_addition(ITEM::kArmor, "armors");
 		log_addition(ITEM::kWeapon, "weapons");
 		log_addition(ITEM::kAmmo, "ammo");
@@ -96,7 +96,6 @@ bool Lookup::GetForms()
 void Distribute::AddKeywords()
 {
 	if (const auto dataHandler = RE::TESDataHandler::GetSingleton(); dataHandler) {
-		
 		const auto distribute = [&]<typename T>(ITEM::TYPE a_type, const std::string& a_record, RE::BSTArray<T*>& formArray) {
 			auto& keywords = Keywords[a_type];
 			if (!keywords.empty()) {
@@ -124,7 +123,8 @@ void Distribute::AddKeywords()
 		distribute(ITEM::kMagicEffect, "magic effects", dataHandler->GetFormArray<RE::EffectSetting>());
 		distribute(ITEM::kPotion, "potions", dataHandler->GetFormArray<RE::AlchemyItem>());
 		distribute(ITEM::kScroll, "scrolls", dataHandler->GetFormArray<RE::ScrollItem>());
-		distribute(ITEM::kLocation, "locations", dataHandler->GetFormArray<RE::BGSLocation>());		
-		distribute(ITEM::kIngredient, "ingredients", dataHandler->GetFormArray<RE::IngredientItem>());	
+		distribute(ITEM::kLocation, "locations", dataHandler->GetFormArray<RE::BGSLocation>());
+		distribute(ITEM::kIngredient, "ingredients", dataHandler->GetFormArray<RE::IngredientItem>());
+		distribute(ITEM::kBook, "books", dataHandler->GetFormArray<RE::TESObjectBOOK>());
 	}
 }

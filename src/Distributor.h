@@ -285,48 +285,50 @@ namespace Lookup
 {
 	namespace detail
 	{
-		inline void formID_to_form(RE::TESDataHandler* a_dataHandler, const FormIDPairVec& a_formIDVec, FormVec& a_formVec)
+		inline bool formID_to_form(RE::TESDataHandler* a_dataHandler, const FormIDPairVec& a_formIDVec, FormVec& a_formVec)
 		{
-			if (!a_formIDVec.empty()) {
-				for (auto& [formID, modName] : a_formIDVec) {
-					if (modName && !formID) {
-						if (INI::detail::is_mod_name(*modName)) {
-							if (const RE::TESFile* filterMod = a_dataHandler->LookupModByName(*modName); filterMod) {
-								logger::info("			Filter ({}) INFO - mod found", filterMod->fileName);
-								a_formVec.push_back(filterMod);
-							} else {
-								logger::error("			Filter ({}) SKIP - mod cannot be found", *modName);
-							}
+			if (a_formIDVec.empty()) {
+				return true;
+			}
+			for (auto& [formID, modName] : a_formIDVec) {
+				if (modName && !formID) {
+					if (INI::detail::is_mod_name(*modName)) {
+						if (const RE::TESFile* filterMod = a_dataHandler->LookupModByName(*modName); filterMod) {
+							logger::info("			Filter ({}) INFO - mod found", filterMod->fileName);
+							a_formVec.push_back(filterMod);
 						} else {
-							auto filterForm = RE::TESForm::LookupByEditorID(*modName);
-							if (filterForm) {
-								const auto formType = filterForm->GetFormType();
-								if (const auto type = Cache::FormType::GetString(formType); !type.empty()) {
-									a_formVec.push_back(filterForm);
-								} else {
-									logger::error("			Filter ({}) SKIP - invalid formtype ({})", *modName, formType);
-								}
-							} else {
-								logger::error("			Filter ({}) SKIP - form doesn't exist", *modName);
-							}
+							logger::error("			Filter ({}) SKIP - mod cannot be found", *modName);
 						}
-					} else if (formID) {
-						auto filterForm = modName ?
-                                              a_dataHandler->LookupForm(*formID, *modName) :
-                                              RE::TESForm::LookupByID(*formID);
+					} else {
+						auto filterForm = RE::TESForm::LookupByEditorID(*modName);
 						if (filterForm) {
 							const auto formType = filterForm->GetFormType();
 							if (const auto type = Cache::FormType::GetString(formType); !type.empty()) {
 								a_formVec.push_back(filterForm);
 							} else {
-								logger::error("			Filter [0x{:X}] ({}) SKIP - invalid formtype ({})", *formID, modName.value_or(""), formType);
+								logger::error("			Filter ({}) SKIP - invalid formtype ({})", *modName, formType);
 							}
 						} else {
-							logger::error("			Filter [0x{:X}] ({}) SKIP - form doesn't exist", *formID, modName.value_or(""));
+							logger::error("			Filter ({}) SKIP - form doesn't exist", *modName);
 						}
+					}
+				} else if (formID) {
+					auto filterForm = modName ?
+                                          a_dataHandler->LookupForm(*formID, *modName) :
+                                          RE::TESForm::LookupByID(*formID);
+					if (filterForm) {
+						const auto formType = filterForm->GetFormType();
+						if (const auto type = Cache::FormType::GetString(formType); !type.empty()) {
+							a_formVec.push_back(filterForm);
+						} else {
+							logger::error("			Filter [0x{:X}] ({}) SKIP - invalid formtype ({})", *formID, modName.value_or(""), formType);
+						}
+					} else {
+						logger::error("			Filter [0x{:X}] ({}) SKIP - form doesn't exist", *formID, modName.value_or(""));
 					}
 				}
 			}
+			return !a_formVec.empty();
 		}
 	}
 
@@ -383,9 +385,18 @@ namespace Lookup
 				}
 			}
 
+			bool invalidEntry = false;
+
 			std::array<FormVec, 3> filterForms;
-			for (std::uint32_t i = 0; i < 3; i++) {
-				detail::formID_to_form(a_dataHandler, filterIDs_ini[i], filterForms[i]);
+			for (std::uint32_t i = 0; i < filterForms.size(); i++) {
+				if (!detail::formID_to_form(a_dataHandler, filterIDs_ini[i], filterForms[i])) {
+					invalidEntry = true;
+					break;
+				}
+			}
+
+			if (invalidEntry) {
+				continue;
 			}
 
 			std::uint32_t count = 0;
@@ -538,72 +549,6 @@ namespace Filter
 				});
 			}
 		}
-
-		namespace archetype
-		{
-			using Archetype = RE::EffectArchetypes::ArchetypeID;
-			inline constexpr frozen::map<Archetype, std::string_view, 47> archetypeMap = {
-				{ Archetype::kNone, "None"sv },
-				{ Archetype::kValueModifier, "ValueMod"sv },
-				{ Archetype::kScript, "Script"sv },
-				{ Archetype::kDispel, "Dispel"sv },
-				{ Archetype::kCureDisease, "CureDisease"sv },
-				{ Archetype::kAbsorb, "Absorb"sv },
-				{ Archetype::kDualValueModifier, "DualValueMod"sv },
-				{ Archetype::kCalm, "Calm"sv },
-				{ Archetype::kDemoralize, "Demoralize"sv },
-				{ Archetype::kFrenzy, "Frenzy"sv },
-				{ Archetype::kDisarm, "Disarm"sv },
-				{ Archetype::kCommandSummoned, "CommandSummoned"sv },
-				{ Archetype::kInvisibility, "Invisibility"sv },
-				{ Archetype::kLight, "Light"sv },
-				{ Archetype::kDarkness, "Darkness"sv },
-				{ Archetype::kNightEye, "NightEye"sv },
-				{ Archetype::kLock, "Lock"sv },
-				{ Archetype::kOpen, "Open"sv },
-				{ Archetype::kBoundWeapon, "BoundWeapon"sv },
-				{ Archetype::kSummonCreature, "SummonCreature"sv },
-				{ Archetype::kDetectLife, "DetectLife"sv },
-				{ Archetype::kTelekinesis, "Telekinesis"sv },
-				{ Archetype::kParalysis, "Paralysis"sv },
-				{ Archetype::kReanimate, "Reanimate"sv },
-				{ Archetype::kSoulTrap, "SoulTrap"sv },
-				{ Archetype::kTurnUndead, "TurnUndead"sv },
-				{ Archetype::kGuide, "Guide"sv },
-				{ Archetype::kWerewolfFeed, "WerewolfFeed"sv },
-				{ Archetype::kCureParalysis, "CureParalysis"sv },
-				{ Archetype::kCureAddiction, "CureAddiction"sv },
-				{ Archetype::kCurePoison, "CurePoison"sv },
-				{ Archetype::kConcussion, "Concussion"sv },
-				{ Archetype::kValueAndParts, "ValueAndParts"sv },
-				{ Archetype::kAccumulateMagnitude, "AccumulateMagnitude"sv },
-				{ Archetype::kStagger, "Stagger"sv },
-				{ Archetype::kPeakValueModifier, "PeakValueMod"sv },
-				{ Archetype::kCloak, "Cloak"sv },
-				{ Archetype::kWerewolf, "Werewolf"sv },
-				{ Archetype::kSlowTime, "SlowTime"sv },
-				{ Archetype::kRally, "Rally"sv },
-				{ Archetype::kEnhanceWeapon, "EnhanceWeapon"sv },
-				{ Archetype::kSpawnHazard, "SpawnHazard"sv },
-				{ Archetype::kEtherealize, "Etherealize"sv },
-				{ Archetype::kBanish, "Banish"sv },
-				{ Archetype::kSpawnScriptedRef, "SpawnScriptedRef"sv },
-				{ Archetype::kDisguise, "Disguise"sv },
-				{ Archetype::kGrabActor, "GrabActor"sv },
-				{ Archetype::kVampireLord, "VampireLord"sv }
-			};
-
-			inline bool matches(Archetype a_archetype, const StringVec& a_strings)
-			{
-				if (auto it = archetypeMap.find(a_archetype); it != archetypeMap.end()) {
-					auto archetypeStr = it->second;
-					return std::ranges::any_of(a_strings, [&](const auto& str) {
-						return string::iequals(archetypeStr, str);
-					});
-				}
-				return false;
-			}
-		}
 	}
 
 	template <class T>
@@ -630,7 +575,7 @@ namespace Filter
 				result = true;
 			}
 			if constexpr (std::is_same_v<T, RE::EffectSetting>) {
-				if (!result && detail::archetype::matches(a_item.data.archetype, strings_NOT)) {
+				if (!result && Cache::Archetype::Matches(a_item.data.archetype, strings_NOT)) {
 					result = true;
 				}
 			}
@@ -650,7 +595,7 @@ namespace Filter
 				result = true;
 			}
 			if constexpr (std::is_same_v<T, RE::EffectSetting>) {
-				if (!result && detail::archetype::matches(a_item.data.archetype, strings_MATCH)) {
+				if (!result && Cache::Archetype::Matches(a_item.data.archetype, strings_MATCH)) {
 					result = true;
 				}
 			}
@@ -755,7 +700,7 @@ namespace Filter
 			if (isHostile && a_item.IsHostile() != *isHostile) {
 				return false;
 			}
-			if (*castingType && a_item.data.castingType != *castingType) {
+			if (castingType && a_item.data.castingType != *castingType) {
 				return false;
 			}
 			if (deliveryType && a_item.data.delivery != *deliveryType) {
