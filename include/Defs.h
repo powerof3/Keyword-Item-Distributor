@@ -18,7 +18,7 @@ namespace ITEM
 		kTotal
 	};
 
-	inline constexpr frozen::map<TYPE, const char*, ITEM::kTotal> map = {
+	inline constexpr frozen::map<TYPE, const char*, kTotal> map = {
 		{ kArmor, "armors" },
 		{ kWeapon, "weapons" },
 		{ kAmmo, "ammo" },
@@ -150,7 +150,7 @@ namespace TRAITS
 		BOOK::Traits>;
 }
 
-namespace INI
+namespace CONFIG
 {
 	enum TYPE : std::uint32_t
 	{
@@ -163,7 +163,6 @@ namespace INI
 		kChance
 	};
 }
-using INI_TYPE = INI::TYPE;
 
 namespace DATA
 {
@@ -177,7 +176,17 @@ namespace DATA
 		kCount
 	};
 }
-using DATA_TYPE = DATA::TYPE;
+
+namespace Lookup
+{
+	namespace detail
+	{
+		inline bool is_mod_name(const std::string& a_str)
+		{
+			return a_str.rfind(".esp") != std::string::npos || a_str.rfind(".esl") != std::string::npos || a_str.rfind(".esm ") != std::string::npos;
+		}
+	}
+}
 
 using FormIDPair = std::pair<
 	std::optional<RE::FormID>,
@@ -206,3 +215,6 @@ using KeywordData = std::tuple<
 	Chance,
 	Count>;
 using KeywordDataVec = std::vector<KeywordData>;
+
+extern std::map<ITEM::TYPE, INIDataVec> INIs;
+extern std::map<ITEM::TYPE, KeywordDataVec> Keywords;

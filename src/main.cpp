@@ -1,4 +1,6 @@
-#include "Distributor.h"
+#include "Distribute.h"
+#include "LookupConfigs.h"
+#include "LookupForms.h"
 
 namespace MessageHandler
 {
@@ -21,10 +23,9 @@ namespace MessageHandler
 	void Distribute(SKSE::MessagingInterface::Message* a_message)
 	{
 		if (a_message->type == SKSE::MessagingInterface::kDataLoaded) {
-			if (Lookup::GetForms()) {
+			if (Lookup::Forms::GetForms()) {
 				Distribute::AddKeywords();
 			}
-
 			detail::send_event();
 		}
 	}
@@ -82,7 +83,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 	SKSE::Init(a_skse);
 
 	auto messaging = SKSE::GetMessagingInterface();
-	if (INI::Read()) {
+	if (Lookup::Config::Read()) {
 		messaging->RegisterListener(MessageHandler::Distribute);
 	} else {
 		messaging->RegisterListener(MessageHandler::NoDistribute);

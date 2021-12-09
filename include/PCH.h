@@ -21,4 +21,5 @@ using namespace std::literals;
 
 using RNG = SKSE::stl::RNG;
 
+#include "Defs.h"
 #include "Version.h"

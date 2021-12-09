@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Defs.h"
-
 //implements https://github.com/Ryan-rsm-McKenzie/CCExtender/blob/master/src/EditorIDCache.h
 namespace Cache
 {
@@ -50,7 +48,7 @@ namespace Cache
 			{ RE::FormType::Faction, "Faction"sv }
 		};
 
-		std::string GetString(const RE::FormType a_type);
+		std::string GetString(RE::FormType a_type);
 	}
 
 	namespace Item
