@@ -549,6 +549,25 @@ namespace Filter
 				});
 			}
 		}
+
+		namespace actorvalue
+		{
+			inline bool matches(const RE::ActorValue a_skill, const StringVec& a_strings)
+			{
+				if (a_skill == RE::ActorValue::kNone) {
+					return false;
+				}
+
+				const auto avInfo = RE::ActorValueList::GetSingleton()->GetActorValue(a_skill);
+				if (!avInfo) {
+					return false;
+				}
+
+				return std::ranges::any_of(a_strings, [&](const auto& str) {
+					return string::iequals(avInfo->enumName, str);
+				});
+			}
+		}
 	}
 
 	template <class T>
@@ -578,6 +597,10 @@ namespace Filter
 				if (!result && Cache::Archetype::Matches(a_item.data.archetype, strings_NOT)) {
 					result = true;
 				}
+			} else if constexpr (std::is_same_v<T, RE::TESObjectBOOK>) {
+				if (!result && detail::actorvalue::matches(a_item.GetSkill(), strings_NOT)) {
+					result = true;
+				}
 			}
 			if (result) {
 				return false;
@@ -596,6 +619,10 @@ namespace Filter
 			}
 			if constexpr (std::is_same_v<T, RE::EffectSetting>) {
 				if (!result && Cache::Archetype::Matches(a_item.data.archetype, strings_MATCH)) {
+					result = true;
+				}
+			} else if constexpr (std::is_same_v<T, RE::TESObjectBOOK>) {
+				if (!result && detail::actorvalue::matches(a_item.GetSkill(), strings_MATCH)) {
 					result = true;
 				}
 			}
