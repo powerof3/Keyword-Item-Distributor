@@ -82,7 +82,7 @@ namespace Filter
 					}
 				case RE::FormType::Spell:
 					{
-						const auto book = a_item->As<RE::TESObjectBOOK>();
+				        const auto book = a_item->As<RE::TESObjectBOOK>();
 						return book && book->GetSpell() == a_filter;
 					}
 				default:
@@ -163,6 +163,22 @@ namespace Filter
 					return string::iequals(avInfo->enumName, str);
 				});
 			}
+
+			inline bool matches(const RE::SpellItem* a_spell, const StringVec& a_strings)
+			{
+				if (!a_spell) {
+					return false;
+				}
+
+				const auto avInfo = RE::ActorValueList::GetSingleton()->GetActorValue(a_spell->GetAssociatedSkill());
+				if (!avInfo) {
+					return false;
+				}
+
+				return std::ranges::any_of(a_strings, [&](const auto& str) {
+					return string::iequals(avInfo->enumName, str);
+				});
+			}
 		}
 	}
 
@@ -176,70 +192,52 @@ namespace Filter
 		}
 
 		const std::string name = a_item.GetName();
-		const std::string editorID = Cache::EditorID::GetSingleton()->GetEditorID(a_item.GetFormID());
 
-		if (!strings_NOT.empty()) {
+	    const auto get_match = [&](const StringVec& a_strings) {
 			bool result = false;
-			if (!name.empty() && detail::name::matches(name, strings_NOT)) {
+		    if (!name.empty() && detail::name::matches(name, a_strings)) {
 				result = true;
 			}
-			if (!result && !editorID.empty() && detail::name::matches(editorID, strings_NOT)) {
-				result = true;
-			}
-			if (!result && detail::keyword::matches(a_item, strings_NOT)) {
+			if (!result && detail::keyword::matches(a_item, a_strings)) {
 				result = true;
 			}
 			if constexpr (std::is_same_v<T, RE::EffectSetting>) {
-				if (!result && Cache::Archetype::Matches(a_item.data.archetype, strings_NOT)) {
+				if (!result && Cache::Archetype::Matches(a_item.data.archetype, a_strings)) {
 					result = true;
 				}
 			} else if constexpr (std::is_same_v<T, RE::TESObjectBOOK>) {
-				if (!result && detail::actorvalue::matches(a_item.GetSkill(), strings_NOT)) {
+				if (!result && detail::actorvalue::matches(a_item.GetSkill(), a_strings) || detail::actorvalue::matches(a_item.GetSpell(), a_strings)) {
 					result = true;
 				}
 			}
-			if (result) {
-				return false;
-			}
-		}
-		if (!strings_MATCH.empty()) {
-			bool result = false;
-			if (!name.empty() && detail::name::matches(name, strings_MATCH)) {
-				result = true;
-			}
-			if (!result && !editorID.empty() && detail::name::matches(editorID, strings_MATCH)) {
-				result = true;
-			}
-			if (!result && detail::keyword::matches(a_item, strings_MATCH)) {
-				result = true;
-			}
-			if constexpr (std::is_same_v<T, RE::EffectSetting>) {
-				if (!result && Cache::Archetype::Matches(a_item.data.archetype, strings_MATCH)) {
-					result = true;
-				}
-			} else if constexpr (std::is_same_v<T, RE::TESObjectBOOK>) {
-				if (!result && detail::actorvalue::matches(a_item.GetSkill(), strings_MATCH)) {
-					result = true;
-				}
-			}
-			if (!result) {
-				return false;
-			}
-		}
-		if (!strings_ANY.empty()) {
+			return result;
+		};
+
+	    const auto get_match_Any = [&]() {
 			bool result = false;
 			if (!name.empty() && detail::name::contains(name, strings_ANY)) {
 				result = true;
 			}
-			if (!result && !editorID.empty() && detail::name::contains(editorID, strings_ANY)) {
-				result = true;
+			if (!result){
+				const auto editorID = Cache::EditorID::GetSingleton()->GetEditorID(a_item.GetFormID());
+				if (detail::name::contains(editorID, strings_ANY)) {
+					result = true;
+				}
 			}
 			if (!result && detail::keyword::contains(a_item, strings_ANY)) {
 				result = true;
 			}
-			if (!result) {
-				return false;
-			}
+			return result;
+		};
+
+		if (!strings_NOT.empty() && get_match(strings_NOT)) {
+			return false;
+		}
+		if (!strings_MATCH.empty() && !get_match(strings_MATCH)) {
+			return false;
+		}
+		if (!strings_ANY.empty() && !get_match_Any()) {
+			return false;
 		}
 
 		return true;

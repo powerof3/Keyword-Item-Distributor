@@ -32,8 +32,9 @@ namespace Cache
 
 	namespace FormType
 	{
-		inline constexpr frozen::map<RE::FormType, std::string_view, 13> map = {
-			{ RE::FormType::Armor, "Armor"sv },
+		inline constexpr frozen::map<RE::FormType, std::string_view, 15> map = {
+			//types
+		    { RE::FormType::Armor, "Armor"sv },
 			{ RE::FormType::Weapon, "Weapon"sv },
 			{ RE::FormType::Ammo, "Ammo"sv },
 			{ RE::FormType::MagicEffect, "Magic Effect"sv },
@@ -41,11 +42,14 @@ namespace Cache
 			{ RE::FormType::Scroll, "Scroll"sv },
 			{ RE::FormType::Location, "Location"sv },
 			{ RE::FormType::Ingredient, "Ingredient"sv },
-			{ RE::FormType::EffectShader, "Effect Shader"sv },
+			{ RE::FormType::Book, "Book"sv },
+			//filters
+		    { RE::FormType::EffectShader, "Effect Shader"sv },
 			{ RE::FormType::ReferenceEffect, "Visual Effect"sv },
 			{ RE::FormType::ArtObject, "Art Object"sv },
 			{ RE::FormType::MusicType, "MusicType"sv },
-			{ RE::FormType::Faction, "Faction"sv }
+			{ RE::FormType::Faction, "Faction"sv },
+		    { RE::FormType::Spell, "Spell"sv }
 		};
 
 		std::string GetString(RE::FormType a_type);

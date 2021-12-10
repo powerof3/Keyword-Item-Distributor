@@ -179,7 +179,16 @@ namespace DATA
 
 namespace Lookup
 {
-	namespace detail
+	enum FORMID_TYPE : std::uint32_t
+	{
+		kNone = 0,
+		kFormIDMod,
+		kMod,
+		kFormID,
+		kEditorID
+	};
+
+    namespace detail
 	{
 		inline bool is_mod_name(const std::string& a_str)
 		{

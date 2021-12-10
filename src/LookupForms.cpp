@@ -15,7 +15,9 @@ bool Lookup::Forms::GetForms()
 			Keywords[type] = KeywordDataVec{};
 		}
 		
-		for (auto& [type, record] : ITEM::map) {
+		Cache::EditorID::GetSingleton()->FillMap();
+
+	    for (auto& [type, record] : ITEM::map) {
 			get_forms(dataHandler, INIs[type], Keywords[type]);
 
 			if (!Keywords[type].empty()) {

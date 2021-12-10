@@ -13,23 +13,47 @@ namespace Lookup::Config
                        std::vector<std::string>();
 		}
 
-		inline FormIDPair get_formID(const std::string& a_str)
+		inline FORMID_TYPE get_formID_type(const std::string& a_str)
 		{
 			if (a_str.find("~"sv) != std::string::npos) {
-				auto splitID = string::split(a_str, "~");
-				return std::make_pair(
-					string::lexical_cast<RE::FormID>(splitID.at(CONFIG::kFormID), true),
-					splitID.at(CONFIG::kESP));
+				return kFormIDMod;
 			}
-            if (Lookup::detail::is_mod_name(a_str) || !string::is_only_hex(a_str)) {
-                return std::make_pair(
-                    std::nullopt,
-                    a_str);
-            }
-            return std::make_pair(
-                string::lexical_cast<RE::FormID>(a_str, true),
-                std::nullopt);
-        }
+			if (Lookup::detail::is_mod_name(a_str)) {
+				return kMod;
+			}
+			return string::is_only_hex(a_str) ? kFormID : kEditorID;
+		}
+
+		inline FormIDPair get_formID(const FORMID_TYPE a_type, const std::string& a_str)
+		{
+			switch (a_type) {
+			case kFormIDMod:
+				{
+					auto splitID = string::split(a_str, "~");
+					return std::make_pair(
+						string::lexical_cast<RE::FormID>(splitID.at(CONFIG::kFormID), true),
+						splitID.at(CONFIG::kESP));
+				}
+			case kMod:
+			case kEditorID:
+				return std::make_pair(
+					std::nullopt,
+					a_str);
+			case kFormID:
+				return std::make_pair(
+					string::lexical_cast<RE::FormID>(a_str, true),
+					std::nullopt);
+			default:
+				return FormIDPair{};
+			}
+		}
+
+		inline FormIDPair get_formID(const std::string& a_str)
+		{
+			return get_formID(
+				get_formID_type(a_str),
+				a_str);
+		}
 
 		template <class T>
 		std::pair<T, T> get_minmax_values(std::string& a_str)
@@ -71,19 +95,8 @@ namespace Lookup::Config
 		std::variant<FormIDPair, std::string> item_ID;
 		try {
 			auto& formSection = sections.at(CONFIG::kFormID);
-			if (formSection.find('~') != std::string::npos || string::is_only_hex(formSection)) {
-				FormIDPair pair;
-				pair.second = std::nullopt;
-
-				if (string::is_only_hex(formSection)) {
-					// formID
-					pair.first = string::lexical_cast<RE::FormID>(formSection, true);
-				} else {
-					// formID~esp
-					pair = detail::get_formID(formSection);
-				}
-
-				item_ID.emplace<FormIDPair>(pair);
+			if (const auto type = detail::get_formID_type(formSection); type != kEditorID) {
+				item_ID.emplace<FormIDPair>(detail::get_formID(type, formSection));
 			} else {
 				item_ID.emplace<std::string>(formSection);
 			}
@@ -113,16 +126,18 @@ namespace Lookup::Config
 				if (str.find("+"sv) != std::string::npos) {
 					auto strings = detail::split_sub_string(str, "+");
 
-					strings_ALL.insert(strings_ALL.end(), strings.begin(), strings.end());
-
-					std::ranges::transform(strings, std::back_inserter(filterIDs_ALL), [](auto const& filter_str) {
+					std::ranges::copy_if(strings, std::back_inserter(strings_ALL), [](const auto& string_str) {
+						return detail::get_formID_type(string_str) == kEditorID;
+					});
+					std::ranges::transform(strings, std::back_inserter(filterIDs_ALL), [](const auto& filter_str) {
 						return detail::get_formID(filter_str);
 					});
-
 				} else if (str.at(0) == '-') {
 					str.erase(0, 1);
 
-					strings_NOT.emplace_back(str);
+					if (detail::get_formID_type(str) == kEditorID) {
+						strings_NOT.emplace_back(str);
+					}
 					filterIDs_NOT.emplace_back(detail::get_formID(str));
 
 				} else if (str.at(0) == '*') {
@@ -130,7 +145,9 @@ namespace Lookup::Config
 					strings_ANY.emplace_back(str);
 
 				} else {
-					strings_MATCH.emplace_back(str);
+					if (detail::get_formID_type(str) == kEditorID) {
+						strings_MATCH.emplace_back(str);
+					}
 					filterIDs_MATCH.emplace_back(detail::get_formID(str));
 				}
 			}
@@ -139,7 +156,7 @@ namespace Lookup::Config
 
 		//TRAITS
 		try {
-            for (auto split_str = detail::split_sub_string(sections.at(CONFIG::kTraits)); auto& str : split_str) {
+			for (auto split_str = detail::split_sub_string(sections.at(CONFIG::kTraits)); auto& str : split_str) {
 				switch (type) {
 				case ITEM::kArmor:
 					{

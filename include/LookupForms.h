@@ -6,10 +6,10 @@ namespace Lookup::Forms
 {
 	namespace detail
 	{
-		inline bool formID_to_form(RE::TESDataHandler* a_dataHandler, const FormIDPairVec& a_formIDVec, FormVec& a_formVec)
+		inline void formID_to_form(RE::TESDataHandler* a_dataHandler, const FormIDPairVec& a_formIDVec, FormVec& a_formVec, StringVec& a_stringVec)
 		{
 			if (a_formIDVec.empty()) {
-				return true;
+				return;
 			}
 			for (auto& [formID, modName] : a_formIDVec) {
 				if (modName && !formID) {
@@ -26,11 +26,14 @@ namespace Lookup::Forms
 							const auto formType = filterForm->GetFormType();
 							if (const auto type = Cache::FormType::GetString(formType); !type.empty()) {
 								a_formVec.push_back(filterForm);
+
+								//remove editorIDs from strings
+								std::erase(a_stringVec, *modName);
 							} else {
 								logger::error("			Filter ({}) SKIP - invalid formtype ({})", *modName, formType);
 							}
 						} else {
-							logger::error("			Filter ({}) SKIP - form doesn't exist", *modName);
+							logger::error("			Filter ({}) SKIP - invalid editorID", *modName);
 						}
 					}
 				} else if (formID) {
@@ -49,11 +52,10 @@ namespace Lookup::Forms
 					}
 				}
 			}
-			return !a_formVec.empty();
 		}
 	}
 
-	inline void get_forms(RE::TESDataHandler* a_dataHandler, const INIDataVec& a_INIDataVec, KeywordDataVec& a_keywordDataVec)
+	inline void get_forms(RE::TESDataHandler* a_dataHandler, INIDataVec& a_INIDataVec, KeywordDataVec& a_keywordDataVec)
 	{
 		if (a_INIDataVec.empty()) {
 			return;
@@ -106,18 +108,9 @@ namespace Lookup::Forms
 				}
 			}
 
-			bool invalidEntry = false;
-
 			std::array<FormVec, 3> filterForms;
 			for (std::uint32_t i = 0; i < filterForms.size(); i++) {
-				if (!detail::formID_to_form(a_dataHandler, filterIDs_ini[i], filterForms[i])) {
-					invalidEntry = true;
-					break;
-				}
-			}
-
-			if (invalidEntry) {
-				continue;
+				detail::formID_to_form(a_dataHandler, filterIDs_ini[i], filterForms[i], strings_ini[i]);
 			}
 
 			std::uint32_t count = 0;
