@@ -18,7 +18,7 @@ bool Lookup::Forms::GetForms()
 		Cache::EditorID::GetSingleton()->FillMap();
 
 	    for (auto& [type, record] : ITEM::map) {
-			get_forms(dataHandler, INIs[type], Keywords[type]);
+			get_forms(dataHandler, type, INIs[type], Keywords[type]);
 
 			if (!Keywords[type].empty()) {
 				result = true;

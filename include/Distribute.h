@@ -85,6 +85,11 @@ namespace Filter
 				        const auto book = a_item->As<RE::TESObjectBOOK>();
 						return book && book->GetSpell() == a_filter;
 					}
+				case RE::FormType::Keyword:
+					{
+						const auto keywordForm = a_item->As<RE::BGSKeywordForm>();
+						return keywordForm && keywordForm->HasKeyword(a_filter->GetFormID());
+					}
 				default:
 					return false;
 				}

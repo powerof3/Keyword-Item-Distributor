@@ -32,27 +32,28 @@ namespace Cache
 
 	namespace FormType
 	{
-		inline constexpr frozen::map<RE::FormType, std::string_view, 15> map = {
+		inline constexpr frozen::set<RE::FormType, 16> set{
 			//types
-		    { RE::FormType::Armor, "Armor"sv },
-			{ RE::FormType::Weapon, "Weapon"sv },
-			{ RE::FormType::Ammo, "Ammo"sv },
-			{ RE::FormType::MagicEffect, "Magic Effect"sv },
-			{ RE::FormType::AlchemyItem, "Potion"sv },
-			{ RE::FormType::Scroll, "Scroll"sv },
-			{ RE::FormType::Location, "Location"sv },
-			{ RE::FormType::Ingredient, "Ingredient"sv },
-			{ RE::FormType::Book, "Book"sv },
+			{ RE::FormType::Armor },
+			{ RE::FormType::Weapon },
+			{ RE::FormType::Ammo },
+			{ RE::FormType::MagicEffect },
+			{ RE::FormType::AlchemyItem },
+			{ RE::FormType::Scroll },
+			{ RE::FormType::Location },
+			{ RE::FormType::Ingredient },
+			{ RE::FormType::Book },
 			//filters
-		    { RE::FormType::EffectShader, "Effect Shader"sv },
-			{ RE::FormType::ReferenceEffect, "Visual Effect"sv },
-			{ RE::FormType::ArtObject, "Art Object"sv },
-			{ RE::FormType::MusicType, "MusicType"sv },
-			{ RE::FormType::Faction, "Faction"sv },
-		    { RE::FormType::Spell, "Spell"sv }
+			{ RE::FormType::Keyword },
+			{ RE::FormType::EffectShader },
+			{ RE::FormType::ReferenceEffect },
+			{ RE::FormType::ArtObject },
+			{ RE::FormType::MusicType },
+			{ RE::FormType::Faction },
+			{ RE::FormType::Spell }
 		};
 
-		std::string GetString(RE::FormType a_type);
+		bool IsFilter(RE::FormType a_type);
 	}
 
 	namespace Item
@@ -69,7 +70,20 @@ namespace Cache
 			{ "Book"sv, ITEM::kBook }
 		};
 
+		inline constexpr frozen::map<ITEM::TYPE, std::string_view, 9> reverse_map = {
+			{ ITEM::kArmor, "Armor"sv },
+			{ ITEM::kWeapon, "Weapon"sv },
+			{ ITEM::kAmmo, "Ammo"sv },
+			{ ITEM::kMagicEffect, "Magic Effect"sv },
+			{ ITEM::kPotion, "Potion"sv },
+			{ ITEM::kScroll, "Scroll"sv },
+			{ ITEM::kLocation, "Location"sv },
+			{ ITEM::kIngredient, "Ingredient"sv },
+			{ ITEM::kBook, "Book"sv }
+		};
+
 		ITEM::TYPE GetType(const std::string& a_type);
+		std::string GetType(ITEM::TYPE a_type);
 	}
 
 	namespace Archetype
