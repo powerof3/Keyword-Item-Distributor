@@ -24,16 +24,16 @@ namespace Lookup::Forms
 						auto filterForm = RE::TESForm::LookupByEditorID(*modName);
 						if (filterForm) {
 							const auto formType = filterForm->GetFormType();
-							if (const auto type = Cache::FormType::GetString(formType); !type.empty()) {
+							if (Cache::FormType::IsFilter(formType)){
 								a_formVec.push_back(filterForm);
 
 								//remove editorIDs from strings
 								std::erase(a_stringVec, *modName);
 							} else {
-								logger::error("			Filter ({}) SKIP - invalid formtype ({})", *modName, formType);
+								logger::error("			Filter ({}) INFO - invalid formtype ({})", *modName, formType);
 							}
 						} else {
-							logger::error("			Filter ({}) SKIP - invalid editorID", *modName);
+							logger::error("			Filter ({}) INFO - invalid editorID, treating string as name or other", *modName);
 						}
 					}
 				} else if (formID) {
@@ -42,7 +42,7 @@ namespace Lookup::Forms
                                           RE::TESForm::LookupByID(*formID);
 					if (filterForm) {
 						const auto formType = filterForm->GetFormType();
-						if (const auto type = Cache::FormType::GetString(formType); !type.empty()) {
+						if (Cache::FormType::IsFilter(formType)) {
 							a_formVec.push_back(filterForm);
 						} else {
 							logger::error("			Filter [0x{:X}] ({}) SKIP - invalid formtype ({})", *formID, modName.value_or(""), formType);
@@ -55,13 +55,13 @@ namespace Lookup::Forms
 		}
 	}
 
-	inline void get_forms(RE::TESDataHandler* a_dataHandler, INIDataVec& a_INIDataVec, KeywordDataVec& a_keywordDataVec)
+	inline void get_forms(RE::TESDataHandler* a_dataHandler, ITEM::TYPE a_type, INIDataVec& a_INIDataVec, KeywordDataVec& a_keywordDataVec)
 	{
 		if (a_INIDataVec.empty()) {
 			return;
 		}
 
-		logger::info("	Starting lookup");
+		logger::info("	Starting {} lookup", Cache::Item::GetType(a_type));
 
 		for (auto& [formIDPair_ini, strings_ini, filterIDs_ini, traits_ini, chance_ini] : a_INIDataVec) {
 			RE::BGSKeyword* keyword = nullptr;

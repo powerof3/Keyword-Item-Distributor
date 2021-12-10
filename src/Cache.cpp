@@ -34,16 +34,21 @@ namespace Cache
 		return it != _formIDToEditorIDMap.end() ? it->second : std::string();
 	}
 
-	std::string FormType::GetString(const RE::FormType a_type)
+	bool FormType::IsFilter(RE::FormType a_type)
 	{
-		auto it = map.find(a_type);
-		return it != map.end() ? std::string(it->second) : std::string();
+		return set.find(a_type) != set.end();
 	}
 
 	ITEM::TYPE Item::GetType(const std::string& a_type)
 	{
 		auto it = map.find(a_type);
 		return it != map.end() ? it->second : ITEM::TYPE::kNone;
+	}
+
+	std::string Item::GetType(ITEM::TYPE a_type)
+	{
+		auto it = reverse_map.find(a_type);
+		return it != reverse_map.end() ? std::string(it->second) : std::string();
 	}
 }
 
