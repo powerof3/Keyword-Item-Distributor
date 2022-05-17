@@ -1,6 +1,6 @@
 {
   "name": "kid",
-  "version-string": "1.3.0",
+  "version-string": "2.0.0",
   "description": "Keyword Item Distributor",
   "homepage": "https://github.com/powerof3/Keyword-Item-Distributor",
   "license": "MIT",
@@ -10,6 +10,7 @@
     "robin-hood-hashing",
     "rsm-binary-io",
     "simpleini",
-    "spdlog"
+    "spdlog",
+    "xbyak"
   ]
 }

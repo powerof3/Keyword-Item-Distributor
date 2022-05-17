@@ -14,10 +14,10 @@ bool Lookup::Forms::GetForms()
 			auto type = static_cast<ITEM::TYPE>(i);
 			Keywords[type] = KeywordDataVec{};
 		}
-		
+
 		Cache::EditorID::GetSingleton()->FillMap();
 
-	    for (auto& [type, record] : ITEM::map) {
+		for (const auto& type : ITEM::map | std::views::keys) {
 			get_forms(dataHandler, type, INIs[type], Keywords[type]);
 
 			if (!Keywords[type].empty()) {
@@ -29,13 +29,12 @@ bool Lookup::Forms::GetForms()
 	if (result) {
 		logger::info("{:*^30}", "PROCESSING");
 
-
 		for (auto& [type, record] : ITEM::map) {
 			if (!INIs[type].empty()) {
 				logger::info("	Adding {}/{} keywords to {}", INIs[type].size(), Keywords[type].size(), record);
 			}
 		}
 	}
-	
+
 	return result;
 }

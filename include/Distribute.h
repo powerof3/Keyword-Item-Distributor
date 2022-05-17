@@ -42,12 +42,19 @@ namespace Filter
 				case RE::FormType::Scroll:
 				case RE::FormType::Ingredient:
 				case RE::FormType::Book:
+				case RE::FormType::Misc:
 					return a_item == a_filter;
 				case RE::FormType::Location:
 					{
 						const auto loc = a_item->As<RE::BGSLocation>();
 						const auto filterLoc = a_filter->As<RE::BGSLocation>();
 						return loc && filterLoc && (loc == filterLoc || loc->IsChild(filterLoc));
+					}
+				case RE::FormType::Projectile:
+					{
+						const auto ammo = a_item->As<RE::TESAmmo>();
+						const auto filterProj = a_filter->As<RE::BGSProjectile>();
+						return ammo && ammo->data.projectile == filterProj;
 					}
 				case RE::FormType::MagicEffect:
 					if (const auto spell = a_item->As<RE::MagicItem>(); spell) {
@@ -88,7 +95,7 @@ namespace Filter
 				case RE::FormType::Keyword:
 					{
 						const auto keywordForm = a_item->As<RE::BGSKeywordForm>();
-						return keywordForm && keywordForm->HasKeyword(a_filter->GetFormID());
+						return keywordForm && keywordForm->HasKeywordID(a_filter->GetFormID());
 					}
 				default:
 					return false;
@@ -210,8 +217,14 @@ namespace Filter
 				if (!result && Cache::Archetype::Matches(a_item.data.archetype, a_strings)) {
 					result = true;
 				}
+				if (!result && detail::actorvalue::matches(a_item.GetMagickSkill(), a_strings)) {
+					result = true;
+				}
 			} else if constexpr (std::is_same_v<T, RE::TESObjectBOOK>) {
-				if (!result && detail::actorvalue::matches(a_item.GetSkill(), a_strings) || detail::actorvalue::matches(a_item.GetSpell(), a_strings)) {
+				if (!result && detail::actorvalue::matches(a_item.GetSkill(), a_strings)) {
+					result = true;
+				}
+				if (!result && detail::actorvalue::matches(a_item.GetSpell(), a_strings)) {
 					result = true;
 				}
 			}
@@ -273,7 +286,7 @@ namespace Filter
 		const auto& traits = std::get<DATA::kTraits>(a_keywordData);
 
 		if constexpr (std::is_same_v<T, RE::TESObjectARMO>) {
-			const auto& [enchanted, templated, ARValue] = std::get<TRAITS::kArmor>(traits);
+			const auto& [enchanted, templated, ARValue, armorType] = std::get<TRAITS::kArmor>(traits);
 			if (enchanted && (a_item.formEnchanting != nullptr) != *enchanted) {
 				return false;
 			}
@@ -293,6 +306,9 @@ namespace Filter
 				} else if (max < RE::NI_INFINITY && AR > max) {
 					return false;
 				}
+			}
+			if (armorType && a_item.GetArmorType() != *armorType) {
+				return false;
 			}
 		} else if constexpr (std::is_same_v<T, RE::TESObjectWEAP>) {
 			const auto& [enchanted, templated, weightValue] = std::get<TRAITS::kWeapon>(traits);
@@ -402,6 +418,26 @@ namespace Distribute
 			if (const auto keyword = std::get<DATA::kForm>(keywordData); keyword) {
 				if (const auto keywordForm = a_item.template As<RE::BGSKeywordForm>(); keywordForm && keywordForm->AddKeyword(keyword)) {
 					++std::get<DATA::kCount>(keywordData);
+				}
+			}
+		}
+	}
+
+	template <class T>
+	void distribute(const ITEM::TYPE a_type) {
+	    if (auto& keywords = Keywords[a_type]; !keywords.empty()) {
+			const auto formArray = RE::TESDataHandler::GetSingleton()->GetFormArray<T>();
+			for (const auto& item : formArray) {
+				if (item) {
+					add_keyword(*item, keywords);
+				}
+			}
+			for (auto& formData : keywords) {
+				auto keyword = std::get<DATA::kForm>(formData);
+				auto count = std::get<DATA::kCount>(formData);
+
+				if (keyword) {
+					logger::info("{} [0x{:X}] added to {}/{} {}", keyword->GetFormEditorID(), keyword->GetFormID(), count, formArray.size(), ITEM::map.find(a_type)->second);
 				}
 			}
 		}

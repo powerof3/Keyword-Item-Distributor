@@ -9,6 +9,7 @@
 #include <SimpleIni.h>
 #include <frozen/map.h>
 #include <frozen/set.h>
+#include <ranges>
 #include <robin_hood.h>
 #include <spdlog/sinks/basic_file_sink.h>
 
@@ -21,6 +22,11 @@ namespace string = SKSE::stl::string;
 using namespace std::literals;
 
 using RNG = SKSE::stl::RNG;
+
+namespace stl
+{
+	using namespace SKSE::stl;
+}
 
 #include "Defs.h"
 #include "Version.h"

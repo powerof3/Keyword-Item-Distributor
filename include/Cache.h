@@ -32,25 +32,27 @@ namespace Cache
 
 	namespace FormType
 	{
-		inline constexpr frozen::set<RE::FormType, 16> set{
+		inline constexpr frozen::set<RE::FormType, 18> set{
 			//types
-			{ RE::FormType::Armor },
-			{ RE::FormType::Weapon },
-			{ RE::FormType::Ammo },
-			{ RE::FormType::MagicEffect },
-			{ RE::FormType::AlchemyItem },
-			{ RE::FormType::Scroll },
-			{ RE::FormType::Location },
-			{ RE::FormType::Ingredient },
-			{ RE::FormType::Book },
+			RE::FormType::Armor,
+			RE::FormType::Weapon,
+			RE::FormType::Ammo,
+			RE::FormType::MagicEffect,
+			RE::FormType::AlchemyItem,
+			RE::FormType::Scroll,
+			RE::FormType::Location,
+			RE::FormType::Ingredient,
+			RE::FormType::Book,
+			RE::FormType::Misc,
 			//filters
-			{ RE::FormType::Keyword },
-			{ RE::FormType::EffectShader },
-			{ RE::FormType::ReferenceEffect },
-			{ RE::FormType::ArtObject },
-			{ RE::FormType::MusicType },
-			{ RE::FormType::Faction },
-			{ RE::FormType::Spell }
+			RE::FormType::Keyword,
+			RE::FormType::EffectShader,
+			RE::FormType::ReferenceEffect,
+			RE::FormType::ArtObject,
+			RE::FormType::MusicType,
+			RE::FormType::Faction,
+			RE::FormType::Spell,
+			RE::FormType::Projectile
 		};
 
 		bool IsFilter(RE::FormType a_type);
@@ -58,7 +60,7 @@ namespace Cache
 
 	namespace Item
 	{
-		inline constexpr frozen::map<std::string_view, ITEM::TYPE, 9> map = {
+		inline constexpr frozen::map<std::string_view, ITEM::TYPE, ITEM::kTotal> map = {
 			{ "Armor"sv, ITEM::kArmor },
 			{ "Weapon"sv, ITEM::kWeapon },
 			{ "Ammo"sv, ITEM::kAmmo },
@@ -67,10 +69,11 @@ namespace Cache
 			{ "Scroll"sv, ITEM::kScroll },
 			{ "Location"sv, ITEM::kLocation },
 			{ "Ingredient"sv, ITEM::kIngredient },
-			{ "Book"sv, ITEM::kBook }
+			{ "Book"sv, ITEM::kBook },
+		    { "Misc Item"sv, ITEM::kMiscItem }
 		};
 
-		inline constexpr frozen::map<ITEM::TYPE, std::string_view, 9> reverse_map = {
+		inline constexpr frozen::map<ITEM::TYPE, std::string_view, ITEM::kTotal> reverse_map = {
 			{ ITEM::kArmor, "Armor"sv },
 			{ ITEM::kWeapon, "Weapon"sv },
 			{ ITEM::kAmmo, "Ammo"sv },
@@ -79,7 +82,8 @@ namespace Cache
 			{ ITEM::kScroll, "Scroll"sv },
 			{ ITEM::kLocation, "Location"sv },
 			{ ITEM::kIngredient, "Ingredient"sv },
-			{ ITEM::kBook, "Book"sv }
+			{ ITEM::kBook, "Book"sv },
+			{ ITEM::kMiscItem, "Misc Item"sv },
 		};
 
 		ITEM::TYPE GetType(const std::string& a_type);

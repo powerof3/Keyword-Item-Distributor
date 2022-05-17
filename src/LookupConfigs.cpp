@@ -1,5 +1,7 @@
 #include "LookupConfigs.h"
 
+#include <ranges>
+
 std::map<ITEM::TYPE, INIDataVec> INIs;
 
 bool Lookup::Config::Read()
@@ -42,8 +44,8 @@ bool Lookup::Config::Read()
 			continue;
 		}
 
-		if (auto values = ini.GetSection(""); values) {
-			for (auto& [key, entry] : *values) {
+		if (const auto values = ini.GetSection(""); values) {
+			for (const auto& entry : *values | std::views::values) {
 				auto [data, type] = parse_config(entry);
 				INIs[type].emplace_back(data);
 			}

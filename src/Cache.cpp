@@ -14,8 +14,10 @@ namespace Cache
 		const RE::BSReadLockGuard locker{ lock };
 		if (map) {
 			for (auto& [id, form] : *map) {
-				_editorIDToFormIDMap.emplace(id.c_str(), form->GetFormID());
-				_formIDToEditorIDMap.emplace(form->GetFormID(), id.c_str());
+				if (FormType::IsFilter(form->GetFormType())) {
+					_editorIDToFormIDMap.emplace(id.c_str(), form->GetFormID());
+					_formIDToEditorIDMap.emplace(form->GetFormID(), id.c_str());
+				}
 			}
 		}
 	}
@@ -54,7 +56,7 @@ namespace Cache
 
 bool Cache::Archetype::Matches(Archetype a_archetype, const StringVec& a_strings)
 {
-	if (auto it = archetypeMap.find(a_archetype); it != archetypeMap.end()) {
+	if (const auto it = archetypeMap.find(a_archetype); it != archetypeMap.end()) {
 		auto archetypeStr = it->second;
 		return std::ranges::any_of(a_strings, [&](const auto& str) {
 			return string::iequals(archetypeStr, str);

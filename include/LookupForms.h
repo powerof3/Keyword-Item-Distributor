@@ -21,10 +21,9 @@ namespace Lookup::Forms
 							logger::error("			Filter ({}) SKIP - mod cannot be found", *modName);
 						}
 					} else {
-						auto filterForm = RE::TESForm::LookupByEditorID(*modName);
-						if (filterForm) {
+						if (auto filterForm = RE::TESForm::LookupByEditorID(*modName); filterForm) {
 							const auto formType = filterForm->GetFormType();
-							if (Cache::FormType::IsFilter(formType)){
+							if (Cache::FormType::IsFilter(formType)) {
 								a_formVec.push_back(filterForm);
 
 								//remove editorIDs from strings
@@ -57,8 +56,8 @@ namespace Lookup::Forms
 
 	inline void get_forms(RE::TESDataHandler* a_dataHandler, ITEM::TYPE a_type, INIDataVec& a_INIDataVec, KeywordDataVec& a_keywordDataVec)
 	{
-		if (a_INIDataVec.empty()) {
-			return;
+	    if (a_INIDataVec.empty()) {
+		    return;
 		}
 
 		logger::info("	Starting {} lookup", Cache::Item::GetType(a_type));

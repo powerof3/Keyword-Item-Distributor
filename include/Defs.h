@@ -14,25 +14,30 @@ namespace ITEM
 		kLocation,
 		kIngredient,
 		kBook,
+		kMiscItem,
 
 		kTotal
 	};
 
-	inline constexpr frozen::map<TYPE, const char*, kTotal> map = {
-		{ kArmor, "armors" },
-		{ kWeapon, "weapons" },
-		{ kAmmo, "ammo" },
-		{ kMagicEffect, "magic effects" },
-		{ kPotion, "potions" },
-		{ kScroll, "scrolls" },
-		{ kLocation, "locations" },
-		{ kIngredient, "ingredients" },
-		{ kBook, "books" }
+	inline constexpr frozen::map<TYPE, std::string_view, kTotal> map = {
+		{ kArmor, "armors"sv },
+		{ kWeapon, "weapons"sv },
+		{ kAmmo, "ammo"sv },
+		{ kMagicEffect, "magic effects"sv },
+		{ kPotion, "potions"sv },
+		{ kScroll, "scrolls"sv },
+		{ kLocation, "locations"sv },
+		{ kIngredient, "ingredients"sv },
+		{ kBook, "books"sv },
+		{ kMiscItem, "misc items"sv }
 	};
 }
 
 namespace TRAITS
 {
+	template <class T>
+	using min_max = std::pair<T, T>;
+
 	enum TYPE : std::uint32_t
 	{
 		kArmor = 0,
@@ -53,13 +58,14 @@ namespace TRAITS
 			kEnchanted,
 			kTemplate,
 			kArmorRating,
+			kArmorType
 		};
 
 		using Traits = std::tuple<
 			std::optional<bool>,
 			std::optional<bool>,
-			std::optional<
-				std::pair<float, float>>>;
+			std::optional<min_max<float>>,
+			std::optional<RE::BIPED_MODEL::ArmorType>>;
 	}
 
 	namespace WEAP
@@ -74,8 +80,7 @@ namespace TRAITS
 		using Traits = std::tuple<
 			std::optional<bool>,
 			std::optional<bool>,
-			std::optional<
-				std::pair<float, float>>>;
+			std::optional<min_max<float>>>;
 	}
 
 	namespace AMMO
@@ -102,9 +107,7 @@ namespace TRAITS
 			std::optional<bool>,
 			std::optional<RE::MagicSystem::CastingType>,
 			std::optional<RE::MagicSystem::Delivery>,
-			std::optional<
-				std::pair<RE::ActorValue,
-					std::pair<std::int32_t, std::int32_t>>>>;
+			std::optional<std::pair<RE::ActorValue, min_max<std::int32_t>>>>;
 	}
 
 	namespace POTION
@@ -115,7 +118,9 @@ namespace TRAITS
 			kFood
 		};
 
-		using Traits = std::tuple<std::optional<bool>, std::optional<bool>>;
+		using Traits = std::tuple<
+			std::optional<bool>,
+			std::optional<bool>>;
 	}
 
 	namespace INGREDIENT
@@ -137,7 +142,10 @@ namespace TRAITS
 			kActorValue
 		};
 
-		using Traits = std::tuple<std::optional<bool>, std::optional<bool>, std::optional<RE::ActorValue>>;
+		using Traits = std::tuple<
+			std::optional<bool>,
+			std::optional<bool>,
+			std::optional<RE::ActorValue>>;
 	}
 
 	using Traits = std::tuple<
@@ -188,11 +196,11 @@ namespace Lookup
 		kEditorID
 	};
 
-    namespace detail
+	namespace detail
 	{
 		inline bool is_mod_name(const std::string& a_str)
 		{
-			return a_str.rfind(".esp") != std::string::npos || a_str.rfind(".esl") != std::string::npos || a_str.rfind(".esm ") != std::string::npos;
+			return a_str.contains(".esp") || a_str.contains(".esl") || a_str.contains(".esm") ;
 		}
 	}
 }

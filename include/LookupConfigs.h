@@ -60,8 +60,7 @@ namespace Lookup::Config
 		{
 			std::pair<T, T> minMax{ std::numeric_limits<T>::max(), std::numeric_limits<T>::max() };
 
-			auto sanitizedStr = string::remove_non_numeric(a_str);
-			if (auto values = string::split(sanitizedStr, " "); !values.empty()) {
+			if (const auto values = string::split(string::remove_non_numeric(a_str), " "); !values.empty()) {
 				if (values.size() > 1) {
 					minMax.first = string::lexical_cast<T>(values.at(0));
 					minMax.second = string::lexical_cast<T>(values.at(1));
@@ -76,8 +75,7 @@ namespace Lookup::Config
 		template <class T>
 		std::optional<T> get_single_value(std::string& a_str)
 		{
-			auto sanitizedStr = string::remove_non_numeric(a_str);
-			if (auto values = string::split(sanitizedStr, " "); !values.empty()) {
+			if (const auto values = string::split(string::remove_non_numeric(a_str), " "); !values.empty()) {
 				return string::lexical_cast<T>(values.at(0));
 			}
 			return std::nullopt;
@@ -111,7 +109,7 @@ namespace Lookup::Config
 		try {
 			const auto& typeStr = sections.at(CONFIG::kType);
 			if (!typeStr.empty()) {
-				type = Cache::Item::GetType(typeStr);
+			    type = Cache::Item::GetType(typeStr);
 			}
 		} catch (...) {
 		}
@@ -160,9 +158,15 @@ namespace Lookup::Config
 				switch (type) {
 				case ITEM::kArmor:
 					{
-						auto& [enchanted, templated, armorRating] = std::get<TRAITS::kArmor>(traits_ini);
-						if (str.find("AR") != std::string::npos) {
+						auto& [enchanted, templated, armorRating, armorType] = std::get<TRAITS::kArmor>(traits_ini);
+						if (str.contains("AR")) {
 							armorRating = detail::get_minmax_values<float>(str);
+						} else if (str == "HEAVY") {
+							armorType = RE::BIPED_MODEL::ArmorType::kHeavyArmor;
+						} else if (str == "LIGHT") {
+							armorType = RE::BIPED_MODEL::ArmorType::kLightArmor;
+						} else if (str == "CLOTHING") {
+							armorType = RE::BIPED_MODEL::ArmorType::kClothing;
 						} else if (str == "E") {
 							enchanted = true;
 						} else if (str == "-E") {
@@ -177,7 +181,7 @@ namespace Lookup::Config
 				case ITEM::kWeapon:
 					{
 						auto& [enchanted, templated, weight] = std::get<TRAITS::kWeapon>(traits_ini);
-						if (str.find('W') != std::string::npos) {
+						if (str.contains('W')) {
 							weight = detail::get_minmax_values<float>(str);
 						} else if (str == "E") {
 							enchanted = true;
@@ -203,14 +207,12 @@ namespace Lookup::Config
 				case ITEM::kMagicEffect:
 					{
 						auto& [isHostile, castingType, deliveryType, skillValue] = std::get<TRAITS::kMagicEffect>(traits_ini);
-						if (str.find('D') != std::string::npos) {
+						if (str.contains('D')) {
 							deliveryType = detail::get_single_value<RE::MagicSystem::Delivery>(str);
-						} else if (str.find("CT") != std::string::npos) {
+						} else if (str.contains("CT")) {
 							castingType = detail::get_single_value<RE::MagicSystem::CastingType>(str);
-						} else if (str.find('(') != std::string::npos) {
-							auto sanitizedStr = string::remove_non_numeric(str);
-							auto value = string::split(sanitizedStr, " ");
-							if (!value.empty()) {
+						} else if (str.contains('(')) {
+                            if (auto value = string::split(string::remove_non_numeric(str), " "); !value.empty()) {
 								auto skill = string::lexical_cast<RE::ActorValue>(value.at(0));
 								auto min = string::lexical_cast<std::int32_t>(value.at(1));
 								if (value.size() > 2) {
