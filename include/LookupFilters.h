@@ -25,13 +25,6 @@ namespace Filter
 
 		namespace form
 		{
-			inline bool has_effect(RE::MagicItem* a_item, RE::EffectSetting* a_mgef)
-			{
-				return std::ranges::any_of(a_item->effects, [&](const auto& effect) {
-					return effect && effect->baseEffect == a_mgef;
-				});
-			}
-
 			inline bool get_type(RE::TESForm* a_item, RE::TESForm* a_filter)
 			{
 				switch (a_filter->GetFormType()) {
@@ -60,11 +53,13 @@ namespace Filter
 					}
 				case RE::FormType::MagicEffect:
 					{
+						const auto mgef = static_cast<RE::EffectSetting*>(a_filter);
 						if (const auto spell = a_item->As<RE::MagicItem>(); spell) {
-							const auto mgef = static_cast<RE::EffectSetting*>(a_filter);
-							return mgef && has_effect(spell, mgef);
+							return std::ranges::any_of(spell->effects, [&](const auto& effect) {
+								return effect && effect->baseEffect == mgef;
+							});
 						}
-						return a_item == a_filter;
+						return a_item == mgef;
 					}
 				case RE::FormType::EffectShader:
 					{
@@ -120,9 +115,9 @@ namespace Filter
 				}
 			}
 
-			inline bool matches(RE::TESForm& a_item, const FormVec& a_forms)
+			inline bool matches(RE::TESForm& a_item, const FormVec& a_forms, bool a_matchesAll = false)
 			{
-				return std::ranges::any_of(a_forms, [&a_item](const auto& a_formFile) {
+				const auto get_form_or_file = [&a_item](const auto& a_formFile) {
 					if (std::holds_alternative<RE::TESForm*>(a_formFile)) {
 						auto form = std::get<RE::TESForm*>(a_formFile);
 						return form && get_type(&a_item, form);
@@ -132,22 +127,13 @@ namespace Filter
 						return file && file->IsFormInMod(a_item.GetFormID());
 					}
 					return false;
-				});
-			}
+				};
 
-			inline bool matches_ALL(RE::TESForm& a_item, const FormVec& a_forms)
-			{
-				return std::ranges::all_of(a_forms, [&a_item](const auto& a_formFile) {
-					if (std::holds_alternative<RE::TESForm*>(a_formFile)) {
-						auto form = std::get<RE::TESForm*>(a_formFile);
-						return form && get_type(&a_item, form);
-					}
-					if (std::holds_alternative<const RE::TESFile*>(a_formFile)) {
-						auto file = std::get<const RE::TESFile*>(a_formFile);
-						return file && file->IsFormInMod(a_item.GetFormID());
-					}
-					return false;
-				});
+				if (a_matchesAll) {
+					return std::ranges::all_of(a_forms, get_form_or_file);
+				} else {
+					return std::ranges::any_of(a_forms, get_form_or_file);
+				}
 			}
 		}
 
@@ -163,16 +149,16 @@ namespace Filter
 
 			inline bool matches(RE::TESForm& a_item, const StringVec& a_strings, bool a_matchesAll = false)
 			{
-				if (a_matchesAll) {
-					return std::ranges::all_of(a_strings, [&a_item](const auto& str) {
-						auto keywordForm = a_item.As<RE::BGSKeywordForm>();
-						return keywordForm && keywordForm->HasKeywordString(str);
-					});
-				}
-				return std::ranges::any_of(a_strings, [&a_item](const auto& str) {
+				const auto has_keyword = [&a_item](const auto& str) {
 					auto keywordForm = a_item.As<RE::BGSKeywordForm>();
 					return keywordForm && keywordForm->HasKeywordString(str);
-				});
+				};
+
+				if (a_matchesAll) {
+					return std::ranges::all_of(a_strings, has_keyword);
+				} else {
+					return std::ranges::any_of(a_strings, has_keyword);
+				}
 			}
 		}
 
@@ -284,7 +270,7 @@ namespace Filter
 	{
 		auto& [filterForms_ALL, filterForms_NOT, filterForms_MATCH] = std::get<DATA::kFilters>(a_keywordData);
 
-		if (!filterForms_ALL.empty() && !detail::form::matches_ALL(a_item, filterForms_ALL)) {
+		if (!filterForms_ALL.empty() && !detail::form::matches(a_item, filterForms_ALL, true)) {
 			return false;
 		}
 

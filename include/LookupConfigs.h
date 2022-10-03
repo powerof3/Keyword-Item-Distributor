@@ -6,11 +6,17 @@ namespace Lookup::Config
 {
 	namespace detail
 	{
+		inline bool is_valid_entry(const std::string& a_str)
+		{
+			return !a_str.empty() && !a_str.contains("NONE"sv);
+		}
+
 		inline std::vector<std::string> split_sub_string(const std::string& a_str, const std::string& a_delimiter = ",")
 		{
-			return !a_str.empty() && a_str.find("NONE"sv) == std::string::npos ?
-                       string::split(a_str, a_delimiter) :
-                       std::vector<std::string>();
+			if (is_valid_entry(a_str)) {
+				return string::split(a_str, a_delimiter);
+			}
+			return {};
 		}
 
 		inline FORMID_TYPE get_formID_type(const std::string& a_str)
@@ -87,18 +93,19 @@ namespace Lookup::Config
 		INIData data;
 		auto& [formIDPair_ini, strings_ini, filterIDs_ini, traits_ini, chance_ini] = data;
 
-		auto sections = string::split(a_value, "|");
+		const auto sections = string::split(a_value, "|");
+		const auto size = sections.size();
 
 		//[FORMID/ESP] / string
 		std::variant<FormIDPair, std::string> item_ID;
-		try {
-			auto& formSection = sections.at(CONFIG::kFormID);
+		if (CONFIG::kFormID < size) {
+			auto& formSection = sections[CONFIG::kFormID];
 			if (const auto type = detail::get_formID_type(formSection); type != kEditorID) {
 				item_ID.emplace<FormIDPair>(detail::get_formID(type, formSection));
 			} else {
 				item_ID.emplace<std::string>(formSection);
 			}
-		} catch (...) {
+		} else {
 			FormIDPair pair = { 0, std::nullopt };
 			item_ID.emplace<FormIDPair>(pair);
 		}
@@ -106,20 +113,18 @@ namespace Lookup::Config
 
 		//TYPE
 		ITEM::TYPE type = ITEM::kNone;
-		try {
-			const auto& typeStr = sections.at(CONFIG::kType);
-			if (!typeStr.empty()) {
-			    type = Cache::Item::GetType(typeStr);
+		if (CONFIG::kType < size) {
+			if (const auto& typeStr = sections[CONFIG::kType]; !typeStr.empty()) {
+				type = Cache::Item::GetType(typeStr);
 			}
-		} catch (...) {
 		}
 
 		//FILTERS
-		try {
+		if (CONFIG::kFilters < size) {
 			auto& [strings_ALL, strings_NOT, strings_MATCH, strings_ANY] = strings_ini;
 			auto& [filterIDs_ALL, filterIDs_NOT, filterIDs_MATCH] = filterIDs_ini;
 
-			auto split_str = detail::split_sub_string(sections.at(CONFIG::kFilters));
+			auto split_str = detail::split_sub_string(sections[CONFIG::kFilters]);
 			for (auto& str : split_str) {
 				if (str.find("+"sv) != std::string::npos) {
 					auto strings = detail::split_sub_string(str, "+");
@@ -149,12 +154,11 @@ namespace Lookup::Config
 					filterIDs_MATCH.emplace_back(detail::get_formID(str));
 				}
 			}
-		} catch (...) {
 		}
 
 		//TRAITS
-		try {
-			for (auto split_str = detail::split_sub_string(sections.at(CONFIG::kTraits)); auto& str : split_str) {
+		if (CONFIG::kTraits < size) {
+			for (auto split_str = detail::split_sub_string(sections[CONFIG::kTraits]); auto& str : split_str) {
 				switch (type) {
 				case ITEM::kArmor:
 					{
@@ -212,7 +216,7 @@ namespace Lookup::Config
 						} else if (str.contains("CT")) {
 							castingType = detail::get_single_value<RE::MagicSystem::CastingType>(str);
 						} else if (str.contains('(')) {
-                            if (auto value = string::split(string::remove_non_numeric(str), " "); !value.empty()) {
+							if (auto value = string::split(string::remove_non_numeric(str), " "); !value.empty()) {
 								auto skill = string::lexical_cast<RE::ActorValue>(value.at(0));
 								auto min = string::lexical_cast<std::int32_t>(value.at(1));
 								if (value.size() > 2) {
@@ -285,17 +289,15 @@ namespace Lookup::Config
 					break;
 				}
 			}
-		} catch (...) {
 		}
 
 		//CHANCE
-		chance_ini = 100;
-		try {
-			const auto& chanceStr = sections.at(CONFIG::kChance);
-			if (!chanceStr.empty() && chanceStr.find("NONE"sv) == std::string::npos) {
+		if (CONFIG::kChance < size) {
+			if (const auto& chanceStr = sections[CONFIG::kChance]; detail::is_valid_entry(chanceStr)) {
 				chance_ini = string::lexical_cast<float>(chanceStr);
 			}
-		} catch (...) {
+		} else {
+			chance_ini = 100;
 		}
 
 		return std::make_pair(data, type);
