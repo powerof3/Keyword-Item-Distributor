@@ -43,7 +43,7 @@ namespace Filter
 					{
 						const auto loc = a_item->As<RE::BGSLocation>();
 						const auto filterLoc = a_filter->As<RE::BGSLocation>();
-						return loc && filterLoc && (loc == filterLoc || loc->IsChild(filterLoc));
+						return loc && filterLoc && loc == filterLoc;
 					}
 				case RE::FormType::Projectile:
 					{
@@ -399,7 +399,7 @@ namespace Filter
 			}
 		} else if constexpr (std::is_same_v<T, RE::TESSoulGem>) {
 			const auto& [black, soulSize, gemSize] = std::get<TRAITS::kSoulGem>(traits);
-			if (black && ((a_item.formFlags & RE::TESSoulGem::RecordFlags::kCanHoldNPCSoul) != 0) != *black) {
+			if (black && a_item.CanHoldNPCSoul() != *black) {
 				return false;
 			}
 			if (soulSize && a_item.GetContainedSoul() != *soulSize) {
