@@ -2,38 +2,14 @@
 
 namespace Cache
 {
-	EditorID* EditorID::GetSingleton()
+	std::string EditorID::GetEditorID(const RE::TESForm* a_form)
 	{
-		static EditorID singleton;
-		return std::addressof(singleton);
-	}
-
-	void EditorID::FillMap()
-	{
-		const auto& [map, lock] = RE::TESForm::GetAllFormsByEditorID();
-		const RE::BSReadLockGuard locker{ lock };
-		if (map) {
-			for (auto& [id, form] : *map) {
-				if (FormType::IsFilter(form->GetFormType())) {
-					_editorIDToFormIDMap.emplace(id.c_str(), form->GetFormID());
-					_formIDToEditorIDMap.emplace(form->GetFormID(), id.c_str());
-				}
-			}
+		auto tweaks = GetModuleHandle("po3_Tweaks");
+	    auto function = reinterpret_cast<_GetFormEditorID>(GetProcAddress(tweaks, "GetFormEditorID"));
+		if (function) {
+			return function(a_form->GetFormID());
 		}
-	}
-
-	RE::FormID EditorID::GetFormID(const std::string& a_editorID)
-	{
-		Locker locker(_lock);
-		auto it = _editorIDToFormIDMap.find(a_editorID);
-		return it != _editorIDToFormIDMap.end() ? it->second : 0;
-	}
-
-	std::string EditorID::GetEditorID(RE::FormID a_formID)
-	{
-		Locker locker(_lock);
-		auto it = _formIDToEditorIDMap.find(a_formID);
-		return it != _formIDToEditorIDMap.end() ? it->second : std::string();
+		return std::string();
 	}
 
 	bool FormType::IsFilter(RE::FormType a_type)
@@ -52,15 +28,15 @@ namespace Cache
 		auto it = reverse_map.find(a_type);
 		return it != reverse_map.end() ? std::string(it->second) : std::string();
 	}
-}
 
-bool Cache::Archetype::Matches(Archetype a_archetype, const StringVec& a_strings)
-{
-	if (const auto it = archetypeMap.find(a_archetype); it != archetypeMap.end()) {
-		auto archetypeStr = it->second;
-		return std::ranges::any_of(a_strings, [&](const auto& str) {
-			return string::iequals(archetypeStr, str);
-		});
+	bool Archetype::Matches(Archetype a_archetype, const StringVec& a_strings)
+	{
+		if (const auto it = archetypeMap.find(a_archetype); it != archetypeMap.end()) {
+			auto archetypeStr = it->second;
+			return std::ranges::any_of(a_strings, [&](const auto& str) {
+				return string::iequals(archetypeStr, str);
+			});
+		}
+		return false;
 	}
-	return false;
 }

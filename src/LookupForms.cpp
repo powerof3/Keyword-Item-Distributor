@@ -15,8 +15,6 @@ bool Lookup::Forms::GetForms()
 			Keywords[type] = KeywordDataVec{};
 		}
 
-		Cache::EditorID::GetSingleton()->FillMap();
-
 		for (const auto& type : ITEM::map | std::views::keys) {
 			get_forms(dataHandler, type, INIs[type], Keywords[type]);
 
