@@ -103,8 +103,17 @@ namespace Filter
 					}
 				case RE::FormType::FormList:
 					{
-						const auto listForm = a_filter->As<RE::BGSListForm>();
-						return listForm && listForm->HasForm(a_item);
+						bool result = false;
+
+						auto list = a_filter->As<RE::BGSListForm>();
+						list->ForEachForm([&](RE::TESForm& a_form) {
+							if (result = get_type(a_item, &a_form); result) {
+								return RE::BSContainer::ForEachResult::kStop;
+							}
+							return RE::BSContainer::ForEachResult::kContinue;
+						});
+
+						return result;
 					}
 				default:
 					return false;
