@@ -43,6 +43,8 @@ namespace Filter
 				case RE::FormType::Ingredient:
 				case RE::FormType::Book:
 				case RE::FormType::Misc:
+				case RE::FormType::KeyMaster:
+				case RE::FormType::SoulGem:
 					return a_item == a_filter;
 				case RE::FormType::Location:
 					{
@@ -57,11 +59,13 @@ namespace Filter
 						return ammo && ammo->data.projectile == filterProj;
 					}
 				case RE::FormType::MagicEffect:
-					if (const auto spell = a_item->As<RE::MagicItem>(); spell) {
-						const auto mgef = static_cast<RE::EffectSetting*>(a_filter);
-						return mgef && has_effect(spell, mgef);
+					{
+						if (const auto spell = a_item->As<RE::MagicItem>(); spell) {
+							const auto mgef = static_cast<RE::EffectSetting*>(a_filter);
+							return mgef && has_effect(spell, mgef);
+						}
+						return a_item == a_filter;
 					}
-					return a_item == a_filter;
 				case RE::FormType::EffectShader:
 					{
 						const auto mgef = a_item->As<RE::EffectSetting>();
@@ -89,7 +93,7 @@ namespace Filter
 					}
 				case RE::FormType::Spell:
 					{
-				        const auto book = a_item->As<RE::TESObjectBOOK>();
+						const auto book = a_item->As<RE::TESObjectBOOK>();
 						return book && book->GetSpell() == a_filter;
 					}
 				case RE::FormType::Keyword:
@@ -114,11 +118,11 @@ namespace Filter
 						auto form = std::get<RE::TESForm*>(a_formFile);
 						return form && get_type(&a_item, form);
 					}
-                    if (std::holds_alternative<const RE::TESFile*>(a_formFile)) {
-                        auto file = std::get<const RE::TESFile*>(a_formFile);
-                        return file && file->IsFormInMod(a_item.GetFormID());
-                    }
-                    return false;
+					if (std::holds_alternative<const RE::TESFile*>(a_formFile)) {
+						auto file = std::get<const RE::TESFile*>(a_formFile);
+						return file && file->IsFormInMod(a_item.GetFormID());
+					}
+					return false;
 				});
 			}
 
@@ -129,11 +133,11 @@ namespace Filter
 						auto form = std::get<RE::TESForm*>(a_formFile);
 						return form && get_type(&a_item, form);
 					}
-                    if (std::holds_alternative<const RE::TESFile*>(a_formFile)) {
-                        auto file = std::get<const RE::TESFile*>(a_formFile);
-                        return file && file->IsFormInMod(a_item.GetFormID());
-                    }
-                    return false;
+					if (std::holds_alternative<const RE::TESFile*>(a_formFile)) {
+						auto file = std::get<const RE::TESFile*>(a_formFile);
+						return file && file->IsFormInMod(a_item.GetFormID());
+					}
+					return false;
 				});
 			}
 		}
@@ -210,9 +214,9 @@ namespace Filter
 
 		const std::string name = a_item.GetName();
 
-	    const auto get_match = [&](const StringVec& a_strings) {
+		const auto get_match = [&](const StringVec& a_strings) {
 			bool result = false;
-		    if (!name.empty() && detail::name::matches(name, a_strings)) {
+			if (!name.empty() && detail::name::matches(name, a_strings)) {
 				result = true;
 			}
 			if (!result && detail::keyword::matches(a_item, a_strings)) {
@@ -236,12 +240,12 @@ namespace Filter
 			return result;
 		};
 
-	    const auto get_match_Any = [&]() {
+		const auto get_match_Any = [&]() {
 			bool result = false;
 			if (!name.empty() && detail::name::contains(name, strings_ANY)) {
 				result = true;
 			}
-			if (!result){
+			if (!result) {
 				const auto editorID = Cache::EditorID::GetSingleton()->GetEditorID(a_item.GetFormID());
 				if (detail::name::contains(editorID, strings_ANY)) {
 					result = true;
@@ -397,6 +401,17 @@ namespace Filter
 			if (av && a_item.GetSkill() != *av) {
 				return false;
 			}
+		} else if constexpr (std::is_same_v<T, RE::TESSoulGem>) {
+			const auto& [black, soulSize, gemSize] = std::get<TRAITS::kSoulGem>(traits);
+			if (black && ((a_item.formFlags & RE::TESSoulGem::RecordFlags::kCanHoldNPCSoul) != 0) != *black) {
+				return false;
+			}
+			if (soulSize && a_item.GetContainedSoul() != *soulSize) {
+				return false;
+			}
+			if (gemSize && a_item.GetMaximumCapacity() != *gemSize) {
+				return false;
+			}
 		}
 
 		auto chance = std::get<DATA::kChance>(a_keywordData);
@@ -429,8 +444,9 @@ namespace Distribute
 	}
 
 	template <class T>
-	void distribute(const ITEM::TYPE a_type) {
-	    if (auto& keywords = Keywords[a_type]; !keywords.empty()) {
+	void distribute(const ITEM::TYPE a_type)
+	{
+		if (auto& keywords = Keywords[a_type]; !keywords.empty()) {
 			const auto formArray = RE::TESDataHandler::GetSingleton()->GetFormArray<T>();
 			for (const auto& item : formArray) {
 				if (item) {

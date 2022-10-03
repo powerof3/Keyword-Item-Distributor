@@ -269,6 +269,18 @@ namespace Lookup::Config
 						}
 					}
 					break;
+				case ITEM::kSoulGem:
+					{
+						auto& [black, soulSize, gemSize] = std::get<TRAITS::kSoulGem>(traits_ini);
+						if (str == "BLACK") {
+							black = true;
+						} else if (str.contains("SOUL")) {
+							soulSize = detail::get_single_value<RE::SOUL_LEVEL>(str);
+						} else {
+							gemSize = detail::get_single_value<RE::SOUL_LEVEL>(str);
+						}
+					}
+					break;
 				default:
 					break;
 				}
