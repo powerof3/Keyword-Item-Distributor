@@ -16,6 +16,6 @@ void Distribute::AddKeywords()
 		distribute<RE::TESObjectBOOK>(ITEM::kBook);
 		distribute<RE::TESObjectMISC>(ITEM::kMiscItem);
 		distribute<RE::TESKey>(ITEM::kKey);
-		distribute<RE::TESSoulGem>(ITEM::kKey);
+		distribute<RE::TESSoulGem>(ITEM::kSoulGem);
 	}
 }
