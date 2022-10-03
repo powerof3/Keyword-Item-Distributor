@@ -32,7 +32,7 @@ namespace Cache
 
 	namespace FormType
 	{
-		inline constexpr frozen::set<RE::FormType, 20> set{
+		inline constexpr frozen::set<RE::FormType, 21> set{
 			//types
 			RE::FormType::Armor,
 			RE::FormType::Weapon,
@@ -54,7 +54,8 @@ namespace Cache
 			RE::FormType::MusicType,
 			RE::FormType::Faction,
 			RE::FormType::Spell,
-			RE::FormType::Projectile
+			RE::FormType::Projectile,
+			RE::FormType::FormList
 		};
 
 		bool IsFilter(RE::FormType a_type);

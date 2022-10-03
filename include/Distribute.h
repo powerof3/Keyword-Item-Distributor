@@ -101,6 +101,11 @@ namespace Filter
 						const auto keywordForm = a_item->As<RE::BGSKeywordForm>();
 						return keywordForm && keywordForm->HasKeywordID(a_filter->GetFormID());
 					}
+				case RE::FormType::FormList:
+					{
+						const auto listForm = a_filter->As<RE::BGSListForm>();
+						return listForm && listForm->HasForm(a_item);
+					}
 				default:
 					return false;
 				}
