@@ -10,7 +10,6 @@
 #include <frozen/map.h>
 #include <frozen/set.h>
 #include <ranges>
-#include <robin_hood.h>
 #include <spdlog/sinks/basic_file_sink.h>
 
 #define DLLEXPORT __declspec(dllexport)

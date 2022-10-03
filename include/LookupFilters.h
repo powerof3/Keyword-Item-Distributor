@@ -208,7 +208,7 @@ namespace Filter
 		}
 
 		const std::string name = a_item.GetName();
-		const std::string editorID = Cache::EditorID::GetEditorID(a_item);
+		const std::string editorID = Cache::EditorID::GetEditorID(&a_item);
 
 		const auto get_match = [&](const StringVec& a_strings) {
 			bool result = false;

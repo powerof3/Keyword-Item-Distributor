@@ -2,9 +2,9 @@
 
 namespace Cache
 {
-	std::string EditorID::GetEditorID(const RE::TESForm* a_form)
+	std::string EditorID::GetEditorID(RE::TESForm* a_form)
 	{
-		auto tweaks = GetModuleHandle("po3_Tweaks");
+		auto tweaks = GetModuleHandleA("po3_Tweaks");
 	    auto function = reinterpret_cast<_GetFormEditorID>(GetProcAddress(tweaks, "GetFormEditorID"));
 		if (function) {
 			return function(a_form->GetFormID());
