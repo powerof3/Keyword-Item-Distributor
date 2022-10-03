@@ -32,7 +32,7 @@ namespace Cache
 
 	namespace FormType
 	{
-		inline constexpr frozen::set<RE::FormType, 18> set{
+		inline constexpr frozen::set<RE::FormType, 20> set{
 			//types
 			RE::FormType::Armor,
 			RE::FormType::Weapon,
@@ -44,6 +44,8 @@ namespace Cache
 			RE::FormType::Ingredient,
 			RE::FormType::Book,
 			RE::FormType::Misc,
+			RE::FormType::KeyMaster,
+			RE::FormType::SoulGem,
 			//filters
 			RE::FormType::Keyword,
 			RE::FormType::EffectShader,
@@ -70,7 +72,9 @@ namespace Cache
 			{ "Location"sv, ITEM::kLocation },
 			{ "Ingredient"sv, ITEM::kIngredient },
 			{ "Book"sv, ITEM::kBook },
-		    { "Misc Item"sv, ITEM::kMiscItem }
+			{ "Misc Item"sv, ITEM::kMiscItem },
+			{ "Key"sv, ITEM::kKey },
+			{ "Soul Gem"sv, ITEM::kSoulGem },
 		};
 
 		inline constexpr frozen::map<ITEM::TYPE, std::string_view, ITEM::kTotal> reverse_map = {
@@ -84,6 +88,8 @@ namespace Cache
 			{ ITEM::kIngredient, "Ingredient"sv },
 			{ ITEM::kBook, "Book"sv },
 			{ ITEM::kMiscItem, "Misc Item"sv },
+			{ ITEM::kKey, "Key"sv },
+			{ ITEM::kSoulGem, "Soul Gem"sv }
 		};
 
 		ITEM::TYPE GetType(const std::string& a_type);

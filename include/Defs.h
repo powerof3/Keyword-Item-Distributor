@@ -15,6 +15,8 @@ namespace ITEM
 		kIngredient,
 		kBook,
 		kMiscItem,
+		kKey,
+		kSoulGem,
 
 		kTotal
 	};
@@ -29,7 +31,9 @@ namespace ITEM
 		{ kLocation, "locations"sv },
 		{ kIngredient, "ingredients"sv },
 		{ kBook, "books"sv },
-		{ kMiscItem, "misc items"sv }
+		{ kMiscItem, "misc items"sv },
+		{ kKey, "keys"sv },
+		{ kSoulGem, "soul gems"sv },
 	};
 }
 
@@ -47,6 +51,7 @@ namespace TRAITS
 		kPotion,
 		kIngredient,
 		kBook,
+		kSoulGem,
 
 		kTotal
 	};
@@ -148,6 +153,21 @@ namespace TRAITS
 			std::optional<RE::ActorValue>>;
 	}
 
+	namespace SOULGEM
+	{
+		enum : std::uint32_t
+		{
+			kBlack,
+			kSoulSize,
+			kGemSize
+		};
+
+		using Traits = std::tuple<
+			std::optional<bool>,
+			std::optional<RE::SOUL_LEVEL>,
+			std::optional<RE::SOUL_LEVEL>>;
+	}
+
 	using Traits = std::tuple<
 		ARMOR::Traits,
 		WEAP::Traits,
@@ -155,7 +175,8 @@ namespace TRAITS
 		MGEF::Traits,
 		POTION::Traits,
 		INGREDIENT::Traits,
-		BOOK::Traits>;
+		BOOK::Traits,
+		SOULGEM::Traits>;
 }
 
 namespace CONFIG
@@ -200,7 +221,7 @@ namespace Lookup
 	{
 		inline bool is_mod_name(const std::string& a_str)
 		{
-			return a_str.contains(".esp") || a_str.contains(".esl") || a_str.contains(".esm") ;
+			return a_str.contains(".esp") || a_str.contains(".esl") || a_str.contains(".esm");
 		}
 	}
 }
