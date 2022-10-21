@@ -73,25 +73,24 @@ namespace Lookup::Forms
 						logger::error("		{} : [0x{:X}]({}) FAIL - keyword doesn't exist", path, *formID, modName.value_or(""));
 					} else if (string::is_empty(keyword->GetFormEditorID())) {
 						keyword = nullptr;
-						logger::error("		{} : [0x{:X}] ({}) FAIL - keyword does not have a valid editorID", path, *formID, modName.value_or(""));
+						logger::error("		{} : [0x{:X}] ({}) FAIL - invalid keyword editorID", path, *formID, modName.value_or(""));
 					}
 				}
 			} else if (std::holds_alternative<std::string>(formIDPair_ini)) {
 				if (auto keywordEDID = std::get<std::string>(formIDPair_ini); !keywordEDID.empty()) {
 					auto& keywordArray = a_dataHandler->GetFormArray<RE::BGSKeyword>();
 
-					auto result = std::find_if(keywordArray.begin(), keywordArray.end(), [&](const auto& keyword) {
+					auto result = std::ranges::find_if(keywordArray, [&](const auto& keyword) {
 						return keyword && string::iequals(keyword->formEditorID, keywordEDID);
 					});
 
 					if (result != keywordArray.end()) {
 						if (keyword = *result; keyword) {
-							if (!keyword->IsDynamicForm()) {
-								logger::info("		{} [0x{:X}] INFO - using existing keyword", keywordEDID, keyword->GetFormID());
+							if (auto file = keyword->GetFile(0); file) {
+								logger::info("		{} [0x{:X}~{}] INFO - using existing keyword", keywordEDID, keyword->GetLocalFormID(), file->GetFilename());
 							}
 						} else {
 							logger::critical("		{} : {} FAIL - couldn't get existing keyword", path, keywordEDID);
-							continue;
 						}
 					} else {
 						const auto factory = RE::IFormFactory::GetConcreteFormFactoryByType<RE::BGSKeyword>();
@@ -99,7 +98,7 @@ namespace Lookup::Forms
 							keyword->formEditorID = keywordEDID;
 							keywordArray.push_back(keyword);
 
-							logger::info("		{} [0x{:X}] INFO - creating keyword", keywordEDID, keyword->GetFormID());
+							logger::info("		{} INFO - creating keyword", keywordEDID, keyword->GetFormID());
 						} else {
 							logger::critical("		{} : {} FAIL - couldn't create keyword", path, keywordEDID);
 						}
