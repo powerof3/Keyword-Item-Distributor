@@ -70,7 +70,7 @@ namespace Lookup::Forms
 					              a_dataHandler->LookupForm<RE::BGSKeyword>(*formID, *modName) :
 					              RE::TESForm::LookupByID<RE::BGSKeyword>(*formID);
 					if (!keyword) {
-						logger::error("		{} : Keyword [0x{:X}]({}) doesn't exist", path, *formID, modName.value_or(""));
+						logger::error("		{} : [0x{:X}]({}) FAIL - keyword doesn't exist", path, *formID, modName.value_or(""));
 					} else if (string::is_empty(keyword->GetFormEditorID())) {
 						keyword = nullptr;
 						logger::error("		{} : [0x{:X}] ({}) FAIL - keyword does not have a valid editorID", path, *formID, modName.value_or(""));

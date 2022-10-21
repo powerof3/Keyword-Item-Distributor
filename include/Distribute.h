@@ -12,7 +12,7 @@ namespace Distribute
 				continue;
 			}
 			if (const auto keyword = std::get<DATA::kForm>(keywordData); keyword) {
-				if (const auto keywordForm = a_item.template As<RE::BGSKeywordForm>(); keywordForm && keywordForm->AddKeyword(keyword)) {
+				if (const auto keywordForm = a_item.As<RE::BGSKeywordForm>(); keywordForm && keywordForm->AddKeyword(keyword)) {
 					++std::get<DATA::kCount>(keywordData);
 				}
 			}
@@ -34,7 +34,11 @@ namespace Distribute
 				auto count = std::get<DATA::kCount>(formData);
 
 				if (keyword) {
-					logger::info("{} [0x{:X}] added to {}/{} {}", keyword->GetFormEditorID(), keyword->GetFormID(), count, formArray.size(), ITEM::map.find(a_type)->second);
+					if (auto file = keyword->GetFile(0); file) {
+						logger::info("{} [0x{:X}~{}] added to {}/{} {}", keyword->GetFormEditorID(), keyword->GetLocalFormID(), file->GetFilename(), count, formArray.size(), ITEM::map.find(a_type)->second);
+					} else {
+						logger::info("{} [0x{:X}] added to {}/{} {}", keyword->GetFormEditorID(), keyword->GetFormID(), count, formArray.size(), ITEM::map.find(a_type)->second);
+					}
 				}
 			}
 		}
