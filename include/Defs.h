@@ -229,16 +229,20 @@ namespace Lookup
 using FormIDPair = std::pair<
 	std::optional<RE::FormID>,
 	std::optional<std::string>>;
+using FormOrEditorID = std::variant<FormIDPair, std::string>;
+
 using FormIDPairVec = std::vector<FormIDPair>;
 using StringVec = std::vector<std::string>;
 using Chance = float;
+using Path = std::string;
 
 using INIData = std::tuple<
-	std::variant<FormIDPair, std::string>,
+	FormOrEditorID,
 	std::array<StringVec, 4>,
 	std::array<FormIDPairVec, 3>,
 	TRAITS::Traits,
-	Chance>;
+	Chance,
+	Path>;
 using INIDataVec = std::vector<INIData>;
 
 using FormVec = std::vector<
@@ -254,5 +258,5 @@ using KeywordData = std::tuple<
 	Count>;
 using KeywordDataVec = std::vector<KeywordData>;
 
-extern std::map<ITEM::TYPE, INIDataVec> INIs;
-extern std::map<ITEM::TYPE, KeywordDataVec> Keywords;
+inline std::map<ITEM::TYPE, INIDataVec> INIs;
+inline std::map<ITEM::TYPE, KeywordDataVec> Keywords;

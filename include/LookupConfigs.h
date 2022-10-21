@@ -88,28 +88,27 @@ namespace Lookup::Config
 		}
 	}
 
-	inline std::pair<INIData, ITEM::TYPE> parse_config(const std::string& a_value)
+	inline std::pair<INIData, ITEM::TYPE> parse_config(const std::string& a_value, const std::string& a_path)
 	{
 		INIData data;
-		auto& [formIDPair_ini, strings_ini, filterIDs_ini, traits_ini, chance_ini] = data;
+		auto& [keywordID_ini, strings_ini, filterIDs_ini, traits_ini, chance_ini, path] = data;
+	    path = a_path;
 
 		const auto sections = string::split(a_value, "|");
 		const auto size = sections.size();
 
 		//[FORMID/ESP] / string
-		std::variant<FormIDPair, std::string> item_ID;
 		if (CONFIG::kFormID < size) {
 			auto& formSection = sections[CONFIG::kFormID];
 			if (const auto type = detail::get_formID_type(formSection); type != kEditorID) {
-				item_ID.emplace<FormIDPair>(detail::get_formID(type, formSection));
+				keywordID_ini.emplace<FormIDPair>(detail::get_formID(type, formSection));
 			} else {
-				item_ID.emplace<std::string>(formSection);
+				keywordID_ini.emplace<std::string>(formSection);
 			}
 		} else {
 			FormIDPair pair = { 0, std::nullopt };
-			item_ID.emplace<FormIDPair>(pair);
+			keywordID_ini.emplace<FormIDPair>(pair);
 		}
-		formIDPair_ini = item_ID;
 
 		//TYPE
 		ITEM::TYPE type = ITEM::kNone;
@@ -280,7 +279,7 @@ namespace Lookup::Config
 							black = true;
 						} else if (str.contains("SOUL")) {
 							soulSize = detail::get_single_value<RE::SOUL_LEVEL>(str);
-						} else {
+						} else { // GEM
 							gemSize = detail::get_single_value<RE::SOUL_LEVEL>(str);
 						}
 					}

@@ -1,9 +1,5 @@
 #include "LookupConfigs.h"
 
-#include <ranges>
-
-std::map<ITEM::TYPE, INIDataVec> INIs;
-
 bool Lookup::Config::Read()
 {
 	logger::info("{:*^30}", "INI");
@@ -26,6 +22,8 @@ bool Lookup::Config::Read()
 
 	logger::info("	{} matching inis found", configs.size());
 
+	std::ranges::sort(configs);
+
 	//initialize map
 	for (size_t i = 0; i < ITEM::TYPE::kTotal; i++) {
 		auto type = static_cast<ITEM::TYPE>(i);
@@ -40,14 +38,20 @@ bool Lookup::Config::Read()
 		ini.SetMultiKey();
 
 		if (const auto rc = ini.LoadFile(path.c_str()); rc < 0) {
-			logger::error("	couldn't read INI");
+			logger::error("		couldn't read INI");
 			continue;
 		}
 
+		string::replace_first_instance(path, "Data\\", "");
+
 		if (const auto values = ini.GetSection(""); values) {
 			for (const auto& entry : *values | std::views::values) {
-				auto [data, type] = parse_config(entry);
-				INIs[type].emplace_back(data);
+				try {
+					auto [data, type] = parse_config(entry, path);
+					INIs[type].emplace_back(data);
+				} catch (...) {
+					logger::error("		Failed to parse entry [{}]", entry);
+				}
 			}
 		}
 	}

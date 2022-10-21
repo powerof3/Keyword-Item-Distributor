@@ -6,7 +6,7 @@ namespace Filter
 {
 	namespace detail
 	{
-		namespace name
+		namespace strings
 		{
 			inline bool contains(const std::string& a_name, const StringVec& a_strings)
 			{
@@ -43,22 +43,26 @@ namespace Filter
 					{
 						const auto loc = a_item->As<RE::BGSLocation>();
 						const auto filterLoc = a_filter->As<RE::BGSLocation>();
-						return loc && filterLoc && loc == filterLoc;
+
+						return loc && filterLoc && (loc == filterLoc || loc->IsParent(filterLoc));
 					}
 				case RE::FormType::Projectile:
 					{
 						const auto ammo = a_item->As<RE::TESAmmo>();
 						const auto filterProj = a_filter->As<RE::BGSProjectile>();
+
 						return ammo && ammo->data.projectile == filterProj;
 					}
 				case RE::FormType::MagicEffect:
 					{
-						const auto mgef = static_cast<RE::EffectSetting*>(a_filter);
+						const auto mgef = a_filter->As<RE::EffectSetting>();
+
 						if (const auto spell = a_item->As<RE::MagicItem>(); spell) {
 							return std::ranges::any_of(spell->effects, [&](const auto& effect) {
 								return effect && effect->baseEffect == mgef;
 							});
 						}
+
 						return a_item == mgef;
 					}
 				case RE::FormType::EffectShader:
@@ -93,14 +97,16 @@ namespace Filter
 					}
 				case RE::FormType::Keyword:
 					{
+						const auto keyword = a_filter->As<RE::BGSKeyword>();
 						const auto keywordForm = a_item->As<RE::BGSKeywordForm>();
-						return keywordForm && keywordForm->HasKeywordID(a_filter->GetFormID());
+
+						return keywordForm && keywordForm->HasKeyword(keyword);
 					}
 				case RE::FormType::FormList:
 					{
 						bool result = false;
 
-						auto list = a_filter->As<RE::BGSListForm>();
+						const auto list = a_filter->As<RE::BGSListForm>();
 						list->ForEachForm([&](RE::TESForm& a_form) {
 							if (result = get_type(a_item, &a_form); result) {
 								return RE::BSContainer::ForEachResult::kStop;
@@ -212,10 +218,10 @@ namespace Filter
 
 		const auto get_match = [&](const StringVec& a_strings) {
 			bool result = false;
-			if (!name.empty() && detail::name::matches(name, a_strings)) {
+			if (!name.empty() && detail::strings::matches(name, a_strings)) {
 				result = true;
 			}
-			if (!result && detail::name::matches(editorID, a_strings)) {
+			if (!result && detail::strings::matches(editorID, a_strings)) {
 				result = true;
 			}
 			if (!result && detail::keyword::matches(a_item, a_strings)) {
@@ -241,10 +247,10 @@ namespace Filter
 
 		const auto get_match_Any = [&](const StringVec& a_strings) {
 			bool result = false;
-			if (!name.empty() && detail::name::contains(name, a_strings)) {
+			if (!name.empty() && detail::strings::contains(name, a_strings)) {
 				result = true;
 			}
-			if (!result && detail::name::contains(editorID, a_strings)) {
+			if (!result && detail::strings::contains(editorID, a_strings)) {
 				result = true;
 			}
 			if (!result && detail::keyword::contains(a_item, a_strings)) {
@@ -410,10 +416,10 @@ namespace Filter
 			}
 		}
 
-		auto chance = std::get<DATA::kChance>(a_keywordData);
-		if (!numeric::essentially_equal(chance, 100.0)) {
-			const auto rng = RNG::GetSingleton()->Generate<float>(0.0, 100.0);
-			if (rng > chance) {
+        const auto chance = std::get<DATA::kChance>(a_keywordData);
+
+		if (!numeric::essentially_equal(chance, 100.0f)) {
+			if (RNG::GetSingleton()->Generate(0.0f, 100.0f) > chance) {
 				return false;
 			}
 		}
