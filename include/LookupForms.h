@@ -37,7 +37,7 @@ namespace Lookup::Forms
 				} else if (formID) {
 					if (g_mergeMapperInterface) {
 						const auto [mergedModName, mergedFormID] = g_mergeMapperInterface->GetNewFormID(modName.value_or("").c_str(), formID.value_or(0));
-						std::string conversion_log = "";
+						std::string conversion_log;
 						if (formID.value_or(0) && mergedFormID && formID.value_or(0) != mergedFormID) {
 							conversion_log = fmt::format("0x{:X}->0x{:X}", formID.value_or(0), mergedFormID);
 							formID.emplace(mergedFormID);
