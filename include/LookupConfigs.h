@@ -88,11 +88,21 @@ namespace Lookup::Config
 		}
 	}
 
-	inline std::pair<INIData, ITEM::TYPE> parse_config(const std::string& a_value, const std::string& a_path)
+	inline std::pair<INIData, ITEM::TYPE> parse_config(std::string& a_value, const std::string& a_path)
 	{
+#ifdef SKYRIMVR
+		// swap dawnguard and dragonborn forms
+		// VR apparently does not load masters in order so the lookup fails
+		static const srell::regex re_dawnguard(R"((0x0*2)([0-9a-f]{6}))", srell::regex_constants::optimize | srell::regex::icase);
+		a_value = regex_replace(a_value, re_dawnguard, "0x$2~Dawnguard.esm");
+
+		static const srell::regex re_dragonborn(R"((0x0*4)([0-9a-f]{6}))", srell::regex_constants::optimize | srell::regex::icase);
+		a_value = regex_replace(a_value, re_dragonborn, "0x$2~Dragonborn.esm");
+#endif
+
 		INIData data;
 		auto& [keywordID_ini, strings_ini, filterIDs_ini, traits_ini, chance_ini, path] = data;
-	    path = a_path;
+		path = a_path;
 
 		const auto sections = string::split(a_value, "|");
 		const auto size = sections.size();
@@ -279,7 +289,7 @@ namespace Lookup::Config
 							black = true;
 						} else if (str.contains("SOUL")) {
 							soulSize = detail::get_single_value<RE::SOUL_LEVEL>(str);
-						} else { // GEM
+						} else {  // GEM
 							gemSize = detail::get_single_value<RE::SOUL_LEVEL>(str);
 						}
 					}

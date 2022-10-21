@@ -47,7 +47,8 @@ bool Lookup::Config::Read()
 		if (const auto values = ini.GetSection(""); values) {
 			for (const auto& entry : *values | std::views::values) {
 				try {
-					auto [data, type] = parse_config(entry, path);
+					std::string entryStr{ entry };
+					auto [data, type] = parse_config(entryStr, path);
 					INIs[type].emplace_back(data);
 				} catch (...) {
 					logger::error("		Failed to parse entry [{}]", entry);
