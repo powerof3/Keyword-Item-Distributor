@@ -6,7 +6,7 @@ namespace Lookup::Forms
 {
 	namespace detail
 	{
-		inline void formID_to_form(RE::TESDataHandler* a_dataHandler, const FormIDPairVec& a_formIDVec, FormVec& a_formVec, StringVec& a_stringVec, const std::string& a_path)
+		inline void formID_to_form(RE::TESDataHandler* a_dataHandler, FormIDPairVec& a_formIDVec, FormVec& a_formVec, StringVec& a_stringVec, const std::string& a_path)
 		{
 			if (a_formIDVec.empty()) {
 				return;
@@ -35,7 +35,27 @@ namespace Lookup::Forms
 						}
 					}
 				} else if (formID) {
-					auto filterForm = modName ?
+					if (g_mergeMapperInterface) {
+						const auto [mergedModName, mergedFormID] = g_mergeMapperInterface->GetNewFormID(modName.value_or("").c_str(), formID.value_or(0));
+						std::string conversion_log = "";
+						if (formID.value_or(0) && mergedFormID && formID.value_or(0) != mergedFormID) {
+							conversion_log = fmt::format("0x{:X}->0x{:X}", formID.value_or(0), mergedFormID);
+							formID.emplace(mergedFormID);
+						}
+						const std::string mergedModString{ mergedModName };
+						if (!(modName.value_or("").empty()) && !mergedModString.empty() && modName.value_or("") != mergedModString) {
+							if (conversion_log.empty()) {
+								conversion_log = fmt::format("{}->{}", modName.value_or(""), mergedModString);
+							} else {
+								conversion_log = fmt::format("{}~{}->{}", conversion_log, modName.value_or(""), mergedModString);
+							}
+							modName.emplace(mergedModName);
+						}
+						if (!conversion_log.empty()) {
+							logger::info("\t\tFound merged: {}", conversion_log);
+						}
+					}
+				    auto filterForm = modName ?
 					                      a_dataHandler->LookupForm(*formID, *modName) :
 					                      RE::TESForm::LookupByID(*formID);
 					if (filterForm) {
@@ -66,6 +86,26 @@ namespace Lookup::Forms
 
 			if (std::holds_alternative<FormIDPair>(formIDPair_ini)) {
 				if (auto [formID, modName] = std::get<FormIDPair>(formIDPair_ini); formID) {
+					if (g_mergeMapperInterface) {
+						const auto [mergedModName, mergedFormID] = g_mergeMapperInterface->GetNewFormID(modName.value_or("").c_str(), formID.value_or(0));
+						std::string conversion_log;
+						if (formID.value_or(0) && mergedFormID && formID.value_or(0) != mergedFormID) {
+							conversion_log = fmt::format("0x{:X}->0x{:X}", formID.value_or(0), mergedFormID);
+							formID.emplace(mergedFormID);
+						}
+						const std::string mergedModString{ mergedModName };
+						if (!(modName.value_or("").empty()) && !mergedModString.empty() && modName.value_or("") != mergedModString) {
+							if (conversion_log.empty()) {
+								conversion_log = fmt::format("{}->{}", modName.value_or(""), mergedModString);
+							} else {
+								conversion_log = fmt::format("{}~{}->{}", conversion_log, modName.value_or(""), mergedModString);
+							}
+							modName.emplace(mergedModName);
+						}
+						if (!conversion_log.empty()) {
+							logger::info("\t\tFound merged: {}", conversion_log);
+						}
+					}
 					keyword = modName ?
 					              a_dataHandler->LookupForm<RE::BGSKeyword>(*formID, *modName) :
 					              RE::TESForm::LookupByID<RE::BGSKeyword>(*formID);

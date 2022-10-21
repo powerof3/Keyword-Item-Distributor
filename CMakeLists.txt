@@ -2,10 +2,12 @@ cmake_minimum_required(VERSION 3.20)
 set(NAME "po3_KeywordItemDistributor")
 set(VERSION 2.1.0)
 set(AE_VERSION 1)
+set(VR_VERSION 1)
 
 # ---- Options ----
 
 option(COPY_BUILD "Copy the build output to the Skyrim directory." TRUE)
+option(BUILD_SKYRIMVR "Build for Skyrim VR" OFF)
 option(BUILD_SKYRIMAE "Build for Skyrim AE" OFF)
 
 # ---- Cache build vars ----
@@ -39,6 +41,14 @@ if(BUILD_SKYRIMAE)
 	set(SkyrimPath ${SkyrimAEPath})
 	set(SkyrimVersion "Skyrim AE")
 	set(VERSION ${VERSION}.${AE_VERSION})
+elseif(BUILD_SKYRIMVR)
+	add_compile_definitions(SKYRIMVR)
+	add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+	set(CommonLibName "CommonLibVR")
+	set_from_environment(SkyrimVRPath)
+	set(SkyrimPath ${SkyrimVRPath})
+	set(SkyrimVersion "Skyrim VR")
+	set(VERSION ${VERSION}.${VR_VERSION})
 else()
 	set(CommonLibName "CommonLibSSE")
 	set_from_environment(Skyrim64Path)
@@ -124,6 +134,7 @@ endif()
 
 find_package(frozen CONFIG REQUIRED)
 find_path(SIMPLEINI_INCLUDE_DIRS "ConvertUTF.c")
+find_path(MERGEMAPPER_INCLUDE_DIRS "MergeMapperPluginAPI.h")
 
 # ---- Add source files ----
 
@@ -156,6 +167,7 @@ add_library(
 	${CMAKE_CURRENT_BINARY_DIR}/version.rc
 	.clang-format
 	.editorconfig
+	${MERGEMAPPER_INCLUDE_DIRS}/MergeMapperPluginAPI.cpp
 )
 
 target_compile_features(
@@ -176,6 +188,7 @@ target_include_directories(
 		${CMAKE_CURRENT_BINARY_DIR}/include
 		${CMAKE_CURRENT_SOURCE_DIR}/include
 		${SIMPLEINI_INCLUDE_DIRS}
+		${MERGEMAPPER_INCLUDE_DIRS}
 )
 
 target_link_libraries(

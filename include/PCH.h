@@ -7,6 +7,7 @@
 #include "SKSE/SKSE.h"
 
 #include <SimpleIni.h>
+#include <MergeMapperPluginAPI.h>
 #include <frozen/map.h>
 #include <frozen/set.h>
 #include <ranges>

@@ -4,35 +4,37 @@
 
 namespace MessageHandler
 {
-	struct detail
-	{
-		static void send_event()
-		{
-			SKSE::ModCallbackEvent modEvent{
-				"KID_KeywordDistributionDone",
-				RE::BSFixedString(),
-				0.0f,
-				nullptr
-			};
+	bool shouldLookupForms{ false };
 
-			SKSE::GetModCallbackEventSource()->SendEvent(&modEvent);
-		}
-	};
-
-	void Distribute(SKSE::MessagingInterface::Message* a_message)
+	void MessageHandler(SKSE::MessagingInterface::Message* a_message)
 	{
-		if (a_message->type == SKSE::MessagingInterface::kDataLoaded) {
-			if (Lookup::Forms::GetForms()) {
-				Distribute::AddKeywords();
+		switch (a_message->type) {
+		case SKSE::MessagingInterface::kPostLoad:
+			shouldLookupForms = Lookup::Config::Read();
+			break;
+		case SKSE::MessagingInterface::kPostPostLoad:
+			{
+				logger::info("{:*^30}", "MERGES");
+				MergeMapperPluginAPI::GetMergeMapperInterface001();  // Request interface
+				if (g_mergeMapperInterface) {                        // Use Interface
+					const auto version = g_mergeMapperInterface->GetBuildNumber();
+					logger::info("Got MergeMapper interface buildnumber {}", version);
+				} else {
+					logger::info("MergeMapper not detected");
+				}
 			}
-			detail::send_event();
-		}
-	}
-
-	void NoDistribute(SKSE::MessagingInterface::Message* a_message)
-	{
-		if (a_message->type == SKSE::MessagingInterface::kDataLoaded) {
-			detail::send_event();
+			break;
+		case SKSE::MessagingInterface::kDataLoaded:
+			{
+				if (shouldLookupForms && Lookup::Forms::GetForms()) {
+					Distribute::AddKeywords();
+				}
+				SKSE::ModCallbackEvent modEvent{ "KID_KeywordDistributionDone", RE::BSFixedString(), 0.0f, nullptr };
+				SKSE::GetModCallbackEventSource()->SendEvent(&modEvent);
+			}
+			break;
+		default:
+			break;
 		}
 	}
 }
@@ -62,7 +64,13 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface* a
 	}
 
 	const auto ver = a_skse->RuntimeVersion();
-	if (ver < SKSE::RUNTIME_1_5_39) {
+	if (ver <
+#	ifdef SKYRIMVR
+		SKSE::RUNTIME_VR_1_4_15
+#	else
+		SKSE::RUNTIME_1_5_39
+#	endif
+	) {
 		logger::critical(FMT_STRING("Unsupported runtime version {}"), ver.string());
 		return false;
 	}
@@ -101,12 +109,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 
 	SKSE::Init(a_skse);
 
-    const auto messaging = SKSE::GetMessagingInterface();
-	if (Lookup::Config::Read()) {
-		messaging->RegisterListener(MessageHandler::Distribute);
-	} else {
-		messaging->RegisterListener(MessageHandler::NoDistribute);
-	}
+	SKSE::GetMessagingInterface()->RegisterListener(MessageHandler::MessageHandler);
 
 	return true;
 }

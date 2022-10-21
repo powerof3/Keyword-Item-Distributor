@@ -1,0 +1,20 @@
+name: Main
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  run:
+    uses: adya/pack-skse-mod/.github/workflows/pack.yml@main
+    with:
+      FOMOD_INCLUDE_PDB: true
+      FOMOD_MOD_NAME: "Keyword Item Distributor"
+      FOMOD_MOD_AUTHOR: "powerofthree"
+      FOMOD_MOD_NEXUS_ID: "55728"
+      PUBLISH_ARCHIVE_TYPE: '7z'
