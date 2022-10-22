@@ -1,6 +1,6 @@
 #include "LookupConfigs.h"
 
-bool Lookup::Config::Read()
+std::pair<bool, bool> Lookup::Config::Read()
 {
 	logger::info("{:*^30}", "INI");
 
@@ -17,7 +17,7 @@ bool Lookup::Config::Read()
 
 	if (configs.empty()) {
 		logger::warn("	No .ini files with _KID suffix were found within the Data folder, aborting...");
-		return false;
+		return { false, false };
 	}
 
 	logger::info("	{} matching inis found", configs.size());
@@ -29,6 +29,8 @@ bool Lookup::Config::Read()
 		auto type = static_cast<ITEM::TYPE>(i);
 		INIs[type] = INIDataVec{};
 	}
+
+	bool shouldLogErrors{ false };
 
 	for (auto& path : configs) {
 		logger::info("	INI : {}", path);
@@ -51,11 +53,12 @@ bool Lookup::Config::Read()
 					auto [data, type] = parse_config(entryStr, path);
 					INIs[type].emplace_back(data);
 				} catch (...) {
-					logger::error("		Failed to parse entry [{}]", entry);
+					logger::error("		Failed to parse entry [Keyword = {}]", entry);
+					shouldLogErrors = true;
 				}
 			}
 		}
 	}
 
-	return true;
+	return { true, shouldLogErrors };
 }

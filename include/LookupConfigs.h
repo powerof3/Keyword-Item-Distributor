@@ -8,7 +8,7 @@ namespace Lookup::Config
 	{
 		inline bool is_valid_entry(const std::string& a_str)
 		{
-			return !a_str.empty() && !a_str.contains("NONE"sv);
+			return !a_str.empty() && !string::icontains(a_str, "NONE"sv);
 		}
 
 		inline std::vector<std::string> split_sub_string(const std::string& a_str, const std::string& a_delimiter = ",")
@@ -167,7 +167,8 @@ namespace Lookup::Config
 
 		//TRAITS
 		if (CONFIG::kTraits < size) {
-			for (auto split_str = detail::split_sub_string(sections[CONFIG::kTraits]); auto& str : split_str) {
+			auto split_str = detail::split_sub_string(sections[CONFIG::kTraits]);
+			for (auto& str : split_str) {
 				switch (type) {
 				case ITEM::kArmor:
 					{
@@ -301,16 +302,16 @@ namespace Lookup::Config
 		}
 
 		//CHANCE
+		chance_ini = 100.0f;
 		if (CONFIG::kChance < size) {
-			if (const auto& chanceStr = sections[CONFIG::kChance]; detail::is_valid_entry(chanceStr)) {
+			const auto& chanceStr = sections[CONFIG::kChance];
+			if (detail::is_valid_entry(chanceStr)) {
 				chance_ini = string::lexical_cast<float>(chanceStr);
 			}
-		} else {
-			chance_ini = 100;
 		}
 
 		return std::make_pair(data, type);
 	}
 
-	bool Read();
+	std::pair<bool, bool> Read();
 }

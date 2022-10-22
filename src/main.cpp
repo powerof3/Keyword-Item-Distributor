@@ -5,12 +5,13 @@
 namespace MessageHandler
 {
 	bool shouldLookupForms{ false };
+	bool shouldLogErrors{ false };
 
 	void MessageHandler(SKSE::MessagingInterface::Message* a_message)
 	{
 		switch (a_message->type) {
 		case SKSE::MessagingInterface::kPostLoad:
-			shouldLookupForms = Lookup::Config::Read();
+			std::tie(shouldLookupForms, shouldLogErrors) = Lookup::Config::Read();
 			break;
 		case SKSE::MessagingInterface::kPostPostLoad:
 			{
@@ -31,6 +32,10 @@ namespace MessageHandler
 				}
 				SKSE::ModCallbackEvent modEvent{ "KID_KeywordDistributionDone", RE::BSFixedString(), 0.0f, nullptr };
 				SKSE::GetModCallbackEventSource()->SendEvent(&modEvent);
+				if (shouldLogErrors) {
+					const auto error = fmt::format("[KID] Errors found when reading configs. Check {}.log in {} for more info\n", Version::PROJECT, SKSE::log::log_directory()->string());
+					RE::ConsoleLog::GetSingleton()->Print(error.c_str());
+				}
 			}
 			break;
 		default:

@@ -400,8 +400,11 @@ namespace Filter
 			if (skill && a_item.TeachesSkill() != *skill) {
 				return false;
 			}
-			if (av && a_item.GetSkill() != *av) {
-				return false;
+			if (av) {
+				const auto taughtSpell = a_item.GetSpell();
+				if (a_item.GetSkill() != *av && (taughtSpell && taughtSpell->GetAssociatedSkill() != *av)) {
+					return false;
+				}
 			}
 		} else if constexpr (std::is_same_v<T, RE::TESSoulGem>) {
 			const auto& [black, soulSize, gemSize] = std::get<TRAITS::kSoulGem>(traits);
@@ -416,7 +419,7 @@ namespace Filter
 			}
 		}
 
-        const auto chance = std::get<DATA::kChance>(a_keywordData);
+		const auto chance = std::get<DATA::kChance>(a_keywordData);
 
 		if (!numeric::essentially_equal(chance, 100.0f)) {
 			if (RNG::GetSingleton()->Generate(0.0f, 100.0f) > chance) {
