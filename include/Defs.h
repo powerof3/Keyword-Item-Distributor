@@ -17,6 +17,7 @@ namespace ITEM
 		kMiscItem,
 		kKey,
 		kSoulGem,
+		kSpell,
 
 		kTotal
 	};
@@ -34,6 +35,7 @@ namespace ITEM
 		{ kMiscItem, "misc items"sv },
 		{ kKey, "keys"sv },
 		{ kSoulGem, "soul gems"sv },
+		{ kSpell, "spells"sv },
 	};
 }
 
@@ -52,6 +54,7 @@ namespace TRAITS
 		kIngredient,
 		kBook,
 		kSoulGem,
+		kSpell,
 
 		kTotal
 	};
@@ -158,14 +161,29 @@ namespace TRAITS
 		enum : std::uint32_t
 		{
 			kBlack,
-			kSoulSize,
-			kGemSize
 		};
 
 		using Traits = std::tuple<
 			std::optional<bool>,
 			std::optional<RE::SOUL_LEVEL>,
 			std::optional<RE::SOUL_LEVEL>>;
+	}
+
+	namespace SPELL
+	{
+		enum : std::uint32_t
+		{
+			kSpellType,
+			kCastingType,
+			kDelivery,
+			kSkill
+		};
+
+		using Traits = std::tuple<
+			std::optional<RE::MagicSystem::SpellType>,
+			std::optional<RE::MagicSystem::CastingType>,
+			std::optional<RE::MagicSystem::Delivery>,
+			std::optional<RE::ActorValue>>;
 	}
 
 	using Traits = std::tuple<
@@ -176,7 +194,8 @@ namespace TRAITS
 		POTION::Traits,
 		INGREDIENT::Traits,
 		BOOK::Traits,
-		SOULGEM::Traits>;
+		SOULGEM::Traits,
+        SPELL::Traits>;
 }
 
 namespace CONFIG

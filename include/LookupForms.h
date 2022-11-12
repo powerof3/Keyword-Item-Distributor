@@ -112,8 +112,8 @@ namespace Lookup::Forms
 				if (auto keywordEDID = std::get<std::string>(formIDPair_ini); !keywordEDID.empty()) {
 					auto& keywordArray = a_dataHandler->GetFormArray<RE::BGSKeyword>();
 
-					auto result = std::ranges::find_if(keywordArray, [&](const auto& keyword) {
-						return keyword && keyword->formEditorID == keywordEDID.c_str();
+					auto result = std::ranges::find_if(keywordArray, [&](const auto& keywordInArray) {
+						return keywordInArray && keywordInArray->formEditorID == keywordEDID.c_str();
 					});
 
 					if (result != keywordArray.end()) {

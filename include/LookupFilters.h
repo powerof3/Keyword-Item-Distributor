@@ -6,7 +6,7 @@ namespace Filter
 {
 	inline RNG staticRNG;
 
-    namespace detail
+	namespace detail
 	{
 		namespace strings
 		{
@@ -94,8 +94,10 @@ namespace Filter
 					}
 				case RE::FormType::Spell:
 					{
-						const auto book = a_item->As<RE::TESObjectBOOK>();
-						return book && book->GetSpell() == a_filter;
+						if (const auto book = a_item->As<RE::TESObjectBOOK>()) {
+							return book->GetSpell() == a_filter;
+						}
+						return a_item == a_filter;
 					}
 				case RE::FormType::Keyword:
 					{
@@ -241,6 +243,10 @@ namespace Filter
 					result = true;
 				}
 				if (!result && detail::actorvalue::matches(a_item.GetSpell(), a_strings)) {
+					result = true;
+				}
+			} else if constexpr (std::is_same_v<T, RE::SpellItem>) {
+				if (!result && detail::actorvalue::matches(a_item.GetAssociatedSkill(), a_strings)) {
 					result = true;
 				}
 			}
@@ -417,6 +423,20 @@ namespace Filter
 				return false;
 			}
 			if (gemSize && a_item.GetMaximumCapacity() != *gemSize) {
+				return false;
+			}
+		} else if constexpr (std::is_same_v<T, RE::SpellItem>) {
+			const auto& [spellType, castingType, deliveryType, skill] = std::get<TRAITS::kSpell>(traits);
+			if (spellType && a_item.GetSpellType() != *spellType) {
+				return false;
+			}
+			if (castingType && a_item.GetCastingType() != *castingType) {
+				return false;
+			}
+			if (deliveryType && a_item.GetDelivery() != *deliveryType) {
+				return false;
+			}
+			if (skill && a_item.GetAssociatedSkill() != *skill) {
 				return false;
 			}
 		}

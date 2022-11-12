@@ -232,6 +232,20 @@ namespace Lookup::Config
 						}
 					}
 					break;
+				case ITEM::kSpell:
+					{
+						auto& [spellType, castingType, deliveryType, skill] = std::get<TRAITS::kSpell>(traits_ini);
+						if (str.contains("ST")) {
+							spellType = detail::get_single_value<RE::MagicSystem::SpellType>(str);
+						} else if (str.contains('D')) {
+							deliveryType = detail::get_single_value<RE::MagicSystem::Delivery>(str);
+						} else if (str.contains("CT")) {
+							castingType = detail::get_single_value<RE::MagicSystem::CastingType>(str);
+						} else {
+							skill = detail::get_single_value<RE::ActorValue>(str);
+						}
+					}
+					break;
 				default:
 					break;
 				}

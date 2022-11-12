@@ -55,6 +55,7 @@ namespace Cache
 			{ "Misc Item"sv, ITEM::kMiscItem },
 			{ "Key"sv, ITEM::kKey },
 			{ "Soul Gem"sv, ITEM::kSoulGem },
+			{ "Spell"sv, ITEM::kSpell },
 		};
 
 		inline constexpr frozen::map<ITEM::TYPE, std::string_view, ITEM::kTotal> reverse_map = {
@@ -69,7 +70,8 @@ namespace Cache
 			{ ITEM::kBook, "Book"sv },
 			{ ITEM::kMiscItem, "Misc Item"sv },
 			{ ITEM::kKey, "Key"sv },
-			{ ITEM::kSoulGem, "Soul Gem"sv }
+			{ ITEM::kSoulGem, "Soul Gem"sv },
+			{ ITEM::kSpell, "Spell"sv }
 		};
 
 		ITEM::TYPE GetType(const std::string& a_type);
