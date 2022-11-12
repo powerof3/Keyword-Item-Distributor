@@ -208,22 +208,7 @@ namespace DATA
 
 namespace Lookup
 {
-	enum FORMID_TYPE : std::uint32_t
-	{
-		kNone = 0,
-		kFormIDMod,
-		kMod,
-		kFormID,
-		kEditorID
-	};
-
-	namespace detail
-	{
-		inline bool is_mod_name(const std::string& a_str)
-		{
-			return a_str.contains(".esp") || a_str.contains(".esl") || a_str.contains(".esm");
-		}
-	}
+    using FORMID_TYPE = distribution::record_type;
 }
 
 using FormIDPair = std::pair<
@@ -231,7 +216,7 @@ using FormIDPair = std::pair<
 	std::optional<std::string>>;
 using FormOrEditorID = std::variant<FormIDPair, std::string>;
 
-using FormIDPairVec = std::vector<FormIDPair>;
+using FormIDVec = std::vector<FormOrEditorID>;
 using StringVec = std::vector<std::string>;
 using Chance = float;
 using Path = std::string;
@@ -239,7 +224,7 @@ using Path = std::string;
 using INIData = std::tuple<
 	FormOrEditorID,
 	std::array<StringVec, 4>,
-	std::array<FormIDPairVec, 3>,
+	std::array<FormIDVec, 3>,
 	TRAITS::Traits,
 	Chance,
 	Path>;

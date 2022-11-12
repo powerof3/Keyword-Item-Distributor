@@ -21,7 +21,7 @@ bool Lookup::Forms::GetForms()
 
 		for (auto& [type, record] : ITEM::map) {
 			if (!INIs[type].empty()) {
-				logger::info("	Adding {}/{} keywords to {}", Keywords[type].size(), INIs[type].size(), record);
+				logger::info("\tAdding {}/{} keywords to {}", Keywords[type].size(), INIs[type].size(), record);
 			}
 		}
 	}

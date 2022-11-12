@@ -6,61 +6,6 @@ namespace Lookup::Config
 {
 	namespace detail
 	{
-		inline bool is_valid_entry(const std::string& a_str)
-		{
-			return !a_str.empty() && !string::icontains(a_str, "NONE"sv);
-		}
-
-		inline std::vector<std::string> split_sub_string(const std::string& a_str, const std::string& a_delimiter = ",")
-		{
-			if (is_valid_entry(a_str)) {
-				return string::split(a_str, a_delimiter);
-			}
-			return {};
-		}
-
-		inline FORMID_TYPE get_formID_type(const std::string& a_str)
-		{
-			if (a_str.find("~"sv) != std::string::npos) {
-				return kFormIDMod;
-			}
-			if (Lookup::detail::is_mod_name(a_str)) {
-				return kMod;
-			}
-			return string::is_only_hex(a_str) ? kFormID : kEditorID;
-		}
-
-		inline FormIDPair get_formID(const FORMID_TYPE a_type, const std::string& a_str)
-		{
-			switch (a_type) {
-			case kFormIDMod:
-				{
-					auto splitID = string::split(a_str, "~");
-					return std::make_pair(
-						string::lexical_cast<RE::FormID>(splitID.at(CONFIG::kFormID), true),
-						splitID.at(CONFIG::kESP));
-				}
-			case kMod:
-			case kEditorID:
-				return std::make_pair(
-					std::nullopt,
-					a_str);
-			case kFormID:
-				return std::make_pair(
-					string::lexical_cast<RE::FormID>(a_str, true),
-					std::nullopt);
-			default:
-				return FormIDPair{};
-			}
-		}
-
-		inline FormIDPair get_formID(const std::string& a_str)
-		{
-			return get_formID(
-				get_formID_type(a_str),
-				a_str);
-		}
-
 		template <class T>
 		std::pair<T, T> get_minmax_values(std::string& a_str)
 		{
@@ -68,10 +13,10 @@ namespace Lookup::Config
 
 			if (const auto values = string::split(string::remove_non_numeric(a_str), " "); !values.empty()) {
 				if (values.size() > 1) {
-					minMax.first = string::lexical_cast<T>(values.at(0));
-					minMax.second = string::lexical_cast<T>(values.at(1));
+					minMax.first = string::to_num<T>(values.at(0));
+					minMax.second = string::to_num<T>(values.at(1));
 				} else {
-					minMax.first = string::lexical_cast<T>(values.at(0));
+					minMax.first = string::to_num<T>(values.at(0));
 				}
 			}
 
@@ -82,7 +27,7 @@ namespace Lookup::Config
 		std::optional<T> get_single_value(std::string& a_str)
 		{
 			if (const auto values = string::split(string::remove_non_numeric(a_str), " "); !values.empty()) {
-				return string::lexical_cast<T>(values.at(0));
+				return string::to_num<T>(values.at(0));
 			}
 			return std::nullopt;
 		}
@@ -109,15 +54,7 @@ namespace Lookup::Config
 
 		//[FORMID/ESP] / string
 		if (CONFIG::kFormID < size) {
-			auto& formSection = sections[CONFIG::kFormID];
-			if (const auto type = detail::get_formID_type(formSection); type != kEditorID) {
-				keywordID_ini.emplace<FormIDPair>(detail::get_formID(type, formSection));
-			} else {
-				keywordID_ini.emplace<std::string>(formSection);
-			}
-		} else {
-			FormIDPair pair = { 0, std::nullopt };
-			keywordID_ini.emplace<FormIDPair>(pair);
+			keywordID_ini = distribution::get_record(sections[CONFIG::kFormID]);
 		}
 
 		//TYPE
@@ -133,41 +70,41 @@ namespace Lookup::Config
 			auto& [strings_ALL, strings_NOT, strings_MATCH, strings_ANY] = strings_ini;
 			auto& [filterIDs_ALL, filterIDs_NOT, filterIDs_MATCH] = filterIDs_ini;
 
-			auto split_str = detail::split_sub_string(sections[CONFIG::kFilters]);
+			auto split_str = distribution::split_entry(sections[CONFIG::kFilters]);
 			for (auto& str : split_str) {
 				if (str.find("+"sv) != std::string::npos) {
-					auto strings = detail::split_sub_string(str, "+");
+					auto strings = distribution::split_entry(str, "+");
 
 					std::ranges::copy_if(strings, std::back_inserter(strings_ALL), [](const auto& string_str) {
-						return detail::get_formID_type(string_str) == kEditorID;
+						return distribution::get_record_type(string_str) == FORMID_TYPE::kEditorID;
 					});
 					std::ranges::transform(strings, std::back_inserter(filterIDs_ALL), [](const auto& filter_str) {
-						return detail::get_formID(filter_str);
+						return distribution::get_record(filter_str);
 					});
 				} else if (str.at(0) == '-') {
 					str.erase(0, 1);
 
-					if (detail::get_formID_type(str) == kEditorID) {
+					if (distribution::get_record_type(str) == FORMID_TYPE::kEditorID) {
 						strings_NOT.emplace_back(str);
 					}
-					filterIDs_NOT.emplace_back(detail::get_formID(str));
+					filterIDs_NOT.emplace_back(distribution::get_record(str));
 
 				} else if (str.at(0) == '*') {
 					str.erase(0, 1);
 					strings_ANY.emplace_back(str);
 
 				} else {
-					if (detail::get_formID_type(str) == kEditorID) {
+					if (distribution::get_record_type(str) == FORMID_TYPE::kEditorID) {
 						strings_MATCH.emplace_back(str);
 					}
-					filterIDs_MATCH.emplace_back(detail::get_formID(str));
+					filterIDs_MATCH.emplace_back(distribution::get_record(str));
 				}
 			}
 		}
 
 		//TRAITS
 		if (CONFIG::kTraits < size) {
-			auto split_str = detail::split_sub_string(sections[CONFIG::kTraits]);
+			auto split_str = distribution::split_entry(sections[CONFIG::kTraits]);
 			for (auto& str : split_str) {
 				switch (type) {
 				case ITEM::kArmor:
@@ -227,10 +164,10 @@ namespace Lookup::Config
 							castingType = detail::get_single_value<RE::MagicSystem::CastingType>(str);
 						} else if (str.contains('(')) {
 							if (auto value = string::split(string::remove_non_numeric(str), " "); !value.empty()) {
-								auto skill = string::lexical_cast<RE::ActorValue>(value.at(0));
-								auto min = string::lexical_cast<std::int32_t>(value.at(1));
+								auto skill = string::to_num<RE::ActorValue>(value.at(0));
+								auto min = string::to_num<std::int32_t>(value.at(1));
 								if (value.size() > 2) {
-									auto max = string::lexical_cast<std::int32_t>(value.at(2));
+									auto max = string::to_num<std::int32_t>(value.at(2));
 									skillValue = { skill, { min, max } };
 								} else {
 									skillValue = { skill, { min, std::numeric_limits<std::int32_t>::max() } };
@@ -279,7 +216,7 @@ namespace Lookup::Config
 						} else if (str == "-AV") {
 							skill = false;
 						} else {
-							av = string::lexical_cast<RE::ActorValue>(str);
+							av = string::to_num<RE::ActorValue>(str);
 						}
 					}
 					break;
@@ -305,8 +242,8 @@ namespace Lookup::Config
 		chance_ini = 100.0f;
 		if (CONFIG::kChance < size) {
 			const auto& chanceStr = sections[CONFIG::kChance];
-			if (detail::is_valid_entry(chanceStr)) {
-				chance_ini = string::lexical_cast<float>(chanceStr);
+			if (distribution::is_valid_entry(chanceStr)) {
+				chance_ini = string::to_num<float>(chanceStr);
 			}
 		}
 

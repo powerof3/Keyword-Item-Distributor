@@ -1,6 +1,5 @@
 #pragma once
 
-//implements https://github.com/Ryan-rsm-McKenzie/CCExtender/blob/master/src/EditorIDCache.h
 namespace Cache
 {
 	using _GetFormEditorID = const char* (*)(std::uint32_t);

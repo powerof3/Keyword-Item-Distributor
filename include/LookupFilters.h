@@ -4,7 +4,9 @@
 
 namespace Filter
 {
-	namespace detail
+	inline RNG staticRNG;
+
+    namespace detail
 	{
 		namespace strings
 		{
@@ -422,7 +424,7 @@ namespace Filter
 		const auto chance = std::get<DATA::kChance>(a_keywordData);
 
 		if (!numeric::essentially_equal(chance, 100.0f)) {
-			if (RNG::GetSingleton()->Generate(0.0f, 100.0f) > chance) {
+			if (staticRNG.Generate(0.0f, 100.0f) > chance) {
 				return false;
 			}
 		}

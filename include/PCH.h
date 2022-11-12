@@ -6,23 +6,25 @@
 #include "RE/Skyrim.h"
 #include "SKSE/SKSE.h"
 
-#include <srell.hpp>
-#include <SimpleIni.h>
+#include <ClibUtil/utils.hpp>
 #include <MergeMapperPluginAPI.h>
+#include <SimpleIni.h>
 #include <frozen/map.h>
 #include <frozen/set.h>
 #include <ranges>
 #include <spdlog/sinks/basic_file_sink.h>
+#include <srell.hpp>
 
 #define DLLEXPORT __declspec(dllexport)
 
 namespace logger = SKSE::log;
-namespace numeric = SKSE::stl::numeric;
-namespace string = SKSE::stl::string;
+namespace numeric = clib_util::numeric;
+namespace string = clib_util::string;
+namespace distribution = clib_util::distribution;
 
 using namespace std::literals;
 
-using RNG = SKSE::stl::RNG;
+using RNG = clib_util::RNG;
 
 namespace stl
 {
