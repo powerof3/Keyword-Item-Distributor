@@ -6,6 +6,15 @@ namespace Lookup::Forms
 {
 	namespace detail
 	{
+		inline RE::BGSKeyword* find_existing_keyword(const RE::BSTArray<RE::BGSKeyword*>& a_keywordArray, const std::string& a_edid)
+		{
+			const auto result = std::ranges::find_if(a_keywordArray, [&](const auto& keywordInArray) {
+				return keywordInArray && keywordInArray->formEditorID == a_edid.c_str();
+			});
+
+			return result != a_keywordArray.end() ? *result : nullptr;
+		}
+
 		inline void get_merged_IDs(std::optional<RE::FormID>& a_formID, std::optional<std::string>& a_modName)
 		{
 			const auto [mergedModName, mergedFormID] = g_mergeMapperInterface->GetNewFormID(a_modName.value_or("").c_str(), a_formID.value_or(0));
@@ -47,12 +56,10 @@ namespace Lookup::Forms
 							logger::error("\t\t\t[{}] Filter ({}) SKIP - mod cannot be found", a_path, *modName);
 						}
 					} else if (formID) {
-						auto filterForm = modName ?
-						                      a_dataHandler->LookupForm(*formID, *modName) :
-						                      RE::TESForm::LookupByID(*formID);
-						if (filterForm) {
-							const auto formType = filterForm->GetFormType();
-							if (Cache::FormType::IsFilter(formType)) {
+						if (auto filterForm = modName ?
+						                          a_dataHandler->LookupForm(*formID, *modName) :
+						                          RE::TESForm::LookupByID(*formID)) {
+							if (const auto formType = filterForm->GetFormType(); Cache::FormType::IsFilter(formType)) {
 								a_formVec.push_back(filterForm);
 							} else {
 								logger::error("\t\t\t[{}] Filter [0x{:X}] ({}) SKIP - invalid formtype ({})", a_path, *formID, modName.value_or(""), formType);
@@ -64,8 +71,7 @@ namespace Lookup::Forms
 				} else if (std::holds_alternative<std::string>(formOrEditorID)) {
 					if (auto editorID = std::get<std::string>(formOrEditorID); !editorID.empty()) {
 						if (auto filterForm = RE::TESForm::LookupByEditorID(editorID); filterForm) {
-							const auto formType = filterForm->GetFormType();
-							if (Cache::FormType::IsFilter(formType)) {
+							if (const auto formType = filterForm->GetFormType(); Cache::FormType::IsFilter(formType)) {
 								a_formVec.push_back(filterForm);
 								//remove editorIDs from strings
 								std::erase(a_stringVec, editorID);
@@ -73,7 +79,13 @@ namespace Lookup::Forms
 								logger::error("\t\t\t[{}] Filter ({}) INFO - invalid formtype ({})", a_path, editorID, formType);
 							}
 						} else {
-							logger::error("\t\t\t[{}] Filter ({}) SKIP - form doesn't exist", a_path, editorID);
+							if (auto keyword = find_existing_keyword(a_dataHandler->GetFormArray<RE::BGSKeyword>(), editorID)) {
+								a_formVec.push_back(keyword);
+								//remove editorIDs from strings
+								std::erase(a_stringVec, editorID);
+							} else {
+								logger::error("\t\t\t[{}] Filter ({}) SKIP - form doesn't exist", a_path, editorID);
+							}
 						}
 					}
 				}
@@ -105,24 +117,18 @@ namespace Lookup::Forms
 						logger::error("\t\t[{}] [0x{:X}]({}) FAIL - keyword doesn't exist", path, *formID, modName.value_or(""));
 					} else if (string::is_empty(keyword->GetFormEditorID())) {
 						keyword = nullptr;
-						logger::error("\t\t[{}] [0x{:X}] ({}) FAIL - invalid keyword editorID", path, *formID, modName.value_or(""));
+						logger::error("\t\t[{}] [0x{:X}] ({}) FAIL - inva`lid keyword editorID", path, *formID, modName.value_or(""));
 					}
 				}
 			} else if (std::holds_alternative<std::string>(formIDPair_ini)) {
 				if (auto keywordEDID = std::get<std::string>(formIDPair_ini); !keywordEDID.empty()) {
 					auto& keywordArray = a_dataHandler->GetFormArray<RE::BGSKeyword>();
 
-					auto result = std::ranges::find_if(keywordArray, [&](const auto& keywordInArray) {
-						return keywordInArray && keywordInArray->formEditorID == keywordEDID.c_str();
-					});
-
-					if (result != keywordArray.end()) {
-						if (keyword = *result; keyword) {
-							if (auto file = keyword->GetFile(0); file) {
-								logger::info("\t\t[{}] {} [0x{:X}~{}] INFO - using existing keyword", path, keywordEDID, keyword->GetLocalFormID(), file->GetFilename());
-							}
+				    if (keyword = detail::find_existing_keyword(keywordArray, keywordEDID); keyword) {
+						if (const auto file = keyword->GetFile(0)) {
+							logger::info("\t\t[{}] {} [0x{:X}~{}] INFO - using existing keyword", path, keywordEDID, keyword->GetLocalFormID(), file->GetFilename());
 						} else {
-							logger::critical("\t\t[{}] {} FAIL - couldn't get existing keyword", path, keywordEDID);
+							logger::critical("\t\t[{}] {} INFO - using created keyword", path, keywordEDID);
 						}
 					} else {
 						const auto factory = RE::IFormFactory::GetConcreteFormFactoryByType<RE::BGSKeyword>();
