@@ -117,7 +117,7 @@ namespace Lookup::Forms
 						logger::error("\t\t[{}] [0x{:X}]({}) FAIL - keyword doesn't exist", path, *formID, modName.value_or(""));
 					} else if (string::is_empty(keyword->GetFormEditorID())) {
 						keyword = nullptr;
-						logger::error("\t\t[{}] [0x{:X}] ({}) FAIL - inva`lid keyword editorID", path, *formID, modName.value_or(""));
+						logger::error("\t\t[{}] [0x{:X}] ({}) FAIL - invalid keyword editorID", path, *formID, modName.value_or(""));
 					}
 				}
 			} else if (std::holds_alternative<std::string>(formIDPair_ini)) {
