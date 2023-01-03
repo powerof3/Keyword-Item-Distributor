@@ -10,7 +10,6 @@
 #include <MergeMapperPluginAPI.h>
 #include <SimpleIni.h>
 #include <frozen/map.h>
-#include <frozen/set.h>
 #include <ranges>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <srell.hpp>

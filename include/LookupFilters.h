@@ -10,17 +10,33 @@ namespace Filter
 	{
 		namespace strings
 		{
-			inline bool contains(const std::string& a_name, const StringVec& a_strings)
+			inline bool matches(RE::TESForm& a_item, const StringVec& a_strings, bool a_matchesAll = false)
 			{
-				return std::ranges::any_of(a_strings, [&](const auto& str) {
-					return string::icontains(a_name, str);
-				});
+				const std::string name = a_item.GetName();
+				const std::string editorID = Cache::EditorID::GetEditorID(&a_item);
+
+				auto keywordForm = a_item.As<RE::BGSKeywordForm>();
+
+				if (a_matchesAll) {
+					return std::ranges::all_of(a_strings, [&](const auto& str) {
+						return keywordForm->HasKeywordString(str);
+					});
+				} else {
+					return std::ranges::any_of(a_strings, [&](const auto& str) {
+						return string::iequals(name, str) || string::iequals(editorID, str) || keywordForm->HasKeywordString(str);
+					});
+				}
 			}
 
-			inline bool matches(const std::string& a_name, const StringVec& a_strings)
+			inline bool contains(RE::TESForm& a_item, const StringVec& a_strings)
 			{
+				const std::string name = a_item.GetName();
+				const std::string editorID = Cache::EditorID::GetEditorID(&a_item);
+
+				auto keywordForm = a_item.As<RE::BGSKeywordForm>();
+
 				return std::ranges::any_of(a_strings, [&](const auto& str) {
-					return string::iequals(a_name, str);
+					return string::icontains(name, str) || string::icontains(editorID, str) || keywordForm->ContainsKeywordString(str);
 				});
 			}
 		}
@@ -147,31 +163,6 @@ namespace Filter
 			}
 		}
 
-		namespace keyword
-		{
-			inline bool contains(RE::TESForm& a_item, const StringVec& a_strings)
-			{
-				return std::ranges::any_of(a_strings, [&a_item](const auto& str) {
-					auto keywordForm = a_item.As<RE::BGSKeywordForm>();
-					return keywordForm && keywordForm->ContainsKeywordString(str);
-				});
-			}
-
-			inline bool matches(RE::TESForm& a_item, const StringVec& a_strings, bool a_matchesAll = false)
-			{
-				const auto has_keyword = [&a_item](const auto& str) {
-					auto keywordForm = a_item.As<RE::BGSKeywordForm>();
-					return keywordForm && keywordForm->HasKeywordString(str);
-				};
-
-				if (a_matchesAll) {
-					return std::ranges::all_of(a_strings, has_keyword);
-				} else {
-					return std::ranges::any_of(a_strings, has_keyword);
-				}
-			}
-		}
-
 		namespace actorvalue
 		{
 			inline bool matches(const RE::ActorValue a_skill, const StringVec& a_strings)
@@ -180,14 +171,13 @@ namespace Filter
 					return false;
 				}
 
-				const auto avInfo = RE::ActorValueList::GetSingleton()->GetActorValue(a_skill);
-				if (!avInfo) {
-					return false;
+				if (const auto avInfo = RE::ActorValueList::GetSingleton()->GetActorValue(a_skill)) {
+					return std::ranges::any_of(a_strings, [&](const auto& str) {
+						return string::iequals(avInfo->enumName, str);
+					});
 				}
 
-				return std::ranges::any_of(a_strings, [&](const auto& str) {
-					return string::iequals(avInfo->enumName, str);
-				});
+				return false;
 			}
 
 			inline bool matches(const RE::SpellItem* a_spell, const StringVec& a_strings)
@@ -196,14 +186,13 @@ namespace Filter
 					return false;
 				}
 
-				const auto avInfo = RE::ActorValueList::GetSingleton()->GetActorValue(a_spell->GetAssociatedSkill());
-				if (!avInfo) {
-					return false;
+				if (const auto avInfo = RE::ActorValueList::GetSingleton()->GetActorValue(a_spell->GetAssociatedSkill())) {
+					return std::ranges::any_of(a_strings, [&](const auto& str) {
+						return string::iequals(avInfo->enumName, str);
+					});
 				}
 
-				return std::ranges::any_of(a_strings, [&](const auto& str) {
-					return string::iequals(avInfo->enumName, str);
-				});
+				return false;
 			}
 		}
 	}
@@ -213,22 +202,13 @@ namespace Filter
 	{
 		auto& [strings_ALL, strings_NOT, strings_MATCH, strings_ANY] = std::get<DATA::kStrings>(a_keywordData);
 
-		if (!strings_ALL.empty() && !detail::keyword::matches(a_item, strings_ALL, true)) {
+		if (!strings_ALL.empty() && !detail::strings::matches(a_item, strings_ALL, true)) {
 			return false;
 		}
 
-		const std::string name = a_item.GetName();
-		const std::string editorID = Cache::EditorID::GetEditorID(&a_item);
-
 		const auto get_match = [&](const StringVec& a_strings) {
 			bool result = false;
-			if (!name.empty() && detail::strings::matches(name, a_strings)) {
-				result = true;
-			}
-			if (!result && detail::strings::matches(editorID, a_strings)) {
-				result = true;
-			}
-			if (!result && detail::keyword::matches(a_item, a_strings)) {
+			if (detail::strings::matches(a_item, a_strings)) {
 				result = true;
 			}
 			if constexpr (std::is_same_v<T, RE::EffectSetting>) {
@@ -253,27 +233,13 @@ namespace Filter
 			return result;
 		};
 
-		const auto get_match_Any = [&](const StringVec& a_strings) {
-			bool result = false;
-			if (!name.empty() && detail::strings::contains(name, a_strings)) {
-				result = true;
-			}
-			if (!result && detail::strings::contains(editorID, a_strings)) {
-				result = true;
-			}
-			if (!result && detail::keyword::contains(a_item, a_strings)) {
-				result = true;
-			}
-			return result;
-		};
-
 		if (!strings_NOT.empty() && get_match(strings_NOT)) {
 			return false;
 		}
 		if (!strings_MATCH.empty() && !get_match(strings_MATCH)) {
 			return false;
 		}
-		if (!strings_ANY.empty() && !get_match_Any(strings_ANY)) {
+		if (!strings_ANY.empty() && !detail::strings::contains(a_item, strings_ANY)) {
 			return false;
 		}
 
@@ -302,6 +268,14 @@ namespace Filter
 	template <class T>
 	bool secondary(T& a_item, const KeywordData& a_keywordData)
 	{
+		const auto chance = std::get<DATA::kChance>(a_keywordData);
+
+		if (!numeric::essentially_equal(chance, 100.0f)) {
+			if (staticRNG.Generate(0.0f, 100.0f) > chance) {
+				return false;
+			}
+		}
+
 		const auto& traits = std::get<DATA::kTraits>(a_keywordData);
 
 		if constexpr (std::is_same_v<T, RE::TESObjectARMO>) {
@@ -437,14 +411,6 @@ namespace Filter
 				return false;
 			}
 			if (skill && a_item.GetAssociatedSkill() != *skill) {
-				return false;
-			}
-		}
-
-		const auto chance = std::get<DATA::kChance>(a_keywordData);
-
-		if (!numeric::essentially_equal(chance, 100.0f)) {
-			if (staticRNG.Generate(0.0f, 100.0f) > chance) {
 				return false;
 			}
 		}

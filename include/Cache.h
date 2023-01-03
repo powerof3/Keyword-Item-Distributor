@@ -11,7 +11,7 @@ namespace Cache
 
 	namespace FormType
 	{
-		inline constexpr frozen::set<RE::FormType, 21> set{
+		inline constexpr std::array set{
 			//types
 			RE::FormType::Armor,
 			RE::FormType::Weapon,
