@@ -3,7 +3,7 @@
 void Distribute::AddKeywords()
 {
 	if (const auto dataHandler = RE::TESDataHandler::GetSingleton(); dataHandler) {
-		logger::info("{:*^30}", "RESULT");
+		logger::info("{:*^50}", "RESULT");
 
 		distribute<RE::TESObjectARMO>(ITEM::kArmor, armors);
 		distribute<RE::TESObjectWEAP>(ITEM::kWeapon, weapons);

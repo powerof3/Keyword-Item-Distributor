@@ -34,7 +34,8 @@ namespace MessageHandler
 
 					const auto endTime = std::chrono::steady_clock::now();
 					const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count();
-					logger::info("\tKeyword resolution took {}μs / {}ms", duration, duration / 1000.0f);
+					logger::info("{:*^50}", "STATS");
+				    logger::info("Keyword distribution took {}μs / {}ms", duration, duration / 1000.0f);
 				}
 
 				const SKSE::ModCallbackEvent modEvent{ "KID_KeywordDistributionDone", {}, 0.0f, nullptr };

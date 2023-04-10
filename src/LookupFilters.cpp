@@ -81,7 +81,7 @@ namespace Filter
 
 						auto archetypeStr = std::to_string(mgef->data.archetype);
 						result = std::ranges::any_of(a_strings, [&](const auto& str) {
-							return string::iequals(archetypeStr, str);
+							return archetypeStr == str;
 						});
 
 						if (!result) {
@@ -155,10 +155,9 @@ namespace Filter
 		if (a_av == RE::ActorValue::kNone) {
 			return false;
 		}
-
-		if (const auto avInfo = RE::ActorValueList::GetSingleton()->GetActorValue(a_av)) {
+	    if (const auto avInfo = RE::ActorValueList::GetSingleton()->GetActorValue(a_av)) {
 			return std::ranges::any_of(a_strings, [&](const auto& str) {
-				return string::iequals(avInfo->enumName, str);
+				return str == avInfo->enumName;
 			});
 		}
 		return false;

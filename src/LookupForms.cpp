@@ -10,10 +10,10 @@ namespace Forms
     bool LookupForms()
 	{
 		if (const auto dataHandler = RE::TESDataHandler::GetSingleton(); dataHandler) {
-			logger::info("{:*^30}", "LOOKUP");
+			logger::info("{:*^50}", "LOOKUP");
 
 			const auto lookup_forms = [&](const ITEM::TYPE type, Distributables& a_distributables) {
-				a_distributables.LookupForms(dataHandler, ITEM::GetType(type), INI::INIs[type]);
+				a_distributables.LookupForms(dataHandler, type, INI::INIs[type]);
 			};
 
 			lookup_forms(ITEM::kArmor, armors);
@@ -36,7 +36,7 @@ namespace Forms
 
 	void LogFormLookup()
 	{
-		logger::info("{:*^30}", "PROCESSING");
+		logger::info("{:*^50}", "PROCESSING");
 
 		const auto list_lookup_result = [&](const ITEM::TYPE type, const Distributables& a_distributables) {
 			if (const auto& rawKeywords = INI::INIs[type]; !rawKeywords.empty()) {

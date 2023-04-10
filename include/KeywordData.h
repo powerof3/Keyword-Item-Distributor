@@ -21,7 +21,7 @@ namespace Keyword
 		void                      clear();
 
 		DataVec& GetKeywords();
-		void     LookupForms(RE::TESDataHandler* a_dataHandler, std::string_view a_type, INI::DataVec& a_INIDataVec);
+		void     LookupForms(RE::TESDataHandler* a_dataHandler, ITEM::TYPE a_type, INI::DataVec& a_INIDataVec);
 
 	private:
 		DataVec keywords;

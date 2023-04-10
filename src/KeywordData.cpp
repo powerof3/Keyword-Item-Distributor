@@ -2,15 +2,23 @@
 
 namespace Keyword
 {
-    namespace detail
+	namespace detail
 	{
 		inline RE::BGSKeyword* find_existing_keyword(const RE::BSTArray<RE::BGSKeyword*>& a_keywordArray, const std::string& a_edid)
 		{
-			const auto result = std::ranges::find_if(a_keywordArray, [&](const auto& keywordInArray) {
+			if (const auto keyword = RE::TESForm::LookupByEditorID<RE::BGSKeyword>(a_edid)) {
+				return keyword;
+			}
+
+			// iterate from last added (most likely to be runtime)
+		    const auto rBegin = std::reverse_iterator(a_keywordArray.end());
+            const auto rEnd = std::reverse_iterator(a_keywordArray.begin());
+
+			const auto result = std::find_if(rBegin, rEnd, [&](const auto& keywordInArray) {
 				return keywordInArray->formEditorID == a_edid.c_str();
 			});
 
-			return result != a_keywordArray.end() ? *result : nullptr;
+			return result != rEnd ? *result : nullptr;
 		}
 
 		inline void get_merged_IDs(std::optional<RE::FormID>& a_formID, std::optional<std::string>& a_modName)
@@ -40,6 +48,9 @@ namespace Keyword
 			if (a_rawFormVec.empty()) {
 				return true;
 			}
+
+			bool error = false;
+
 			for (auto& formOrEditorID : a_rawFormVec) {
 				if (const auto formModPair(std::get_if<FormModPair>(&formOrEditorID)); formModPair) {
 					auto& [formID, modName] = *formModPair;
@@ -47,28 +58,29 @@ namespace Keyword
 						get_merged_IDs(formID, modName);
 					}
 					if (modName && !formID) {
-						if (const RE::TESFile* filterMod = a_dataHandler->LookupModByName(*modName); filterMod) {
+						if (const RE::TESFile* filterMod = a_dataHandler->LookupModByName(*modName)) {
 							logger::info("\t\t[{}] Filter ({}) INFO - mod found", a_path, filterMod->fileName);
 							a_formVec.push_back(filterMod);
 						} else {
-							logger::error("\t\t[{}] Filter ({}) SKIP - mod cannot be found", a_path, *modName);
+							error = true;
+						    logger::error("\t\t[{}] Filter ({}) SKIP - mod cannot be found", a_path, *modName);
 						}
 					} else if (formID) {
-						auto filterForm = modName ?
-						                      a_dataHandler->LookupForm(*formID, *modName) :
-						                      RE::TESForm::LookupByID(*formID);
-						if (filterForm) {
+                        if (auto filterForm = modName ?
+                                                  a_dataHandler->LookupForm(*formID, *modName) :
+                                                  RE::TESForm::LookupByID(*formID)) {
 							const auto formType = filterForm->GetFormType();
 							if (Cache::FormType::IsFilter(formType)) {
 								a_formVec.push_back(filterForm);
 							} else if (formType == RE::FormType::Keyword) {
 								a_stringVec.push_back(filterForm->GetFormEditorID());
-								return true;
 							} else {
-								logger::error("\t\t[{}] Filter [0x{:X}] ({}) SKIP - invalid formtype ({})", a_path, *formID, modName.value_or(""), formType);
+								error = true;
+							    logger::error("\t\t[{}] Filter [0x{:X}] ({}) SKIP - invalid formtype ({})", a_path, *formID, modName.value_or(""), formType);
 							}
 						} else {
-							logger::error("\t\t[{}] Filter [0x{:X}] ({}) SKIP - form doesn't exist", a_path, *formID, modName.value_or(""));
+							error = true;
+						    logger::error("\t\t[{}] Filter [0x{:X}] ({}) SKIP - form doesn't exist", a_path, *formID, modName.value_or(""));
 						}
 					}
 				} else if (auto editorID = std::get<std::string>(formOrEditorID); !editorID.empty()) {
@@ -76,26 +88,33 @@ namespace Keyword
 						const auto formType = filterForm->GetFormType();
 						if (Cache::FormType::IsFilter(formType)) {
 							a_formVec.push_back(filterForm);
-							// remove filter editorIDs from strings (filters will handle it)
+							// remove editorID from strings (filters will handle it)
 							std::erase(a_stringVec, editorID);
 						} else if (filterForm->IsNot(RE::FormType::Keyword)) {
-							logger::error("\t\t[{}] Filter ({}) INFO - invalid formtype ({})", a_path, editorID, formType);
-						} else {
-							// keyword found, let strings handle it
-						    return true;
+							error = true;
+						    logger::error("\t\t[{}] Filter ({}) INFO - invalid formtype ({})", a_path, editorID, formType);
 						}
 					} else {
-						// runtime form
+						// keyword found, let strings handle it
 						if (find_existing_keyword(a_dataHandler->GetFormArray<RE::BGSKeyword>(), editorID)) {
-							// keyword found, let strings handle it
-							return true;
+							logger::info("\t\t[{}] Filter ({}) INFO - runtime keyword", a_path, editorID);
+						} else if (Cache::ActorValue::map.contains(editorID)) {
+							logger::info("\t\t[{}] Filter ({}) INFO - actor value", a_path, editorID);
+						} else if (Cache::Archetype::map.contains(editorID)) {
+							logger::info("\t\t[{}] Filter ({}) INFO - archetype", a_path, editorID);
 						} else {
-							logger::error("\t\t[{}] Filter ({}) SKIP - form doesn't exist", a_path, editorID);
+							error = true;
+						    logger::error("\t\t[{}] Filter ({}) SKIP - form doesn't exist", a_path, editorID);
 						}
 					}
 				}
 			}
-			return !a_formVec.empty();
+
+			if (error) {
+				error = a_formVec.empty() && a_stringVec.empty();
+			}
+
+			return !error;
 		}
 	}
 
@@ -119,13 +138,13 @@ namespace Keyword
 		return keywords;
 	}
 
-	void Distributables::LookupForms(RE::TESDataHandler* a_dataHandler, std::string_view a_type, INI::DataVec& a_INIDataVec)
+	void Distributables::LookupForms(RE::TESDataHandler* a_dataHandler, ITEM::TYPE a_type, INI::DataVec& a_INIDataVec)
 	{
 		if (a_INIDataVec.empty()) {
 			return;
 		}
 
-		logger::info("Starting {} lookup", a_type);
+		logger::info("{}", GetType(a_type));
 
 		keywords.reserve(a_INIDataVec.size());
 
@@ -184,7 +203,6 @@ namespace Keyword
 			if (validEntry) {
 				validEntry = detail::formID_to_form(a_dataHandler, rawFormFilters.MATCH, filterForms.MATCH, stringFilters.MATCH, path);
 			}
-
 			if (!validEntry) {
 				continue;
 			}

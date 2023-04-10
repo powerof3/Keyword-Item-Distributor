@@ -121,7 +121,7 @@ namespace INI
 
 	std::pair<bool, bool> GetConfigs()
 	{
-		logger::info("{:*^30}", "INI");
+		logger::info("{:*^50}", "INI");
 
 		std::vector<std::string> configs = distribution::get_configs(R"(Data\)", "_KID"sv);
 
