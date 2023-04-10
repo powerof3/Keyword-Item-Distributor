@@ -73,26 +73,28 @@ namespace Filter
 			auto result = std::ranges::any_of(a_strings, [&](const auto& str) {
 				return string::iequals(name, str) || string::iequals(edid, str) || kywdForm->HasKeywordString(str);
 			});
-			switch (item->GetFormType()) {
-			case RE::FormType::MagicEffect:
-				{
-					if (!result) {
+			if (!result) {
+				switch (item->GetFormType()) {
+				case RE::FormType::Weapon:
+					{
+						const auto weapon = item->As<RE::TESObjectWEAP>();
+						result = has_actorvalue(weapon->weaponData.skill.get(), a_strings);
+					}
+					break;
+				case RE::FormType::MagicEffect:
+					{
 						const auto mgef = item->As<RE::EffectSetting>();
-
-						auto archetypeStr = std::to_string(mgef->data.archetype);
+						auto       archetypeStr = std::to_string(mgef->data.archetype);
 						result = std::ranges::any_of(a_strings, [&](const auto& str) {
 							return archetypeStr == str;
 						});
-
 						if (!result) {
 							result = has_actorvalue(mgef->GetMagickSkill(), a_strings);
 						}
 					}
-				}
-				break;
-			case RE::FormType::Book:
-				{
-					if (!result) {
+					break;
+				case RE::FormType::Book:
+					{
 						const auto book = item->As<RE::TESObjectBOOK>();
 						auto       skill = RE::ActorValue::kNone;
 						if (book->TeachesSkill()) {
@@ -102,21 +104,19 @@ namespace Filter
 						}
 						result = has_actorvalue(skill, a_strings);
 					}
-				}
-				break;
-			case RE::FormType::AlchemyItem:
-			case RE::FormType::Ingredient:
-			case RE::FormType::Scroll:
-			case RE::FormType::Spell:
-				{
-					if (!result) {
+					break;
+				case RE::FormType::AlchemyItem:
+				case RE::FormType::Ingredient:
+				case RE::FormType::Scroll:
+				case RE::FormType::Spell:
+					{
 						const auto magicItem = item->As<RE::MagicItem>();
 						result = has_actorvalue(magicItem->GetAssociatedSkill(), a_strings);
 					}
+					break;
+				default:
+					break;
 				}
-				break;
-			default:
-				break;
 			}
 			return result;
 		}
@@ -155,7 +155,7 @@ namespace Filter
 		if (a_av == RE::ActorValue::kNone) {
 			return false;
 		}
-	    if (const auto avInfo = RE::ActorValueList::GetSingleton()->GetActorValue(a_av)) {
+		if (const auto avInfo = RE::ActorValueList::GetSingleton()->GetActorValue(a_av)) {
 			return std::ranges::any_of(a_strings, [&](const auto& str) {
 				return str == avInfo->enumName;
 			});
