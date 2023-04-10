@@ -62,6 +62,7 @@ namespace Cache
 			RE::FormType::Faction,
 			RE::FormType::Spell,  // also type
 			RE::FormType::Projectile,
+			RE::FormType::EquipSlot,
 			RE::FormType::FormList
 		};
 

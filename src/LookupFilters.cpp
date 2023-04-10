@@ -234,6 +234,13 @@ namespace Filter
 				}
 				return item == a_formFilter;
 			}
+		case RE::FormType::EquipSlot:
+			{
+				if (const auto equipType = item->As<RE::BGSEquipType>()) {
+					return equipType->GetEquipSlot() == a_formFilter;
+				}
+				return false;
+			}
 		case RE::FormType::FormList:
 			{
 				bool result = false;
