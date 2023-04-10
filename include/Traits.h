@@ -140,6 +140,8 @@ namespace TRAITS
 			for (auto& trait : traits) {
 				if (trait.contains("W")) {
 					weight = Range<float>(trait);
+				} else if (trait.contains('D')) {
+					damage = Range<float>(trait);
 				} else {
 					switch (string::const_hash(trait)) {
 					case "HandToHandMelee"_h:
@@ -209,39 +211,7 @@ namespace TRAITS
 			if (animationType && weapon->weaponData.animationType != *animationType) {
 				return false;
 			}
-			return true;
-		}
-
-	private:
-		// members
-		nullable<bool>            enchanted;
-		nullable<bool>            templated;
-		nullable<RE::WEAPON_TYPE> animationType{};
-		nullable<Range<float>>    weight;
-	};
-
-	class AmmoTraits : public Traits
-	{
-	public:
-		AmmoTraits(const std::string& a_traits)
-		{
-			switch (string::const_hash(a_traits)) {
-			case "B"_h:
-				isBolt = true;
-				break;
-			case "-B"_h:
-				isBolt = false;
-				break;
-			default:
-				break;
-			}
-		}
-
-		~AmmoTraits() override = default;
-
-		[[nodiscard]] bool PassFilter(RE::TESForm* a_item) const override
-		{
-			if (isBolt && a_item->As<RE::TESAmmo>()->IsBolt() != *isBolt) {
+			if (damage && !damage->IsInRange(weapon->GetAttackDamage())) {
 				return false;
 			}
 			return true;
@@ -249,7 +219,55 @@ namespace TRAITS
 
 	private:
 		// members
-		nullable<bool> isBolt;
+		nullable<bool>            enchanted{};
+		nullable<bool>            templated{};
+		nullable<RE::WEAPON_TYPE> animationType{};
+		nullable<Range<float>>    damage{};
+		nullable<Range<float>>    weight{};
+	};
+
+	class AmmoTraits : public Traits
+	{
+	public:
+		AmmoTraits(const std::string& a_traits)
+		{
+			auto traits = distribution::split_entry(a_traits);
+			for (auto& trait : traits) {
+				if (trait.contains('D')) {
+					damage = Range<float>(trait);
+				} else {
+					switch (string::const_hash(a_traits)) {
+					case "B"_h:
+						isBolt = true;
+						break;
+					case "-B"_h:
+						isBolt = false;
+						break;
+					default:
+						break;
+					}
+				}
+			}
+		}
+
+		~AmmoTraits() override = default;
+
+		[[nodiscard]] bool PassFilter(RE::TESForm* a_item) const override
+		{
+            const auto ammo = a_item->As<RE::TESAmmo>();
+			if (isBolt && ammo->IsBolt() != *isBolt) {
+				return false;
+			}
+			if (damage && !damage->IsInRange(ammo->data.damage)) {
+				return false;
+			}
+			return true;
+		}
+
+	private:
+		// members
+		nullable<bool>         isBolt;
+		nullable<Range<float>> damage;
 	};
 
 	class MagicEffectTraits : public Traits
