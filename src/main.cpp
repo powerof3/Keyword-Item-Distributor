@@ -11,27 +11,35 @@ namespace MessageHandler
 	{
 		switch (a_message->type) {
 		case SKSE::MessagingInterface::kPostLoad:
-			std::tie(shouldLookupForms, shouldLogErrors) = Lookup::Config::Read();
+			std::tie(shouldLookupForms, shouldLogErrors) = INI::GetConfigs();
 			break;
 		case SKSE::MessagingInterface::kPostPostLoad:
 			{
-				logger::info("{:*^30}", "MERGES");
+				logger::info("{:*^50}", "MERGES");
 				MergeMapperPluginAPI::GetMergeMapperInterface001();  // Request interface
 				if (g_mergeMapperInterface) {                        // Use Interface
 					const auto version = g_mergeMapperInterface->GetBuildNumber();
-					logger::info("Got MergeMapper interface buildnumber {}", version);
+					logger::info("\tGot MergeMapper interface buildnumber {}", version);
 				} else {
-					logger::info("MergeMapper not detected");
+					logger::info("INFO - MergeMapper not detected");
 				}
 			}
 			break;
 		case SKSE::MessagingInterface::kDataLoaded:
 			{
-				if (shouldLookupForms && Lookup::Forms::GetForms()) {
+				const auto startTime = std::chrono::steady_clock::now();
+				if (shouldLookupForms && Forms::LookupForms()) {
+					Forms::LogFormLookup();
 					Distribute::AddKeywords();
+
+					const auto endTime = std::chrono::steady_clock::now();
+					const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count();
+					logger::info("\tKeyword resolution took {}μs / {}ms", duration, duration / 1000.0f);
 				}
-				SKSE::ModCallbackEvent modEvent{ "KID_KeywordDistributionDone", RE::BSFixedString(), 0.0f, nullptr };
+
+				const SKSE::ModCallbackEvent modEvent{ "KID_KeywordDistributionDone", {}, 0.0f, nullptr };
 				SKSE::GetModCallbackEventSource()->SendEvent(&modEvent);
+
 				if (shouldLogErrors) {
 					const auto error = fmt::format("[KID] Errors found when reading configs. Check {}.log in {} for more info\n", Version::PROJECT, SKSE::log::log_directory()->string());
 					RE::ConsoleLog::GetSingleton()->Print(error.c_str());

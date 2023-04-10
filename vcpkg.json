@@ -7,10 +7,8 @@
   "dependencies": [
     "boost-stl-interfaces",
     "clib-util",
-    "frozen",
     "mergemapper",
     "rsm-binary-io",
-    "simpleini",
     "spdlog",
     "srell",
     "xbyak"

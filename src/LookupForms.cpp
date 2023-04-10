@@ -1,30 +1,64 @@
 #include "LookupForms.h"
 
-bool Lookup::Forms::GetForms()
+#include "KeywordData.h"
+#include "LookupConfigs.h"
+
+namespace Forms
 {
-	bool result = false;
+	using namespace Keyword;
 
-	if (const auto dataHandler = RE::TESDataHandler::GetSingleton(); dataHandler) {
-		logger::info("{:*^30}", "LOOKUP");
+    bool LookupForms()
+	{
+		if (const auto dataHandler = RE::TESDataHandler::GetSingleton(); dataHandler) {
+			logger::info("{:*^30}", "LOOKUP");
 
-		for (const auto& type : ITEM::map | std::views::keys) {
-			get_forms(dataHandler, type, INIs[type], Keywords[type]);
+			const auto lookup_forms = [&](const ITEM::TYPE type, Distributables& a_distributables) {
+				a_distributables.LookupForms(dataHandler, ITEM::GetType(type), INI::INIs[type]);
+			};
 
-			if (!Keywords[type].empty()) {
-				result = true;
-			}
+			lookup_forms(ITEM::kArmor, armors);
+			lookup_forms(ITEM::kWeapon, weapons);
+			lookup_forms(ITEM::kAmmo, ammo);
+			lookup_forms(ITEM::kMagicEffect, magicEffects);
+			lookup_forms(ITEM::kPotion, potions);
+			lookup_forms(ITEM::kScroll, scrolls);
+			lookup_forms(ITEM::kLocation, locations);
+			lookup_forms(ITEM::kIngredient, ingredients);
+			lookup_forms(ITEM::kBook, books);
+			lookup_forms(ITEM::kMiscItem, miscItems);
+			lookup_forms(ITEM::kKey, keys);
+			lookup_forms(ITEM::kSoulGem, soulGems);
+			lookup_forms(ITEM::kSpell, spells);
 		}
+
+		return armors || weapons || ammo || magicEffects || potions || scrolls || locations || ingredients || books || miscItems || keys || soulGems || spells;
 	}
 
-	if (result) {
+	void LogFormLookup()
+	{
 		logger::info("{:*^30}", "PROCESSING");
 
-		for (auto& [type, record] : ITEM::map) {
-			if (!INIs[type].empty()) {
-				logger::info("\tAdding {}/{} keywords to {}", Keywords[type].size(), INIs[type].size(), record);
+		const auto list_lookup_result = [&](const ITEM::TYPE type, const Distributables& a_distributables) {
+			if (const auto& rawKeywords = INI::INIs[type]; !rawKeywords.empty()) {
+				logger::info("Adding {}/{} keywords to {}", a_distributables.size(), rawKeywords.size(), ITEM::logTypes[type]);
 			}
-		}
-	}
+		};
 
-	return result;
+		list_lookup_result(ITEM::kArmor, armors);
+		list_lookup_result(ITEM::kWeapon, weapons);
+		list_lookup_result(ITEM::kAmmo, ammo);
+		list_lookup_result(ITEM::kMagicEffect, magicEffects);
+		list_lookup_result(ITEM::kPotion, potions);
+		list_lookup_result(ITEM::kScroll, scrolls);
+		list_lookup_result(ITEM::kLocation, locations);
+		list_lookup_result(ITEM::kIngredient, ingredients);
+		list_lookup_result(ITEM::kBook, books);
+		list_lookup_result(ITEM::kMiscItem, miscItems);
+		list_lookup_result(ITEM::kKey, keys);
+		list_lookup_result(ITEM::kSoulGem, soulGems);
+		list_lookup_result(ITEM::kSpell, spells);
+
+		// clear raw configs
+		INI::INIs.clear();
+	}
 }

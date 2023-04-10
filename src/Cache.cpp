@@ -2,7 +2,7 @@
 
 namespace Cache
 {
-	std::string EditorID::GetEditorID(RE::TESForm* a_form)
+	std::string EditorID::GetEditorID(const RE::TESForm* a_form)
 	{
 		if (!a_form) {
 			return {};
@@ -38,7 +38,7 @@ namespace Cache
 			return a_form->GetFormEditorID();
 		default:
 			{
-                static auto tweaks = GetModuleHandleA("po3_Tweaks");
+				static auto tweaks = GetModuleHandleA("po3_Tweaks");
 				static auto function = reinterpret_cast<_GetFormEditorID>(GetProcAddress(tweaks, "GetFormEditorID"));
 				if (function) {
 					return function(a_form->GetFormID());
@@ -53,26 +53,16 @@ namespace Cache
 		return std::ranges::find(set, a_type) != set.end();
 	}
 
-	ITEM::TYPE Item::GetType(const std::string& a_type)
+	Item::TYPE Item::GetType(const std::string& a_type)
 	{
-        const auto it = map.find(a_type);
-		return it != map.end() ? it->second : ITEM::TYPE::kNone;
+		const auto it = std::ranges::find(itemTypes, a_type);
+		return it != itemTypes.end() ?
+		           static_cast<TYPE>(it - std::begin(itemTypes)) :
+		           kNone;
 	}
 
-	std::string Item::GetType(ITEM::TYPE a_type)
+	std::string_view Item::GetType(TYPE a_type)
 	{
-        const auto it = reverse_map.find(a_type);
-		return it != reverse_map.end() ? std::string(it->second) : std::string();
-	}
-
-	bool Archetype::Matches(Archetype a_archetype, const StringVec& a_strings)
-	{
-		if (const auto it = archetypeMap.find(a_archetype); it != archetypeMap.end()) {
-			auto archetypeStr = it->second;
-			return std::ranges::any_of(a_strings, [&](const auto& str) {
-				return string::iequals(archetypeStr, str);
-			});
-		}
-		return false;
+		return itemTypes[a_type];
 	}
 }
