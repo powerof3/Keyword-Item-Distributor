@@ -66,6 +66,8 @@ namespace TRAITS
 			for (auto& trait : traits) {
 				if (trait.contains("AR")) {
 					armorRating = Range<float>(trait);
+				} else if (trait.contains("W")) {
+					weight = Range<float>(trait);
 				} else {
 					switch (string::const_hash(trait)) {
 					case "HEAVY"_h:
@@ -114,6 +116,9 @@ namespace TRAITS
 			if (armorType && armor->GetArmorType() != *armorType) {
 				return false;
 			}
+			if (weight && !weight->IsInRange(armor->weight)) {
+				return false;
+			}
 			return true;
 		}
 
@@ -123,9 +128,8 @@ namespace TRAITS
 		nullable<bool>                       templated{};
 		nullable<Range<float>>               armorRating{};
 		nullable<RE::BIPED_MODEL::ArmorType> armorType{};
+		nullable<Range<float>>               weight;
 	};
-
-
 
 	class WeaponTraits : public Traits
 	{
@@ -138,6 +142,36 @@ namespace TRAITS
 					weight = Range<float>(trait);
 				} else {
 					switch (string::const_hash(trait)) {
+					case "HandToHandMelee"_h:
+						animationType = RE::WEAPON_TYPE::kHandToHandMelee;
+						break;
+					case "OneHandSword"_h:
+						animationType = RE::WEAPON_TYPE::kOneHandSword;
+						break;
+					case "OneHandDagger"_h:
+						animationType = RE::WEAPON_TYPE::kOneHandDagger;
+						break;
+					case "OneHandAxe"_h:
+						animationType = RE::WEAPON_TYPE::kOneHandAxe;
+						break;
+					case "OneHandMace"_h:
+						animationType = RE::WEAPON_TYPE::kOneHandMace;
+						break;
+					case "TwoHandSword"_h:
+						animationType = RE::WEAPON_TYPE::kOneHandSword;
+						break;
+					case "TwoHandAxe"_h:
+						animationType = RE::WEAPON_TYPE::kOneHandAxe;
+						break;
+					case "Bow"_h:
+						animationType = RE::WEAPON_TYPE::kBow;
+						break;
+					case "Staff"_h:
+						animationType = RE::WEAPON_TYPE::kStaff;
+						break;
+					case "Crossbow"_h:
+						animationType = RE::WEAPON_TYPE::kCrossbow;
+						break;
 					case "E"_h:
 						enchanted = true;
 						break;
@@ -172,14 +206,18 @@ namespace TRAITS
 			if (weight && !weight->IsInRange(weapon->weight)) {
 				return false;
 			}
+			if (animationType && weapon->weaponData.animationType != *animationType) {
+				return false;
+			}
 			return true;
 		}
 
 	private:
 		// members
-		nullable<bool>         enchanted;
-		nullable<bool>         templated;
-		nullable<Range<float>> weight;
+		nullable<bool>            enchanted;
+		nullable<bool>            templated;
+		nullable<RE::WEAPON_TYPE> animationType{};
+		nullable<Range<float>>    weight;
 	};
 
 	class AmmoTraits : public Traits
