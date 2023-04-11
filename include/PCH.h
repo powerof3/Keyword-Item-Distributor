@@ -12,12 +12,15 @@
 #include <ClibUtil/rng.hpp>
 #include <ClibUtil/simpleINI.hpp>
 #include <MergeMapperPluginAPI.h>
+#include <ankerl/unordered_dense.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <srell.hpp>
 
+#include "LogBuffer.h"
+
 #define DLLEXPORT __declspec(dllexport)
 
-namespace logger = SKSE::log;
+namespace logger = LogBuffer;
 namespace string = clib_util::string;
 namespace distribution = clib_util::distribution;
 

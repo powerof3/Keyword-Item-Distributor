@@ -7,11 +7,12 @@ namespace Keyword
 {
 	struct Data
 	{
-		Count           count{ 0 };
 		RE::BGSKeyword* keyword{ nullptr };
 		FilterData      filters;
 	};
+
 	using DataVec = std::vector<Data>;
+	using CountMap = std::map<RE::BGSKeyword*, std::uint32_t>;
 
 	class Distributables
 	{
@@ -20,11 +21,14 @@ namespace Keyword
 		[[nodiscard]] std::size_t size() const;
 		void                      clear();
 
-		DataVec& GetKeywords();
-		void     LookupForms(RE::TESDataHandler* a_dataHandler, ITEM::TYPE a_type, INI::DataVec& a_INIDataVec);
+		DataVec&        GetKeywords();
+		const CountMap& GetKeywordCounts();
+		void            IncrementCount(RE::BGSKeyword* a_keyword);
+		void            LookupForms(RE::TESDataHandler* a_dataHandler, ITEM::TYPE a_type, INI::DataVec& a_INIDataVec);
 
 	private:
-		DataVec keywords;
+		DataVec  keywords;
+		CountMap keywordCount;
 	};
 
 	inline Distributables armors;

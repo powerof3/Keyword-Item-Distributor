@@ -8,33 +8,28 @@ namespace Distribute
 	using namespace Keyword;
 
 	template <class T>
-	void add_keyword(T* a_item, KeywordDataVec& keywords)
+	void distribute(Distributables& keywords)
 	{
-		for (auto& [count, keyword, filters] : keywords) {
-			if (filters.PassedFilters(a_item)) {
-				if (a_item->AddKeyword(keyword)) {
-					++count;
+		if (keywords) {
+			for (auto& item : RE::TESDataHandler::GetSingleton()->GetFormArray<T>()) {
+				for (auto& [keyword, filters] : keywords.GetKeywords()) {
+					if (filters.PassedFilters(item) && item->AddKeyword(keyword)) {
+						keywords.IncrementCount(keyword);
+					}
 				}
 			}
 		}
 	}
 
 	template <class T>
-	void distribute(const ITEM::TYPE a_type, Distributables& keywords)
+	void log_keyword_count(const ITEM::TYPE a_type, Distributables& keywords)
 	{
 		if (keywords) {
 			logger::info("{}", GetType(a_type));
 
-			const auto formArray = RE::TESDataHandler::GetSingleton()->GetFormArray<T>();
-			const auto formArraySize = formArray.size();
+			const auto formArraySize = RE::TESDataHandler::GetSingleton()->GetFormArray<T>().size();
 
-			auto& keywordVec = keywords.GetKeywords();
-
-			for (auto& item : formArray) {
-				add_keyword(item, keywordVec);
-			}
-
-			for (const auto& [count, keyword, filters] : keywordVec) {
+			for (const auto& [keyword, count] : keywords.GetKeywordCounts()) {
 				if (const auto file = keyword->GetFile(0)) {
 					logger::info("\t{} [0x{:X}~{}] added to {}/{}", keyword->GetFormEditorID(), keyword->GetLocalFormID(), file->GetFilename(), count, formArraySize);
 				} else {

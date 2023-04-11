@@ -33,5 +33,3 @@ using ProcessedVec = std::vector<FormOrString>;
 using ProcessedFilters = Filters<FormOrString>;
 
 using Chance = float;
-using Path = std::string;
-using Count = std::uint32_t;

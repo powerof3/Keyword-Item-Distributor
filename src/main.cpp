@@ -38,6 +38,9 @@ namespace MessageHandler
 				    logger::info("Keyword distribution took {}μs / {}ms", duration, duration / 1000.0f);
 				}
 
+				// Clear logger's buffer to free some memory :)
+				logger::clear();
+
 				const SKSE::ModCallbackEvent modEvent{ "KID_KeywordDistributionDone", {}, 0.0f, nullptr };
 				SKSE::GetModCallbackEventSource()->SendEvent(&modEvent);
 
@@ -95,7 +98,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface* a
 
 void InitializeLog()
 {
-	auto path = logger::log_directory();
+	auto path = SKSE::log::log_directory();
 	if (!path) {
 		stl::report_and_fail("Failed to find standard logging directory"sv);
 	}

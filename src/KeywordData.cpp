@@ -119,11 +119,22 @@ namespace Keyword
 	void Distributables::clear()
 	{
 		keywords.clear();
+		keywordCount.clear();
 	}
 
 	DataVec& Distributables::GetKeywords()
 	{
 		return keywords;
+	}
+
+    const CountMap& Distributables::GetKeywordCounts()
+	{
+		return keywordCount;
+	}
+
+    void Distributables::IncrementCount(RE::BGSKeyword* a_keyword)
+	{
+		++keywordCount[a_keyword];
 	}
 
 	void Distributables::LookupForms(RE::TESDataHandler* a_dataHandler, ITEM::TYPE a_type, INI::DataVec& a_INIDataVec)
@@ -193,10 +204,10 @@ namespace Keyword
 
 			if (!validEntry) {
 				logger::error("\t\tNo filters were processed, skipping distribution");
-			    continue;
+				continue;
 			}
 
-			keywords.emplace_back(0, keyword, FilterData{ processedFilters, std::move(traits), chance });
+			keywords.emplace_back(keyword, FilterData{ processedFilters, std::move(traits), chance });
 		}
 	}
 

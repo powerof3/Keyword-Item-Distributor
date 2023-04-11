@@ -11,6 +11,7 @@
     "rsm-binary-io",
     "spdlog",
     "srell",
+    "unordered-dense",
     "xbyak"
   ]
 }

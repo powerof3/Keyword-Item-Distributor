@@ -132,6 +132,8 @@ else ()
 	)
 endif()
 
+find_package(unordered_dense CONFIG REQUIRED)
+
 find_path(SRELL_INCLUDE_DIRS "srell.hpp")
 find_path(MERGEMAPPER_INCLUDE_DIRS "MergeMapperPluginAPI.h")
 find_path(CLIB_UTIL_INCLUDE_DIRS "ClibUtil/utils.hpp")
@@ -196,6 +198,7 @@ target_link_libraries(
 	${PROJECT_NAME}
 	PRIVATE
 		${CommonLibName}::${CommonLibName}
+		unordered_dense::unordered_dense
 )
 
 target_precompile_headers(

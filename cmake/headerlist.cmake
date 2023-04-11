@@ -3,6 +3,7 @@ set(headers ${headers}
 	include/Defs.h
 	include/Distribute.h
 	include/KeywordData.h
+	include/LogBuffer.h
 	include/LookupConfigs.h
 	include/LookupFilters.h
 	include/LookupForms.h

@@ -21,7 +21,7 @@ namespace INI
 		RawFilters     rawFilters{};
 		TraitsPtr      traits{};
 		Chance         chance{ 100 };
-		Path           path{};
+		std::string    path{};
 	};
 	using DataVec = std::vector<Data>;
 

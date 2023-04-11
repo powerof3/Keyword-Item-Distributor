@@ -60,5 +60,8 @@ namespace Forms
 
 		// clear raw configs
 		INI::INIs.clear();
+
+		// Clear logger's buffer to free some memory :)
+		logger::clear();
 	}
 }
