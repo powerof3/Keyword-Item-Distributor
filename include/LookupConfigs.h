@@ -17,12 +17,11 @@ namespace INI
 
 	struct Data
 	{
-		FormOrEditorID          rawForm{};
-		StringFilters           stringFilters{};
-		Filters<FormOrEditorID> rawFormFilters{};
-		TraitsPtr               traits{};
-		Chance                  chance{ 100 };
-		Path                    path{};
+		FormIDOrString rawForm{};
+		RawFilters     rawFilters{};
+		TraitsPtr      traits{};
+		Chance         chance{ 100 };
+		Path           path{};
 	};
 	using DataVec = std::vector<Data>;
 

@@ -12,8 +12,9 @@ namespace Distribute
 	{
 		for (auto& [count, keyword, filters] : keywords) {
 			if (filters.PassedFilters(a_item)) {
-				a_item->AddKeyword(keyword);
-				++count;
+				if (a_item->AddKeyword(keyword)) {
+					++count;
+				}
 			}
 		}
 	}

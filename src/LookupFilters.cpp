@@ -2,9 +2,8 @@
 
 namespace Filter
 {
-	Data::Data(StringFilters a_stringFilters, FormFilters a_formFilters, TraitsPtr a_traits, Chance a_chance) :
-		stringFilters(std::move(a_stringFilters)),
-		formFilters(std::move(a_formFilters)),
+	Data::Data(ProcessedFilters a_processedFilters, TraitsPtr a_traits, Chance a_chance) :
+		processedFilters(std::move(a_processedFilters)),
 		traits(std::move(a_traits)),
 		chance(a_chance)
 	{}
@@ -21,37 +20,20 @@ namespace Filter
 
 		item = a_item;
 		kywdForm = a_item->As<RE::BGSKeywordForm>();
-		formID = a_item->GetFormID();
 		edid = Cache::EditorID::GetEditorID(a_item);
 		name = a_item->GetName();
 
-		// STRING
-		if (!stringFilters.ALL.empty() && !HasStringFilter(stringFilters.ALL, true)) {
+		// STRING,FORM
+		if (!processedFilters.ALL.empty() && !HasFormOrStringFilter(processedFilters.ALL, true)) {
 			return false;
 		}
-
-		if (!stringFilters.NOT.empty() && HasStringFilter(stringFilters.NOT)) {
+		if (!processedFilters.NOT.empty() && HasFormOrStringFilter(processedFilters.NOT)) {
 			return false;
 		}
-
-		if (!stringFilters.MATCH.empty() && !HasStringFilter(stringFilters.MATCH)) {
+		if (!processedFilters.MATCH.empty() && !HasFormOrStringFilter(processedFilters.MATCH)) {
 			return false;
 		}
-
-		if (!stringFilters.ANY.empty() && !ContainsStringFilter(stringFilters.ANY)) {
-			return false;
-		}
-
-		// FORM
-		if (!formFilters.ALL.empty() && !HasFormFilter(formFilters.ALL, true)) {
-			return false;
-		}
-
-		if (!formFilters.NOT.empty() && HasFormFilter(formFilters.NOT)) {
-			return false;
-		}
-
-		if (!formFilters.MATCH.empty() && !HasFormFilter(formFilters.MATCH)) {
+		if (!processedFilters.ANY.empty() && !ContainsStringFilter(processedFilters.ANY)) {
 			return false;
 		}
 
@@ -63,107 +45,32 @@ namespace Filter
 		return true;
 	}
 
-	bool Data::HasStringFilter(const StringVec& a_strings, bool a_all) const
+	bool Data::HasFormOrStringFilter(const ProcessedVec& a_processed, bool a_all) const
 	{
-		if (a_all) {
-			return std::ranges::all_of(a_strings, [&](const auto& str) {
-				return kywdForm->HasKeywordString(str);
-			});
-		} else {
-			auto result = std::ranges::any_of(a_strings, [&](const auto& str) {
-				return string::iequals(name, str) || string::iequals(edid, str) || kywdForm->HasKeywordString(str);
-			});
-			if (!result) {
-				switch (item->GetFormType()) {
-				case RE::FormType::Weapon:
-					{
-						const auto weapon = item->As<RE::TESObjectWEAP>();
-						result = has_actorvalue(weapon->weaponData.skill.get(), a_strings);
-					}
-					break;
-				case RE::FormType::MagicEffect:
-					{
-						const auto mgef = item->As<RE::EffectSetting>();
-						auto       archetypeStr = std::to_string(mgef->data.archetype);
-						result = std::ranges::any_of(a_strings, [&](const auto& str) {
-							return archetypeStr == str;
-						});
-						if (!result) {
-							result = has_actorvalue(mgef->GetMagickSkill(), a_strings);
-						}
-					}
-					break;
-				case RE::FormType::Book:
-					{
-						const auto book = item->As<RE::TESObjectBOOK>();
-						auto       skill = RE::ActorValue::kNone;
-						if (book->TeachesSkill()) {
-							skill = book->data.teaches.actorValueToAdvance;
-						} else if (book->TeachesSpell() && book->data.teaches.spell) {
-							skill = book->data.teaches.spell->GetAssociatedSkill();
-						}
-						result = has_actorvalue(skill, a_strings);
-					}
-					break;
-				case RE::FormType::AlchemyItem:
-				case RE::FormType::Ingredient:
-				case RE::FormType::Scroll:
-				case RE::FormType::Spell:
-					{
-						const auto magicItem = item->As<RE::MagicItem>();
-						result = has_actorvalue(magicItem->GetAssociatedSkill(), a_strings);
-					}
-					break;
-				default:
-					break;
-				}
-			}
+		const auto has_form_or_string_filter = [&](const FormOrString& a_formString) {
+			bool result = false;
+			std::visit(overload{
+						   [&](RE::TESForm* a_form) {
+							   result = HasFormFilter(a_form);
+						   },
+						   [&](const RE::TESFile* a_file) {
+							   result = a_file->IsFormInMod(item->GetFormID());
+						   },
+						   [&](const std::string& a_str) {
+							   result = string::iequals(name, a_str) || string::iequals(edid, a_str) || has_skill_or_archetype(a_str);
+						   } },
+				a_formString);
 			return result;
-		}
-	}
-
-	bool Data::ContainsStringFilter(const StringVec& a_strings) const
-	{
-		return std::ranges::any_of(a_strings, [&](const auto& str) {
-			return string::icontains(name, str) || string::icontains(edid, str) || kywdForm->ContainsKeywordString(str);
-		});
-	}
-
-	bool Data::HasFormFilter(const FormVec& a_forms, bool all) const
-	{
-		const auto has_form_or_file = [&](const std::variant<RE::TESForm*, const RE::TESFile*>& a_formFile) {
-			if (std::holds_alternative<RE::TESForm*>(a_formFile)) {
-				const auto form = std::get<RE::TESForm*>(a_formFile);
-				return form && has_form_filter(form);
-			}
-			if (std::holds_alternative<const RE::TESFile*>(a_formFile)) {
-				const auto file = std::get<const RE::TESFile*>(a_formFile);
-				return file && file->IsFormInMod(formID);
-			}
-			return false;
 		};
 
-		if (all) {
-			return std::ranges::all_of(a_forms, has_form_or_file);
+		if (a_all) {
+			return std::ranges::all_of(a_processed, has_form_or_string_filter);
 		} else {
-			return std::ranges::any_of(a_forms, has_form_or_file);
+			return std::ranges::any_of(a_processed, has_form_or_string_filter);
 		}
 	}
 
-	bool Data::has_actorvalue(RE::ActorValue a_av, const StringVec& a_strings)
-	{
-		if (a_av == RE::ActorValue::kNone) {
-			return false;
-		}
-		if (const auto avInfo = RE::ActorValueList::GetSingleton()->GetActorValue(a_av)) {
-			return std::ranges::any_of(a_strings, [&](const auto& str) {
-				return str == avInfo->enumName;
-			});
-		}
-		return false;
-	}
-
-	bool Data::has_form_filter(RE::TESForm* a_formFilter) const
+	bool Data::HasFormFilter(RE::TESForm* a_formFilter) const
 	{
 		switch (a_formFilter->GetFormType()) {
 		case RE::FormType::Armor:
@@ -177,6 +84,8 @@ namespace Filter
 		case RE::FormType::KeyMaster:
 		case RE::FormType::SoulGem:
 			return item == a_formFilter;
+		case RE::FormType::Keyword:
+			return kywdForm->HasKeyword(a_formFilter->As<RE::BGSKeyword>());
 		case RE::FormType::Location:
 			{
 				const auto loc = item->As<RE::BGSLocation>();
@@ -247,7 +156,7 @@ namespace Filter
 
 				const auto list = a_formFilter->As<RE::BGSListForm>();
 				list->ForEachForm([&](RE::TESForm& a_form) {
-					if (result = has_form_filter(&a_form); result) {
+					if (result = HasFormFilter(&a_form); result) {
 						return RE::BSContainer::ForEachResult::kStop;
 					}
 					return RE::BSContainer::ForEachResult::kContinue;
@@ -258,5 +167,58 @@ namespace Filter
 		default:
 			return false;
 		}
+	}
+
+	bool Data::ContainsStringFilter(const std::vector<std::string>& a_strings) const
+	{
+		return std::ranges::any_of(a_strings, [&](const auto& str) {
+			return string::icontains(name, str) || string::icontains(edid, str) || kywdForm->ContainsKeywordString(str);
+		});
+	}
+
+	bool Data::has_skill_or_archetype(const std::string& a_str) const
+	{
+		if (AV::map.contains(a_str)) {
+			switch (item->GetFormType()) {
+			case RE::FormType::Weapon:
+				{
+					const auto weapon = item->As<RE::TESObjectWEAP>();
+					return AV::GetActorValue(weapon->weaponData.skill.get()) == a_str;
+				}
+			case RE::FormType::MagicEffect:
+				{
+					const auto mgef = item->As<RE::EffectSetting>();
+					return AV::GetActorValue(mgef->GetMagickSkill()) == a_str;
+				}
+			case RE::FormType::Book:
+				{
+					const auto book = item->As<RE::TESObjectBOOK>();
+					auto       skill = RE::ActorValue::kNone;
+					if (book->TeachesSkill()) {
+						skill = book->data.teaches.actorValueToAdvance;
+					} else if (book->TeachesSpell() && book->data.teaches.spell) {
+						skill = book->data.teaches.spell->GetAssociatedSkill();
+					}
+					return AV::GetActorValue(skill) == a_str;
+				}
+			case RE::FormType::AlchemyItem:
+			case RE::FormType::Ingredient:
+			case RE::FormType::Scroll:
+			case RE::FormType::Spell:
+				{
+					const auto magicItem = item->As<RE::MagicItem>();
+					return AV::GetActorValue(magicItem->GetAssociatedSkill()) == a_str;
+				}
+			default:
+				return false;
+			}
+		}
+
+		if (ARCHETYPE::map.contains(a_str)) {
+			const auto mgef = item->As<RE::EffectSetting>();
+			return mgef && std::to_string(mgef->data.archetype) == a_str;
+		}
+
+		return false;
 	}
 }

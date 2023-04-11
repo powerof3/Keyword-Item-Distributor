@@ -8,7 +8,9 @@
 #include "RE/Skyrim.h"
 #include "SKSE/SKSE.h"
 
-#include <ClibUtil/utils.hpp>
+#include <ClibUtil/distribution.hpp>
+#include <ClibUtil/rng.hpp>
+#include <ClibUtil/simpleINI.hpp>
 #include <MergeMapperPluginAPI.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <srell.hpp>
@@ -16,7 +18,6 @@
 #define DLLEXPORT __declspec(dllexport)
 
 namespace logger = SKSE::log;
-namespace numeric = clib_util::numeric;
 namespace string = clib_util::string;
 namespace distribution = clib_util::distribution;
 
@@ -24,7 +25,6 @@ using namespace std::literals;
 using namespace string::literals;
 
 using RNG = clib_util::RNG;
-using FORMID_TYPE = distribution::record_type;
 
 template <class T>
 using nullable = std::optional<T>;

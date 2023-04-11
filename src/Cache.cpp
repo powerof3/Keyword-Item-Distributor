@@ -65,4 +65,16 @@ namespace Cache
 	{
 		return itemTypes[a_type];
 	}
+
+    std::string_view ActorValue::GetActorValue(RE::ActorValue a_av)
+	{
+        const auto it = r_map.find(a_av);
+		return it != r_map.end() ? it->second : "None";
+	}
+
+    RE::ActorValue   ActorValue::GetActorValue(std::string_view a_av)
+	{
+		const auto it = map.find(a_av);
+		return it != map.end() ? it->second : RE::ActorValue::kNone;
+	}
 }

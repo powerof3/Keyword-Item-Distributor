@@ -41,29 +41,20 @@ namespace INI
 				for (auto& filter : filterStr) {
 					if (filter.contains('+')) {
 						auto ALL = distribution::split_entry(filter, "+");
-						std::ranges::copy_if(ALL, std::back_inserter(data.stringFilters.ALL), [](const auto& string_str) {
-							return distribution::get_record_type(string_str) == FORMID_TYPE::kEditorID;
-						});
-						std::ranges::transform(ALL, std::back_inserter(data.rawFormFilters.ALL), [](const auto& filter_str) {
+						std::ranges::transform(ALL, std::back_inserter(data.rawFilters.ALL), [](const auto& filter_str) {
 							return distribution::get_record(filter_str);
 						});
 					} else if (filter.at(0) == '-') {
 						filter.erase(0, 1);
 
-						if (distribution::get_record_type(filter) == FORMID_TYPE::kEditorID) {
-							data.stringFilters.NOT.emplace_back(filter);
-						}
-						data.rawFormFilters.NOT.emplace_back(distribution::get_record(filter));
+					    data.rawFilters.NOT.emplace_back(distribution::get_record(filter));
 
 					} else if (filter.at(0) == '*') {
 						filter.erase(0, 1);
-						data.stringFilters.ANY.emplace_back(filter);
+						data.rawFilters.ANY.emplace_back(filter);
 
 					} else {
-						if (distribution::get_record_type(filter) == FORMID_TYPE::kEditorID) {
-							data.stringFilters.MATCH.emplace_back(filter);
-						}
-						data.rawFormFilters.MATCH.emplace_back(distribution::get_record(filter));
+						data.rawFilters.MATCH.emplace_back(distribution::get_record(filter));
 					}
 				}
 			}
