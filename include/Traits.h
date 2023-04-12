@@ -254,7 +254,7 @@ namespace TRAITS
 
 		[[nodiscard]] bool PassFilter(RE::TESForm* a_item) const override
 		{
-            const auto ammo = a_item->As<RE::TESAmmo>();
+			const auto ammo = a_item->As<RE::TESAmmo>();
 			if (isBolt && ammo->IsBolt() != *isBolt) {
 				return false;
 			}
@@ -563,4 +563,4 @@ namespace TRAITS
 		nullable<RE::ActorValue>               skill{};
 	};
 }
-using TraitsPtr = std::unique_ptr<TRAITS::Traits>;
+using TraitsPtr = std::shared_ptr<TRAITS::Traits>;

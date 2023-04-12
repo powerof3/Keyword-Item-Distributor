@@ -6,6 +6,7 @@ namespace Filter
 {
 	struct Data
 	{
+		Data() = default;
 		Data(ProcessedFilters a_processedFilters, TraitsPtr a_traits, Chance a_chance);
 
 		[[nodiscard]] bool PassedFilters(RE::TESForm* a_item);
@@ -13,7 +14,7 @@ namespace Filter
 		// members
 		ProcessedFilters processedFilters{};
 		TraitsPtr        traits{};
-		Chance           chance{};
+		Chance           chance{ 100 };
 
 	private:
 		RE::TESForm*        item{ nullptr };

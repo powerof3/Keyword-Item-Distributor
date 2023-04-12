@@ -1,14 +1,13 @@
 #pragma once
 
 #include "KeywordData.h"
-#include "LookupFilters.h"
 
 namespace Distribute
 {
 	using namespace Keyword;
 
 	template <class T>
-	void distribute(Distributables& keywords)
+	void distribute(Distributables<T>& keywords)
 	{
 		if (keywords) {
 			for (auto& item : RE::TESDataHandler::GetSingleton()->GetFormArray<T>()) {
@@ -22,18 +21,18 @@ namespace Distribute
 	}
 
 	template <class T>
-	void log_keyword_count(const ITEM::TYPE a_type, Distributables& keywords)
+	void log_keyword_count(const Distributables<T>& keywords)
 	{
 		if (keywords) {
-			logger::info("{}", GetType(a_type));
+			logger::info("{}", keywords.GetTypeString());
 
 			const auto formArraySize = RE::TESDataHandler::GetSingleton()->GetFormArray<T>().size();
 
 			for (const auto& [keyword, count] : keywords.GetKeywordCounts()) {
 				if (const auto file = keyword->GetFile(0)) {
-					logger::info("\t{} [0x{:X}~{}] added to {}/{}", keyword->GetFormEditorID(), keyword->GetLocalFormID(), file->GetFilename(), count, formArraySize);
+					buffered_logger::info("\t{} [0x{:X}~{}] added to {}/{}", keyword->GetFormEditorID(), keyword->GetLocalFormID(), file->GetFilename(), count, formArraySize);
 				} else {
-					logger::info("\t{} [0x{:X}] added to {}/{}", keyword->GetFormEditorID(), keyword->GetFormID(), count, formArraySize);
+					buffered_logger::info("\t{} [0x{:X}] added to {}/{}", keyword->GetFormEditorID(), keyword->GetFormID(), count, formArraySize);
 				}
 			}
 		}

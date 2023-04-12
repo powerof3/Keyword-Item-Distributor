@@ -20,7 +20,7 @@ namespace Filter
 
 		item = a_item;
 		kywdForm = a_item->As<RE::BGSKeywordForm>();
-		edid = Cache::EditorID::GetEditorID(a_item);
+		edid = EDID::GetEditorID(a_item);
 		name = a_item->GetName();
 
 		// STRING,FORM

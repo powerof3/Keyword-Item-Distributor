@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Defs.h"
+
 namespace Cache
 {
 	namespace EditorID
@@ -72,7 +74,7 @@ namespace Cache
 
 	namespace Archetype
 	{
-		inline const std::unordered_map<std::string_view, RE::EffectArchetype> map{
+		inline const StringMap<RE::EffectArchetype> map{
 			{ "None"sv, RE::EffectArchetype::kNone },
 			{ "ValueMod"sv, RE::EffectArchetype::kValueModifier },
 			{ "Script"sv, RE::EffectArchetype::kScript },
@@ -126,7 +128,7 @@ namespace Cache
 
 	namespace ActorValue
 	{
-		inline const std::unordered_map<std::string_view, RE::ActorValue> map{
+		inline const StringMap<RE::ActorValue> map{
 			{ "Aggression"sv, RE::ActorValue::kAggression },
 			{ "Confidence"sv, RE::ActorValue::kConfidence },
 			{ "Energy"sv, RE::ActorValue::kEnergy },
@@ -293,7 +295,7 @@ namespace Cache
 			{ "ReflectDamage"sv, RE::ActorValue::kReflectDamage },
 		};
 
-		inline const std::unordered_map<RE::ActorValue, std::string_view> r_map{
+		inline const Map<RE::ActorValue, std::string_view> r_map{
 			{ RE::ActorValue::kAggression, "Aggression"sv },
 			{ RE::ActorValue::kConfidence, "Confidence"sv },
 			{ RE::ActorValue::kEnergy, "Energy"sv },
@@ -464,6 +466,7 @@ namespace Cache
 		RE::ActorValue   GetActorValue(std::string_view a_av);
 	}
 }
+namespace EDID = Cache::EditorID;
 namespace ITEM = Cache::Item;
 namespace AV = Cache::ActorValue;
 namespace ARCHETYPE = Cache::Archetype;

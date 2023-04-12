@@ -20,7 +20,8 @@
 
 #define DLLEXPORT __declspec(dllexport)
 
-namespace logger = LogBuffer;
+namespace logger = SKSE::log;
+namespace buffered_logger = LogBuffer;
 namespace string = clib_util::string;
 namespace distribution = clib_util::distribution;
 

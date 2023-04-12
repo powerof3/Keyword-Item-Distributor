@@ -1,5 +1,25 @@
 #pragma once
 
+template <class K, class D>
+using Map = ankerl::unordered_dense::map<K, D>;
+template <class K>
+using Set = ankerl::unordered_dense::set<K>;
+
+struct string_hash
+{
+	using is_transparent = void;  // enable heterogeneous overloads
+	using is_avalanching = void;  // mark class as high quality avalanching hash
+
+	[[nodiscard]] std::uint64_t operator()(std::string_view str) const noexcept
+	{
+		return ankerl::unordered_dense::hash<std::string_view>{}(str);
+	}
+};
+
+template <class D>
+using StringMap = ankerl::unordered_dense::map<std::string_view, D, string_hash, std::equal_to<>>;
+using StringSet = ankerl::unordered_dense::set<std::string_view, string_hash, std::equal_to<>>;
+
 // Keyword = formID~esp(OR)keywordEditorID|type|strings,formIDs(OR)editorIDs|traits|chance
 
 // for visting variants
