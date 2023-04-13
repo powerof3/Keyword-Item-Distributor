@@ -89,6 +89,11 @@ namespace Filter
 		case RE::FormType::Misc:
 		case RE::FormType::KeyMaster:
 		case RE::FormType::SoulGem:
+		case RE::FormType::Flora:
+		case RE::FormType::Activator:
+		case RE::FormType::Furniture:
+		case RE::FormType::Race:
+		case RE::FormType::TalkingActivator:
 			return item == a_formFilter;
 		case RE::FormType::Keyword:
 			return kywdForm->HasKeyword(a_formFilter->As<RE::BGSKeyword>());

@@ -27,7 +27,7 @@ namespace Forms
 		ForEachDistributable([]<typename T>(const Distributable<T>& a_distributable) {
 			const auto type = a_distributable.GetType();
 			if (const auto& rawKeywords = INI::INIs[type]; !rawKeywords.empty()) {
-				logger::info("Adding {}/{} keywords to {}", a_distributable.size(), rawKeywords.size(), ITEM::logTypes[type]);
+				logger::info("Adding {}/{} keywords to {}", a_distributable.size(), rawKeywords.size(), ITEM::itemTypes[type].second);
 			}
 		});
 

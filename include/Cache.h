@@ -27,12 +27,35 @@ namespace Cache
 			kKey,
 			kSoulGem,
 			kSpell,
+			kActivator,
+			kFlora,
+			kFurniture,
+			kRace,
+			kTalkingActivator,
 
 			kTotal
 		};
 
-		inline constexpr std::array itemTypes{ "Armor"sv, "Weapon"sv, "Ammo"sv, "Magic Effect"sv, "Potion"sv, "Scroll"sv, "Location"sv, "Ingredient"sv, "Book"sv, "Misc Item"sv, "Key"sv, "Soul Gem"sv, "Spell"sv };
-		inline constexpr std::array logTypes{ "armors"sv, "weapons"sv, "ammo"sv, "magic effects"sv, "potions"sv, "scrolls"sv, "location"sv, "ingredients"sv, "books"sv, "misc items"sv, "keys"sv, "soul gems"sv, "spells"sv };
+		inline constexpr std::array itemTypes{
+			std::pair{ "Armor"sv, "armors"sv },
+			std::pair{ "Weapon"sv, "weapons"sv },
+			std::pair{ "Ammo"sv, "ammo"sv },
+			std::pair{ "Magic Effect"sv, "magic effects"sv },
+			std::pair{ "Potion"sv, "potions"sv },
+			std::pair{ "Scroll"sv, "scrolls"sv },
+			std::pair{ "Location"sv, "location"sv },
+			std::pair{ "Ingredient"sv, "ingredients"sv },
+			std::pair{ "Book"sv, "books"sv },
+			std::pair{ "Misc Item"sv, "misc items"sv },
+			std::pair{ "Key"sv, "keys"sv },
+			std::pair{ "Soul Gem"sv, "soul gems"sv },
+			std::pair{ "Spell"sv, "spells"sv },
+			std::pair{ "Activator"sv, "activators"sv },
+			std::pair{ "Flora"sv, "flora"sv },
+			std::pair{ "Furniture"sv, "furniture"sv },
+		    std::pair{ "Race"sv, "races"sv },
+		    std::pair{ "Talking Activator"sv, "talking activators"sv }
+		};
 
 		TYPE             GetType(const std::string& a_type);
 		std::string_view GetType(TYPE a_type);
@@ -54,6 +77,11 @@ namespace Cache
 			RE::FormType::Misc,
 			RE::FormType::KeyMaster,
 			RE::FormType::SoulGem,
+			RE::FormType::Activator,
+			RE::FormType::Flora,
+			RE::FormType::Furniture,
+			RE::FormType::Race,
+			RE::FormType::TalkingActivator,
 			//filters
 			RE::FormType::EffectShader,
 			RE::FormType::ReferenceEffect,

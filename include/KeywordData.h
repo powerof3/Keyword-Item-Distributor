@@ -143,19 +143,24 @@ namespace Keyword
 		DataVec    keywords{};
 	};
 
-	inline Distributable<RE::TESObjectARMO>  armors{ ITEM::kArmor };
-	inline Distributable<RE::TESObjectWEAP>  weapons{ ITEM::kWeapon };
-	inline Distributable<RE::TESAmmo>        ammo{ ITEM::kAmmo };
-	inline Distributable<RE::EffectSetting>  magicEffects{ ITEM::kMagicEffect };
-	inline Distributable<RE::AlchemyItem>    potions{ ITEM::kPotion };
-	inline Distributable<RE::ScrollItem>     scrolls{ ITEM::kScroll };
-	inline Distributable<RE::BGSLocation>    locations{ ITEM::kLocation };
-	inline Distributable<RE::IngredientItem> ingredients{ ITEM::kIngredient };
-	inline Distributable<RE::TESObjectBOOK>  books{ ITEM::kBook };
-	inline Distributable<RE::TESObjectMISC>  miscItems{ ITEM::kMiscItem };
-	inline Distributable<RE::TESKey>         keys{ ITEM::kKey };
-	inline Distributable<RE::TESSoulGem>     soulGems{ ITEM::kSoulGem };
-	inline Distributable<RE::SpellItem>      spells{ ITEM::kSpell };
+	inline Distributable<RE::TESObjectARMO>       armors{ ITEM::kArmor };
+	inline Distributable<RE::TESObjectWEAP>       weapons{ ITEM::kWeapon };
+	inline Distributable<RE::TESAmmo>             ammo{ ITEM::kAmmo };
+	inline Distributable<RE::EffectSetting>       magicEffects{ ITEM::kMagicEffect };
+	inline Distributable<RE::AlchemyItem>         potions{ ITEM::kPotion };
+	inline Distributable<RE::ScrollItem>          scrolls{ ITEM::kScroll };
+	inline Distributable<RE::BGSLocation>         locations{ ITEM::kLocation };
+	inline Distributable<RE::IngredientItem>      ingredients{ ITEM::kIngredient };
+	inline Distributable<RE::TESObjectBOOK>       books{ ITEM::kBook };
+	inline Distributable<RE::TESObjectMISC>       miscItems{ ITEM::kMiscItem };
+	inline Distributable<RE::TESKey>              keys{ ITEM::kKey };
+	inline Distributable<RE::TESSoulGem>          soulGems{ ITEM::kSoulGem };
+	inline Distributable<RE::SpellItem>           spells{ ITEM::kSpell };
+	inline Distributable<RE::TESObjectACTI>       activators{ ITEM::kActivator };
+	inline Distributable<RE::TESFlora>            flora{ ITEM::kFlora };
+	inline Distributable<RE::TESFurniture>        furniture{ ITEM::kFurniture };
+	inline Distributable<RE::TESRace>             races{ ITEM::kRace };
+	inline Distributable<RE::BGSTalkingActivator> talkingActivators{ ITEM::kTalkingActivator };
 
 	template <typename Func, typename... Args>
 	void ForEachDistributable(Func&& a_func, Args&&... args)
@@ -173,6 +178,11 @@ namespace Keyword
 		a_func(keys, std::forward<Args>(args)...);
 		a_func(soulGems, std::forward<Args>(args)...);
 		a_func(spells, std::forward<Args>(args)...);
+		a_func(activators, std::forward<Args>(args)...);
+		a_func(flora, std::forward<Args>(args)...);
+		a_func(furniture, std::forward<Args>(args)...);
+		a_func(races, std::forward<Args>(args)...);
+		a_func(talkingActivators, std::forward<Args>(args)...);
 	}
 
 	void Clear();
