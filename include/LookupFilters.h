@@ -4,14 +4,12 @@
 
 namespace Filter
 {
-	static inline RNG rng{};
-
     struct Data
 	{
 		Data() = default;
 		Data(ProcessedFilters a_processedFilters, TraitsPtr a_traits, Chance a_chance);
 
-		[[nodiscard]] bool PassedFilters(RE::TESForm* a_item);
+		[[nodiscard]] bool PassedFilters(const RE::BGSKeyword* a_keyword, RE::TESForm* a_item);
 
 		// members
 		ProcessedFilters processedFilters{};

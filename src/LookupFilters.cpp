@@ -8,11 +8,14 @@ namespace Filter
 		chance(a_chance)
 	{}
 
-	bool Data::PassedFilters(RE::TESForm* a_item)
+	bool Data::PassedFilters(const RE::BGSKeyword* a_keyword, RE::TESForm* a_item)
 	{
 		// Fail chance first to avoid running unnecessary checks
 		if (chance < 100) {
-		    const auto randNum = RNG(a_item->GetFormID()).Generate<Chance>(0, 100);
+			const auto kywdHash = hash::fnv1a_32<std::string_view>(a_keyword->GetFormEditorID());
+			const auto hash = hash::szudzik_pair(kywdHash, a_item->GetFormID());
+
+		    const auto randNum = RNG(hash).Generate<Chance>(0, 100);
 			if (randNum > chance) {
 				return false;
 			}
