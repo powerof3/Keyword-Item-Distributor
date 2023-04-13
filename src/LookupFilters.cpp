@@ -161,6 +161,13 @@ namespace Filter
 				}
 				return false;
 			}
+		case RE::FormType::VoiceType:
+			{
+				if (const auto talkingActivator = item->As<RE::BGSTalkingActivator>()) {
+					return talkingActivator->GetObjectVoiceType() == a_formFilter;
+				}
+				return false;
+			}
 		case RE::FormType::FormList:
 			{
 				bool result = false;
@@ -199,7 +206,12 @@ namespace Filter
 			case RE::FormType::MagicEffect:
 				{
 					const auto mgef = item->As<RE::EffectSetting>();
-					return AV::GetActorValue(mgef->GetMagickSkill()) == a_str;
+
+					auto result = AV::GetActorValue(mgef->GetMagickSkill()) == a_str;
+					if (!result) {
+						result = AV::GetActorValue(mgef->data.resistVariable) == a_str;
+					}
+					return result;
 				}
 			case RE::FormType::Book:
 				{
