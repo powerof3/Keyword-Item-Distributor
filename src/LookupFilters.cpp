@@ -82,11 +82,8 @@ namespace Filter
 		case RE::FormType::Armor:
 		case RE::FormType::Weapon:
 		case RE::FormType::Ammo:
-		case RE::FormType::AlchemyItem:
 		case RE::FormType::Scroll:
-		case RE::FormType::Ingredient:
 		case RE::FormType::Book:
-		case RE::FormType::Misc:
 		case RE::FormType::KeyMaster:
 		case RE::FormType::SoulGem:
 		case RE::FormType::Flora:
@@ -147,6 +144,15 @@ namespace Filter
 				const auto loc = item->As<RE::BGSLocation>();
 				return loc && loc->unreportedCrimeFaction == a_formFilter;
 			}
+		case RE::FormType::AlchemyItem:
+		case RE::FormType::Ingredient:
+		case RE::FormType::Misc:
+			{
+				if (const auto flora = item->As<RE::TESFlora>()) {
+					return flora->produceItem == a_formFilter;
+				}
+				return item == a_formFilter;
+			}
 		case RE::FormType::Spell:
 			{
 				if (const auto book = item->As<RE::TESObjectBOOK>()) {
@@ -165,6 +171,13 @@ namespace Filter
 			{
 				if (const auto talkingActivator = item->As<RE::BGSTalkingActivator>()) {
 					return talkingActivator->GetObjectVoiceType() == a_formFilter;
+				}
+				return false;
+			}
+		case RE::FormType::LeveledItem:
+			{
+				if (const auto flora = item->As<RE::TESFlora>()) {
+					return flora->produceItem == a_formFilter;
 				}
 				return false;
 			}

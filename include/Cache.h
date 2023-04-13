@@ -92,6 +92,8 @@ namespace Cache
 			RE::FormType::Spell,  // also type
 			RE::FormType::Projectile,
 			RE::FormType::EquipSlot,
+			RE::FormType::VoiceType,
+			RE::FormType::LeveledItem,
 			RE::FormType::FormList
 		};
 

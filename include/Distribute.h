@@ -11,7 +11,11 @@ namespace Distribute
 	{
 		if (keywords) {
 			for (auto& item : RE::TESDataHandler::GetSingleton()->GetFormArray<T>()) {
-				for (auto& [count, keyword, filters] : keywords.GetKeywords()) {
+				if constexpr (std::is_same_v<T, RE::TESFlora>) {
+					logger::info(
+						"{} : {} [{}]", EDID::GetEditorID(item), EDID::GetEditorID(item->produceItem), item->produceItem ? item->produceItem->GetFormType() : RE::FormType::None);
+				}
+			    for (auto& [count, keyword, filters] : keywords.GetKeywords()) {
 					if (filters.PassedFilters(keyword, item) && item->AddKeyword(keyword)) {
 						++count;
 					}
