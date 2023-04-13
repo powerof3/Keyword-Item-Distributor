@@ -12,10 +12,13 @@ namespace Filter
 	{
 		// Fail chance first to avoid running unnecessary checks
 		if (chance < 100) {
-			const auto kywdHash = hash::fnv1a_32<std::string_view>(a_keyword->GetFormEditorID());
-			const auto hash = hash::szudzik_pair(kywdHash, a_item->GetFormID());
+			// create unique seed based on keyword editorID (can't use formID because it can be dynamic) and item formID
+			// item formID alone would result in same RNG chance for different keywords
+			const auto seed = hash::szudzik_pair(
+				hash::fnv1a_32<std::string_view>(a_keyword->GetFormEditorID()),
+				a_item->GetFormID());
 
-		    const auto randNum = RNG(hash).Generate<Chance>(0, 100);
+			const auto randNum = RNG(seed).Generate<Chance>(0, 100);
 			if (randNum > chance) {
 				return false;
 			}
