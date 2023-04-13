@@ -114,6 +114,7 @@ namespace Keyword
 		bool operator==(const Data& a_rhs) const;
 
 		// members
+		std::uint32_t   count{ 0 };
 		RE::BGSKeyword* keyword{ nullptr };
 		FilterData      filters{};
 	};
@@ -122,10 +123,10 @@ namespace Keyword
 	using CountMap = std::map<RE::BGSKeyword*, std::uint32_t>;
 
 	template <class T>
-	class Distributables
+	class Distributable
 	{
 	public:
-		Distributables(ITEM::TYPE a_type);
+		Distributable(ITEM::TYPE a_type);
 
 		explicit                  operator bool() const;
 		[[nodiscard]] std::size_t size() const;
@@ -135,29 +136,26 @@ namespace Keyword
 		[[nodiscard]] std::string_view GetTypeString() const;
 		[[nodiscard]] const DataVec&   GetKeywords() const;
 		[[nodiscard]] DataVec&         GetKeywords();
-		[[nodiscard]] const CountMap&  GetKeywordCounts() const;
-		void                           IncrementCount(RE::BGSKeyword* a_keyword);
 		void                           LookupForms();
 
 	private:
 		ITEM::TYPE type;
 		DataVec    keywords{};
-		CountMap   keywordCount{};
 	};
 
-	inline Distributables<RE::TESObjectARMO>  armors{ ITEM::kArmor };
-	inline Distributables<RE::TESObjectWEAP>  weapons{ ITEM::kWeapon };
-	inline Distributables<RE::TESAmmo>        ammo{ ITEM::kAmmo };
-	inline Distributables<RE::EffectSetting>  magicEffects{ ITEM::kMagicEffect };
-	inline Distributables<RE::AlchemyItem>    potions{ ITEM::kPotion };
-	inline Distributables<RE::ScrollItem>     scrolls{ ITEM::kScroll };
-	inline Distributables<RE::BGSLocation>    locations{ ITEM::kLocation };
-	inline Distributables<RE::IngredientItem> ingredients{ ITEM::kIngredient };
-	inline Distributables<RE::TESObjectBOOK>  books{ ITEM::kBook };
-	inline Distributables<RE::TESObjectMISC>  miscItems{ ITEM::kMiscItem };
-	inline Distributables<RE::TESKey>         keys{ ITEM::kKey };
-	inline Distributables<RE::TESSoulGem>     soulGems{ ITEM::kSoulGem };
-	inline Distributables<RE::SpellItem>      spells{ ITEM::kSpell };
+	inline Distributable<RE::TESObjectARMO>  armors{ ITEM::kArmor };
+	inline Distributable<RE::TESObjectWEAP>  weapons{ ITEM::kWeapon };
+	inline Distributable<RE::TESAmmo>        ammo{ ITEM::kAmmo };
+	inline Distributable<RE::EffectSetting>  magicEffects{ ITEM::kMagicEffect };
+	inline Distributable<RE::AlchemyItem>    potions{ ITEM::kPotion };
+	inline Distributable<RE::ScrollItem>     scrolls{ ITEM::kScroll };
+	inline Distributable<RE::BGSLocation>    locations{ ITEM::kLocation };
+	inline Distributable<RE::IngredientItem> ingredients{ ITEM::kIngredient };
+	inline Distributable<RE::TESObjectBOOK>  books{ ITEM::kBook };
+	inline Distributable<RE::TESObjectMISC>  miscItems{ ITEM::kMiscItem };
+	inline Distributable<RE::TESKey>         keys{ ITEM::kKey };
+	inline Distributable<RE::TESSoulGem>     soulGems{ ITEM::kSoulGem };
+	inline Distributable<RE::SpellItem>      spells{ ITEM::kSpell };
 
 	template <typename Func, typename... Args>
 	void ForEachDistributable(Func&& a_func, Args&&... args)
@@ -183,67 +181,54 @@ using KeywordData = Keyword::Data;
 using KeywordDataVec = Keyword::DataVec;
 
 template <class T>
-Keyword::Distributables<T>::Distributables(ITEM::TYPE a_type) :
+Keyword::Distributable<T>::Distributable(ITEM::TYPE a_type) :
 	type(a_type)
 {}
 
 template <class T>
-Keyword::Distributables<T>::operator bool() const
+Keyword::Distributable<T>::operator bool() const
 {
 	return !keywords.empty();
 }
 
 template <class T>
-std::size_t Keyword::Distributables<T>::size() const
+std::size_t Keyword::Distributable<T>::size() const
 {
 	return keywords.size();
 }
 
 template <class T>
-void Keyword::Distributables<T>::clear()
+void Keyword::Distributable<T>::clear()
 {
 	keywords.clear();
-	keywordCount.clear();
 }
 
 template <class T>
-ITEM::TYPE Keyword::Distributables<T>::GetType() const
+ITEM::TYPE Keyword::Distributable<T>::GetType() const
 {
 	return type;
 }
 
 template <class T>
-std::string_view Keyword::Distributables<T>::GetTypeString() const
+std::string_view Keyword::Distributable<T>::GetTypeString() const
 {
 	return ITEM::GetType(type);
 }
 
 template <class T>
-const KeywordDataVec& Keyword::Distributables<T>::GetKeywords() const
+const KeywordDataVec& Keyword::Distributable<T>::GetKeywords() const
 {
 	return keywords;
 }
 
 template <class T>
-KeywordDataVec& Keyword::Distributables<T>::GetKeywords()
+KeywordDataVec& Keyword::Distributable<T>::GetKeywords()
 {
 	return keywords;
 }
 
 template <class T>
-const Keyword::CountMap& Keyword::Distributables<T>::GetKeywordCounts() const
-{
-	return keywordCount;
-}
-
-template <class T>
-void Keyword::Distributables<T>::IncrementCount(RE::BGSKeyword* a_keyword)
-{
-	++keywordCount[a_keyword];
-}
-
-template <class T>
-void Keyword::Distributables<T>::LookupForms()
+void Keyword::Distributable<T>::LookupForms()
 {
 	auto& INIDataVec = INI::INIs[type];
 	if (INIDataVec.empty()) {
@@ -256,6 +241,12 @@ void Keyword::Distributables<T>::LookupForms()
 
 	const auto dataHandler = RE::TESDataHandler::GetSingleton();
 	auto&      keywordArray = dataHandler->GetFormArray<RE::BGSKeyword>();
+
+	// INIDataVec index, keyword
+	std::map<std::uint32_t, RE::BGSKeyword*> processedKeywords{};
+
+	// Process keywords to be distributed first.
+	std::uint32_t index = 0;
 
 	for (auto& [rawForm, rawFilters, traits, chance, path] : INIDataVec) {
 		RE::BGSKeyword* keyword = nullptr;
@@ -271,7 +262,7 @@ void Keyword::Distributables<T>::LookupForms()
 			                             RE::TESForm::LookupByID<RE::BGSKeyword>(*formID);
 						   if (!keyword) {
 							   buffered_logger::error("\t[{}] [0x{:X}]({}) FAIL - keyword doesn't exist", path, *formID, modName.value_or(""));
-						   } else if (string::is_empty(keyword->GetFormEditorID())) {
+						   } else if (keyword->formEditorID.empty()) {
 							   keyword = nullptr;
 							   buffered_logger::error("\t[{}] [0x{:X}]({}) FAIL - keyword editorID is empty!", path, *formID, modName.value_or(""));
 						   }
@@ -291,11 +282,17 @@ void Keyword::Distributables<T>::LookupForms()
 				   },
 			rawForm);
 
-		if (!keyword) {
-			continue;
+		if (keyword) {
+			processedKeywords.emplace(index, keyword);
 		}
+		index++;
+	}
 
-		logger::info("\t[{}] {}", path, keyword->GetFormEditorID());
+	// Get Filters
+	for (auto& [vecIdx, keyword] : processedKeywords) {
+		auto& [rawForm, rawFilters, traits, chance, path] = INIDataVec[vecIdx];
+
+		buffered_logger::info("\t[{}] {}", path, keyword->GetFormEditorID());
 
 		ProcessedFilters processedFilters{};
 
@@ -315,6 +312,6 @@ void Keyword::Distributables<T>::LookupForms()
 			continue;
 		}
 
-		keywords.emplace_back(Data{ keyword, { processedFilters, traits, chance } });
+		keywords.emplace_back(Data{ 0, keyword, { processedFilters, traits, chance } });
 	}
 }

@@ -2,14 +2,14 @@
 
 void Distribute::AddKeywords()
 {
-	ForEachDistributable([]<typename T>(Distributables<T>& a_distributables) {
-		distribute(a_distributables);
+	ForEachDistributable([]<typename T>(Distributable<T>& a_distributable) {
+		distribute(a_distributable);
 	});
 
 	logger::info("{:*^50}", "RESULT");
 
-	ForEachDistributable([]<typename T>(Distributables<T>& a_distributables) {
-		log_keyword_count(a_distributables);
+	ForEachDistributable([]<typename T>(Distributable<T>& a_distributable) {
+		log_keyword_count(a_distributable);
 	});
 
 	// clear keywords

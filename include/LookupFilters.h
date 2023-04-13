@@ -4,7 +4,9 @@
 
 namespace Filter
 {
-	struct Data
+	static inline RNG rng{};
+
+    struct Data
 	{
 		Data() = default;
 		Data(ProcessedFilters a_processedFilters, TraitsPtr a_traits, Chance a_chance);

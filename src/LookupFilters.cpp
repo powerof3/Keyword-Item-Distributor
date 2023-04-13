@@ -12,7 +12,7 @@ namespace Filter
 	{
 		// Fail chance first to avoid running unnecessary checks
 		if (chance < 100) {
-			const auto randNum = RNG(a_item->GetFormID()).Generate<Chance>(0, 100);
+		    const auto randNum = RNG(a_item->GetFormID()).Generate<Chance>(0, 100);
 			if (randNum > chance) {
 				return false;
 			}

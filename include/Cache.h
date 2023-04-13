@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Defs.h"
-
 namespace Cache
 {
 	namespace EditorID

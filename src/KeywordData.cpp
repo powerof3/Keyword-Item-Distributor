@@ -12,8 +12,8 @@ namespace Keyword
 
 	void Clear()
 	{
-		ForEachDistributable([]<typename T>(Distributables<T>& a_distributables) {
-			a_distributables.clear();
+		ForEachDistributable([]<typename T>(Distributable<T>& a_distributable) {
+			a_distributable.clear();
 		});
 	}
 }
