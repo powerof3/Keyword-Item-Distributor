@@ -21,12 +21,12 @@ namespace Filter
 		RE::BGSKeywordForm* kywdForm{ nullptr };
 		std::string         edid{};
 		std::string         name{};
+		std::string         model{};
 
 		[[nodiscard]] bool HasFormOrStringFilter(const ProcessedVec& a_processed, bool a_all = false) const;
 		[[nodiscard]] bool HasFormFilter(RE::TESForm* a_formFilter) const;
+		[[nodiscard]] bool HasStringFilter(const std::string& a_str) const;
 		[[nodiscard]] bool ContainsStringFilter(const std::vector<std::string>& a_strings) const;
-
-		[[nodiscard]] bool has_skill_or_archetype(const std::string& a_str) const;
 	};
 }
 using FilterData = Filter::Data;

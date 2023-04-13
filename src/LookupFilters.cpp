@@ -29,6 +29,12 @@ namespace Filter
 		edid = EDID::GetEditorID(a_item);
 		name = a_item->GetName();
 
+		if (const auto tesModel = a_item->As<RE::TESModel>()) {
+			model = tesModel->GetModel();
+		} else {
+			model.clear();
+		}
+
 		// STRING,FORM
 		if (!processedFilters.ALL.empty() && !HasFormOrStringFilter(processedFilters.ALL, true)) {
 			return false;
@@ -63,7 +69,7 @@ namespace Filter
 							   result = a_file->IsFormInMod(item->GetFormID());
 						   },
 						   [&](const std::string& a_str) {
-							   result = string::iequals(name, a_str) || string::iequals(edid, a_str) || has_skill_or_archetype(a_str);
+							   result = HasStringFilter(a_str);
 						   } },
 				a_formString);
 			return result;
@@ -200,15 +206,12 @@ namespace Filter
 		}
 	}
 
-	bool Data::ContainsStringFilter(const std::vector<std::string>& a_strings) const
+	bool Data::HasStringFilter(const std::string& a_str) const
 	{
-		return std::ranges::any_of(a_strings, [&](const auto& str) {
-			return string::icontains(name, str) || string::icontains(edid, str) || kywdForm->ContainsKeywordString(str);
-		});
-	}
+		if (string::iequals(name, a_str) || string::iequals(edid, a_str)) {
+			return true;
+		}
 
-	bool Data::has_skill_or_archetype(const std::string& a_str) const
-	{
 		if (AV::map.contains(a_str)) {
 			switch (item->GetFormType()) {
 			case RE::FormType::Weapon:
@@ -251,10 +254,21 @@ namespace Filter
 		}
 
 		if (ARCHETYPE::map.contains(a_str)) {
-			const auto mgef = item->As<RE::EffectSetting>();
-			return mgef && std::to_string(mgef->data.archetype) == a_str;
+			if (const auto mgef = item->As<RE::EffectSetting>()) {
+				return std::to_string(mgef->data.archetype) == a_str;
+			}
 		}
 
-		return false;
+        return string::iequals(model, a_str);
+	}
+
+	bool Data::ContainsStringFilter(const std::vector<std::string>& a_strings) const
+	{
+		return std::ranges::any_of(a_strings, [&](const auto& str) {
+			return string::icontains(name, str) ||
+			       string::icontains(edid, str) ||
+			       kywdForm->ContainsKeywordString(str) ||
+			       string::icontains(model, str);
+		});
 	}
 }
