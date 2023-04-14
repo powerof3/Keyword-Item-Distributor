@@ -99,7 +99,7 @@ namespace Keyword
 									   } else {
 										   if (string::icontains(editorID, ".nif")) {
 											   Filter::SanitizePath(editorID);
-										   } else {
+										   } else if (!AV::map.contains(editorID) && !ARCHETYPE::map.contains(editorID)) {
 											   buffered_logger::info("\t\tFilter ({}) INFO - treating as string", editorID);
 										   }
 										   a_formVec.push_back(editorID);
