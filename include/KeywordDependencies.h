@@ -29,7 +29,11 @@ namespace Keyword
         template <class T>
 		void ResolveKeywords(Distributable<T> & keywords)
 		{
-			std::call_once(init, []() {
+			if (!keywords) {
+				return;
+			}
+
+            std::call_once(init, []() {
 				const auto dataHandler = RE::TESDataHandler::GetSingleton();
 				for (const auto& kwd : dataHandler->GetFormArray<RE::BGSKeyword>()) {
 					if (kwd) {
@@ -52,10 +56,6 @@ namespace Keyword
 					}
 				}
 			});
-
-            if (!keywords) {
-				return;
-			}
 
 			Resolver resolver;
 

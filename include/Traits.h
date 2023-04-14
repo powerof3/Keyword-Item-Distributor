@@ -562,5 +562,71 @@ namespace TRAITS
 		nullable<RE::MagicSystem::Delivery>    deliveryType{};
 		nullable<RE::ActorValue>               skill{};
 	};
+
+	class FurnitureTraits : public Traits
+	{
+	public:
+		FurnitureTraits(const std::string& a_traits)
+		{
+			auto traits = distribution::split_entry(a_traits);
+			for (auto& trait : traits) {
+				if (trait.contains("BT")) {
+					benchType = detail::get_single_value<RE::TESFurniture::WorkBenchData::BenchType>(trait);
+				} else if (trait.contains('T')) {
+					furnitureType = detail::get_single_value<std::int32_t>(trait);
+				} else if (trait.contains("US")) {
+					useSkill = detail::get_single_value<RE::ActorValue>(trait);
+				}
+			}
+		}
+
+		~FurnitureTraits() override = default;
+
+		bool PassFilter(RE::TESForm* a_item) const override
+		{
+			const auto furniture = a_item->As<RE::TESFurniture>();
+
+			if (benchType && furniture->workBenchData.benchType != *benchType) {
+				return false;
+			}
+
+			if (furnitureType && GetFurnitureType(furniture) != *furnitureType) {
+				return false;
+			}
+
+			if (useSkill && furniture->workBenchData.usesSkill != *useSkill) {
+				return false;
+			}
+
+			return true;
+		}
+
+	private:
+        static std::int32_t GetFurnitureType(const RE::TESFurniture* a_furniture)
+		{
+			using FLAGS = RE::TESFurniture::ActiveMarker;
+
+			const auto flags = a_furniture->furnFlags;
+			if (flags.any(FLAGS::kIsPerch)) {
+				return 0;
+			}
+			if (flags.any(FLAGS::kCanLean)) {
+				return 1;
+			}
+			if (flags.any(FLAGS::kCanSit)) {
+				return 2;
+			}
+			if (flags.any(FLAGS::kCanSleep)) {
+				return 3;
+			}
+
+			return -1;
+		}
+
+		// members
+		nullable<std::int32_t>                               furnitureType{};
+		nullable<RE::TESFurniture::WorkBenchData::BenchType> benchType{};
+		nullable<RE::ActorValue>                             useSkill{};
+	};
 }
 using TraitsPtr = std::shared_ptr<TRAITS::Traits>;

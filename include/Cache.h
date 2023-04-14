@@ -97,6 +97,7 @@ namespace Cache
 			RE::FormType::EquipSlot,
 			RE::FormType::VoiceType,
 			RE::FormType::LeveledItem,
+			RE::FormType::Water,
 			RE::FormType::FormList
 		};
 

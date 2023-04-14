@@ -2,18 +2,20 @@
 
 namespace Filter
 {
-    void SanitizeString(std::string& a_string) {
-        std::ranges::transform(a_string, a_string.begin(),
-            [](unsigned char c) { return static_cast<unsigned char>(std::tolower(c)); });
-    }
+	void SanitizeString(std::string& a_string)
+	{
+		std::ranges::transform(a_string, a_string.begin(),
+			[](unsigned char c) { return static_cast<unsigned char>(std::tolower(c)); });
+	}
 
-    void SanitizePath(std::string& a_string) {
-        SanitizeString(a_string);
+	void SanitizePath(std::string& a_string)
+	{
+		SanitizeString(a_string);
 
-        a_string = srell::regex_replace(a_string, srell::regex(R"(/+|\\+)"), R"(\)");
-        a_string = srell::regex_replace(a_string, srell::regex(R"(^\\+)"), "");
-        a_string = srell::regex_replace(a_string, srell::regex(R"(.*?[^\s]meshes\\|^meshes\\)", srell::regex::icase), "");
-    }
+		a_string = srell::regex_replace(a_string, srell::regex(R"(/+|\\+)"), R"(\)");
+		a_string = srell::regex_replace(a_string, srell::regex(R"(^\\+)"), "");
+		a_string = srell::regex_replace(a_string, srell::regex(R"(.*?[^\s]meshes\\|^meshes\\)", srell::regex::icase), "");
+	}
 
 	Data::Data(ProcessedFilters a_processedFilters, TraitsPtr a_traits, Chance a_chance) :
 		processedFilters(std::move(a_processedFilters)),
@@ -99,7 +101,6 @@ namespace Filter
 	bool Data::HasFormFilter(RE::TESForm* a_formFilter) const
 	{
 		switch (a_formFilter->GetFormType()) {
-		case RE::FormType::Armor:
 		case RE::FormType::Weapon:
 		case RE::FormType::Ammo:
 		case RE::FormType::Scroll:
@@ -114,6 +115,13 @@ namespace Filter
 			return item == a_formFilter;
 		case RE::FormType::Keyword:
 			return kywdForm->HasKeyword(a_formFilter->As<RE::BGSKeyword>());
+		case RE::FormType::Armor:
+			{
+				if (const auto race = item->As<RE::TESRace>()) {
+					return race->skin == a_formFilter;
+				}
+				return item == a_formFilter;
+			}
 		case RE::FormType::Location:
 			{
 				const auto loc = item->As<RE::BGSLocation>();
@@ -151,8 +159,13 @@ namespace Filter
 			}
 		case RE::FormType::ArtObject:
 			{
-				const auto mgef = item->As<RE::EffectSetting>();
-				return mgef && (mgef->data.castingArt == a_formFilter || mgef->data.hitEffectArt == a_formFilter || mgef->data.enchantEffectArt == a_formFilter);
+				if (const auto mgef = item->As<RE::EffectSetting>()) {
+					return mgef->data.castingArt == a_formFilter || mgef->data.hitEffectArt == a_formFilter || mgef->data.enchantEffectArt == a_formFilter;
+				}
+				if (const auto race = item->As<RE::TESRace>()) {
+					return race->dismemberBlood == a_formFilter;
+				}
+				return false;
 			}
 		case RE::FormType::MusicType:
 			{
@@ -175,8 +188,15 @@ namespace Filter
 			}
 		case RE::FormType::Spell:
 			{
+				const auto spell = a_formFilter->As<RE::SpellItem>();
 				if (const auto book = item->As<RE::TESObjectBOOK>()) {
-					return book->GetSpell() == a_formFilter;
+					return book->GetSpell() == spell;
+				}
+				if (const auto race = item->As<RE::TESRace>()) {
+					return race->actorEffects && race->actorEffects->GetIndex(spell).has_value();
+				}
+				if (const auto furniture = item->As<RE::TESFurniture>()) {
+					return furniture->associatedForm == a_formFilter;
 				}
 				return item == a_formFilter;
 			}
@@ -185,7 +205,13 @@ namespace Filter
 				if (const auto weapon = item->As<RE::TESObjectWEAP>()) {
 					return weapon->formEnchanting == a_formFilter;
 				}
-				return item == a_formFilter;
+				if (const auto armor = item->As<RE::TESObjectARMO>()) {
+					return armor->formEnchanting == a_formFilter;
+				}
+				if (const auto enchantment = item->As<RE::EnchantmentItem>()) {
+					return enchantment == a_formFilter || enchantment->data.baseEnchantment == a_formFilter;
+				}
+				return false;
 			}
 		case RE::FormType::EquipSlot:
 			{
@@ -208,10 +234,22 @@ namespace Filter
 				}
 				return false;
 			}
+		case RE::FormType::Water:
+			{
+				if (const auto activator = item->As<RE::TESObjectACTI>()) {
+					return activator->GetWaterType() == a_formFilter;
+				}
+				return false;
+			}
 		case RE::FormType::FormList:
 			{
-				bool result = false;
+				if (const auto enchantment = item->As<RE::EnchantmentItem>()) {
+					if (enchantment->data.wornRestrictions == a_formFilter) {
+						return true;
+					}
+				}
 
+				bool       result = false;
 				const auto list = a_formFilter->As<RE::BGSListForm>();
 				list->ForEachForm([&](RE::TESForm& a_form) {
 					if (result = HasFormFilter(&a_form); result) {
@@ -219,7 +257,6 @@ namespace Filter
 					}
 					return RE::BSContainer::ForEachResult::kContinue;
 				});
-
 				return result;
 			}
 		default:
