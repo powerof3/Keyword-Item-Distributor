@@ -10,5 +10,6 @@ set(headers ${headers}
 	include/LookupFilters.h
 	include/LookupForms.h
 	include/PCH.h
+	include/Timer.h
 	include/Traits.h
 )

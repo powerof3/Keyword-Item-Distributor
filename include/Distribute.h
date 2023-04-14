@@ -11,7 +11,7 @@ namespace Distribute
 	{
 		if (keywords) {
 			for (auto& item : RE::TESDataHandler::GetSingleton()->GetFormArray<T>()) {
-			    for (auto& [count, keyword, filters] : keywords.GetKeywords()) {
+				for (auto& [count, keyword, filters] : keywords.GetKeywords()) {
 					if (filters.PassedFilters(keyword, item) && item->AddKeyword(keyword)) {
 						++count;
 					}
@@ -29,24 +29,25 @@ namespace Distribute
 			const auto formArraySize = RE::TESDataHandler::GetSingleton()->GetFormArray<T>().size();
 
 			// Group the same entries together to show total number of distributed records in the log.
-			std::map<RE::FormID, std::uint32_t> sums{};
-		    for (auto& [count, keyword, filters] : a_keywords.GetKeywords()) {
-				auto it = sums.find(keyword->GetFormID());
+			std::map<RE::FormID, Data> sums{};
+			for (auto& keywordData : a_keywords.GetKeywords()) {
+				auto it = sums.find(keywordData.keyword->GetFormID());
 				if (it != sums.end()) {
-					it->second += count;
+					it->second.count += keywordData.count;
 				} else {
-					sums.insert({ keyword->GetFormID(), count });
+					sums.insert({ keywordData.keyword->GetFormID(), keywordData });
 				}
 			}
 
-			for (auto& [count, keyword, filters] : a_keywords.GetKeywords()) {
-				auto actualCount = sums.find(keyword->GetFormID())->second;
-			    if (const auto file = keyword->GetFile(0)) {
-					buffered_logger::info("\t{} [0x{:X}~{}] added to {}/{}", keyword->GetFormEditorID(), keyword->GetLocalFormID(), file->GetFilename(), actualCount, formArraySize);
+			for (auto& entry : sums | std::views::values) {
+				auto& [count, keyword, filters] = entry;
+				if (const auto file = keyword->GetFile(0)) {
+					logger::info("\t{} [0x{:X}~{}] added to {}/{}", keyword->GetFormEditorID(), keyword->GetLocalFormID(), file->GetFilename(), count, formArraySize);
 				} else {
-					buffered_logger::info("\t{} [0x{:X}] added to {}/{}", keyword->GetFormEditorID(), keyword->GetFormID(), actualCount, formArraySize);
+					logger::info("\t{} [0x{:X}] added to {}/{}", keyword->GetFormEditorID(), keyword->GetFormID(), count, formArraySize);
 				}
 			}
+			sums.clear();
 		}
 	}
 

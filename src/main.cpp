@@ -1,6 +1,7 @@
 #include "Distribute.h"
 #include "LookupConfigs.h"
 #include "LookupForms.h"
+#include "Timer.h"
 
 namespace MessageHandler
 {
@@ -27,15 +28,21 @@ namespace MessageHandler
 			break;
 		case SKSE::MessagingInterface::kDataLoaded:
 			{
-				const auto startTime = std::chrono::steady_clock::now();
-				if (shouldLookupForms && Forms::LookupForms()) {
-					Forms::LogFormLookup();
-					Distribute::AddKeywords();
+                if (shouldLookupForms) {
+                    Timer timer;
+                    timer.start();
+				    if (Forms::LookupForms()) {
+						Forms::LogFormLookup();
+						timer.end();
+						logger::info("Form lookup took {}μs / {}ms", timer.duration_μs(), timer.duration_ms());
 
-					const auto endTime = std::chrono::steady_clock::now();
-					const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count();
-					logger::info("{:*^50}", "STATS");
-				    logger::info("Keyword distribution took {}μs / {}ms", duration, duration / 1000.0f);
+						timer.start();
+						Distribute::AddKeywords();
+						timer.end();
+
+						logger::info("{:*^50}", "STATS");
+						logger::info("Distribution took {}μs / {}ms", timer.duration_μs(), timer.duration_ms());
+					}
 				}
 
 				// Clear logger's buffer to free some memory :)

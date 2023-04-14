@@ -48,13 +48,13 @@ std::string describe(Value value)
 	return os.str();
 }
 
-inline std::ostream& operator<<(std::ostream& os, RE::TESFile* file)
+inline std::ostream& operator<<(std::ostream& os, const RE::TESFile* file)
 {
 	os << file->fileName;
 	return os;
 }
 
-inline std::ostream& operator<<(std::ostream& os, RE::TESForm* form)
+inline std::ostream& operator<<(std::ostream& os, const RE::TESForm* form)
 {
 	if (const auto& edid = Cache::EditorID::GetEditorID(form); !edid.empty()) {
 		os << edid << " ";
