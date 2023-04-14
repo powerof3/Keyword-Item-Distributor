@@ -12,12 +12,16 @@ namespace Forms
 	{
 		logger::info("{:*^50}", "LOOKUP");
 
-		ForEachDistributable([]<typename T>(Distributable<T>& a_distributable) {
+		bool empty = true;
+	    ForEachDistributable([&]<typename T>(Distributable<T>& a_distributable) {
 			a_distributable.LookupForms();
 			Dependencies::ResolveKeywords(a_distributable);
+			if (!a_distributable.empty()) {
+				empty = false;
+			}
 		});
 
-		return armors || weapons || ammo || magicEffects || potions || scrolls || locations || ingredients || books || miscItems || keys || soulGems || spells;
+		return !empty;
 	}
 
 	void LogFormLookup()

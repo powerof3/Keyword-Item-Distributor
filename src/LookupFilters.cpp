@@ -180,6 +180,13 @@ namespace Filter
 				}
 				return item == a_formFilter;
 			}
+		case RE::FormType::Enchantment:
+			{
+				if (const auto weapon = item->As<RE::TESObjectWEAP>()) {
+					return weapon->formEnchanting == a_formFilter;
+				}
+				return item == a_formFilter;
+			}
 		case RE::FormType::EquipSlot:
 			{
 				if (const auto equipType = item->As<RE::BGSEquipType>()) {

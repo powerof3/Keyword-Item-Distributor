@@ -32,6 +32,7 @@ namespace Cache
 			kFurniture,
 			kRace,
 			kTalkingActivator,
+			kEnchantmentItem,
 
 			kTotal
 		};
@@ -54,7 +55,8 @@ namespace Cache
 			std::pair{ "Flora"sv, "flora"sv },
 			std::pair{ "Furniture"sv, "furniture"sv },
 		    std::pair{ "Race"sv, "races"sv },
-		    std::pair{ "Talking Activator"sv, "talking activators"sv }
+		    std::pair{ "Talking Activator"sv, "talking activators"sv },
+			std::pair{ "Enchantment"sv, "enchantments"sv }
 		};
 
 		TYPE             GetType(const std::string& a_type);
@@ -82,6 +84,7 @@ namespace Cache
 			RE::FormType::Furniture,
 			RE::FormType::Race,
 			RE::FormType::TalkingActivator,
+			RE::FormType::Enchantment,
 			//filters
 			RE::FormType::EffectShader,
 			RE::FormType::ReferenceEffect,

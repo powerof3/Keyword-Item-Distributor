@@ -133,6 +133,7 @@ namespace Keyword
 		Distributable(ITEM::TYPE a_type);
 
 		explicit                  operator bool() const;
+		bool                      empty() const;
 		[[nodiscard]] std::size_t size() const;
 		void                      clear();
 
@@ -165,28 +166,34 @@ namespace Keyword
 	inline Distributable<RE::TESFurniture>        furniture{ ITEM::kFurniture };
 	inline Distributable<RE::TESRace>             races{ ITEM::kRace };
 	inline Distributable<RE::BGSTalkingActivator> talkingActivators{ ITEM::kTalkingActivator };
+	inline Distributable<RE::EnchantmentItem>     enchantments{ ITEM::kEnchantmentItem };
 
 	template <typename Func, typename... Args>
 	void ForEachDistributable(Func&& a_func, Args&&... args)
 	{
-		a_func(armors, std::forward<Args>(args)...);
-		a_func(weapons, std::forward<Args>(args)...);
-		a_func(ammo, std::forward<Args>(args)...);
-		a_func(magicEffects, std::forward<Args>(args)...);
-		a_func(potions, std::forward<Args>(args)...);
-		a_func(scrolls, std::forward<Args>(args)...);
-		a_func(locations, std::forward<Args>(args)...);
-		a_func(ingredients, std::forward<Args>(args)...);
-		a_func(books, std::forward<Args>(args)...);
-		a_func(miscItems, std::forward<Args>(args)...);
-		a_func(keys, std::forward<Args>(args)...);
-		a_func(soulGems, std::forward<Args>(args)...);
-		a_func(spells, std::forward<Args>(args)...);
-		a_func(activators, std::forward<Args>(args)...);
-		a_func(flora, std::forward<Args>(args)...);
-		a_func(furniture, std::forward<Args>(args)...);
-		a_func(races, std::forward<Args>(args)...);
-		a_func(talkingActivators, std::forward<Args>(args)...);
+		const auto process = [&](auto&& container) {
+			a_func(container, std::forward<Args>(args)...);
+		};
+
+		process(armors);
+		process(weapons);
+		process(ammo);
+		process(magicEffects);
+		process(potions);
+		process(scrolls);
+		process(locations);
+		process(ingredients);
+		process(books);
+		process(miscItems);
+		process(keys);
+		process(soulGems);
+		process(spells);
+		process(activators);
+		process(flora);
+		process(furniture);
+		process(races);
+		process(talkingActivators);
+		process(enchantments);
 	}
 
 	void Clear();
@@ -202,7 +209,13 @@ Keyword::Distributable<T>::Distributable(ITEM::TYPE a_type) :
 template <class T>
 Keyword::Distributable<T>::operator bool() const
 {
-	return !keywords.empty();
+	return !empty();
+}
+
+template <class T>
+bool Keyword::Distributable<T>::empty() const
+{
+	return keywords.empty();
 }
 
 template <class T>
