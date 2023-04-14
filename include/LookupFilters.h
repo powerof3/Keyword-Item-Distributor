@@ -4,6 +4,9 @@
 
 namespace Filter
 {
+	void SanitizeString(std::string& a_string);
+    void SanitizePath(std::string& a_string);
+
     struct Data
 	{
 		Data() = default;

@@ -85,7 +85,7 @@ namespace Keyword
 									   }
 								   }
 							   },
-							   [&](const std::string& editorID) {
+							   [&](std::string& editorID) {
 								   if (auto filterForm = RE::TESForm::LookupByEditorID(editorID)) {
 									   const auto formType = filterForm->GetFormType();
 									   if (Cache::FormType::IsFilter(formType)) {
@@ -97,7 +97,11 @@ namespace Keyword
 									   if (auto keyword = find_existing_keyword(keywordArray, editorID, true)) {
 										   a_formVec.push_back(keyword);
 									   } else {
-										   buffered_logger::info("\t\tFilter ({}) INFO - treating as string", editorID);
+										   if (string::icontains(editorID, ".nif")) {
+											   Filter::SanitizePath(editorID);
+										   } else {
+											   buffered_logger::info("\t\tFilter ({}) INFO - treating as string", editorID);
+										   }
 										   a_formVec.push_back(editorID);
 									   }
 								   }
@@ -314,6 +318,11 @@ void Keyword::Distributable<T>::LookupForms()
 			validEntry = detail::formID_to_form(rawFilters.MATCH, processedFilters.MATCH);
 		}
 		if (validEntry) {
+			std::ranges::for_each(rawFilters.ANY, [](std::string& str) {
+				if (string::icontains(str, ".nif")) {
+					Filter::SanitizePath(str);
+				}
+			});
 			processedFilters.ANY = rawFilters.ANY;
 		}
 

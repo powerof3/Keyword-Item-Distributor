@@ -2,6 +2,19 @@
 
 namespace Filter
 {
+    void SanitizeString(std::string& a_string) {
+        std::ranges::transform(a_string, a_string.begin(),
+            [](unsigned char c) { return static_cast<unsigned char>(std::tolower(c)); });
+    }
+
+    void SanitizePath(std::string& a_string) {
+        SanitizeString(a_string);
+
+        a_string = srell::regex_replace(a_string, srell::regex(R"(/+|\\+)"), R"(\)");
+        a_string = srell::regex_replace(a_string, srell::regex(R"(^\\+)"), "");
+        a_string = srell::regex_replace(a_string, srell::regex(R"(.*?[^\s]meshes\\|^meshes\\)", srell::regex::icase), "");
+    }
+
 	Data::Data(ProcessedFilters a_processedFilters, TraitsPtr a_traits, Chance a_chance) :
 		processedFilters(std::move(a_processedFilters)),
 		traits(std::move(a_traits)),
@@ -31,6 +44,7 @@ namespace Filter
 
 		if (const auto tesModel = a_item->As<RE::TESModel>()) {
 			model = tesModel->GetModel();
+			SanitizeString(model);
 		} else {
 			model.clear();
 		}
@@ -208,10 +222,6 @@ namespace Filter
 
 	bool Data::HasStringFilter(const std::string& a_str) const
 	{
-		if (string::iequals(name, a_str) || string::iequals(edid, a_str)) {
-			return true;
-		}
-
 		if (AV::map.contains(a_str)) {
 			switch (item->GetFormType()) {
 			case RE::FormType::Weapon:
@@ -259,16 +269,22 @@ namespace Filter
 			}
 		}
 
-        return string::iequals(model, a_str);
+		if (a_str.contains(".nif")) {
+			return model == a_str;
+		}
+
+		return string::iequals(name, a_str) || string::iequals(edid, a_str);
 	}
 
 	bool Data::ContainsStringFilter(const std::vector<std::string>& a_strings) const
 	{
 		return std::ranges::any_of(a_strings, [&](const auto& str) {
+			if (str.contains(".nif")) {
+				return model.contains(str);
+			}
 			return string::icontains(name, str) ||
 			       string::icontains(edid, str) ||
-			       kywdForm->ContainsKeywordString(str) ||
-			       string::icontains(model, str);
+			       kywdForm->ContainsKeywordString(str);
 		});
 	}
 }
