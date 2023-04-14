@@ -281,6 +281,8 @@ namespace TRAITS
 					deliveryType = detail::get_single_value<RE::MagicSystem::Delivery>(trait);
 				} else if (trait.contains("CT")) {
 					castingType = detail::get_single_value<RE::MagicSystem::CastingType>(trait);
+				} else if (trait.contains("R")) {
+					resistance = detail::get_single_value<RE::ActorValue>(trait);
 				} else if (trait.contains('(')) {
 					if (auto value = string::split(string::remove_non_numeric(trait), " "); !value.empty()) {
 						auto skillType = string::to_num<RE::ActorValue>(value[0]);
@@ -324,6 +326,9 @@ namespace TRAITS
 					return false;
 				}
 			}
+			if (resistance && mgef->data.resistVariable != *resistance) {
+				return false;
+			}
 			return true;
 		}
 
@@ -333,6 +338,7 @@ namespace TRAITS
 		nullable<RE::MagicSystem::CastingType>                   castingType;
 		nullable<RE::MagicSystem::Delivery>                      deliveryType;
 		nullable<std::pair<RE::ActorValue, Range<std::int32_t>>> skill;
+		nullable<RE::ActorValue>                                 resistance;
 	};
 
 	class PotionTraits : public Traits
@@ -602,7 +608,7 @@ namespace TRAITS
 		}
 
 	private:
-        static std::int32_t GetFurnitureType(const RE::TESFurniture* a_furniture)
+		static std::int32_t GetFurnitureType(const RE::TESFurniture* a_furniture)
 		{
 			using FLAGS = RE::TESFurniture::ActiveMarker;
 

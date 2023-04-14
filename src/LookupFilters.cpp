@@ -276,12 +276,7 @@ namespace Filter
 			case RE::FormType::MagicEffect:
 				{
 					const auto mgef = item->As<RE::EffectSetting>();
-
-					auto result = AV::GetActorValue(mgef->GetMagickSkill()) == a_str;
-					if (!result) {
-						result = AV::GetActorValue(mgef->data.resistVariable) == a_str;
-					}
-					return result;
+					return  AV::GetActorValue(mgef->GetMagickSkill()) == a_str;
 				}
 			case RE::FormType::Book:
 				{
