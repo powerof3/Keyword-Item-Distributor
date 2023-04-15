@@ -64,7 +64,8 @@ namespace Keyword
 			/// A map that will be used to map back keywords to their data wrappers.
 			std::unordered_multimap<RE::BGSKeyword*, KeywordData> dataKeywords;
 
-			for (const auto& keywordData : keywordForms) {
+			logger::info("\tSorting keywords...");
+            for (const auto& keywordData : keywordForms) {
 				dataKeywords.emplace(keywordData.keyword, keywordData);
 				resolver.AddIsolated(keywordData.keyword);
 
@@ -100,7 +101,7 @@ namespace Keyword
 			const auto result = resolver.Resolve();
 
 			keywordForms.clear();
-			logger::info("\tSorting keywords :");
+			logger::info("\tSorted keywords :");
 			for (const auto& keyword : result) {
 				const auto& [begin, end] = dataKeywords.equal_range(keyword);
 				if (begin != end) {

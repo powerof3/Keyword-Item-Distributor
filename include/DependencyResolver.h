@@ -32,7 +32,7 @@ public:
 		try {
 			addDependency(lhs, rhs);
 		} catch (SelfReferenceDependencyException& e) {
-			buffered_logger::warn("\tINFO - {} is referencing itself", describe(e.current));
+			buffered_logger::warn("\t\tINFO - {} is referencing itself", describe(e.current));
 		} catch (CyclicDependencyException& e) {
 			std::ostringstream os;
 			os << e.path.top();
@@ -42,7 +42,8 @@ public:
 				os << " -> " << path.top();
 				path.pop();
 			}
-			buffered_logger::warn("\tINFO - {} and {} depend on each other. Distribution might not work as expected.\n\t\t\t\t\tFull path: {}", describe(e.first), describe(e.second), os.str());
+			buffered_logger::warn("\t\tINFO - {} and {} depend on each other. Distribution might not work as expected.", describe(e.first), describe(e.second));
+			buffered_logger::warn("\t\t\tFull path: {}", os.str());
 		} catch (...) {
 			// we'll ignore other exceptions
 		}

@@ -266,7 +266,11 @@ namespace Filter
 
 	bool Data::HasStringFilter(const std::string& a_str) const
 	{
-		if (AV::map.contains(a_str)) {
+		if (string::iequals(name, a_str) || string::iequals(edid, a_str)) {
+			return true;
+		}
+
+	    if (AV::map.contains(a_str)) {
 			switch (item->GetFormType()) {
 			case RE::FormType::Weapon:
 				{
@@ -293,6 +297,7 @@ namespace Filter
 			case RE::FormType::Ingredient:
 			case RE::FormType::Scroll:
 			case RE::FormType::Spell:
+			case RE::FormType::Enchantment:
 				{
 					const auto magicItem = item->As<RE::MagicItem>();
 					return AV::GetActorValue(magicItem->GetAssociatedSkill()) == a_str;
@@ -312,7 +317,7 @@ namespace Filter
 			return model == a_str;
 		}
 
-		return string::iequals(name, a_str) || string::iequals(edid, a_str);
+		return false;
 	}
 
 	bool Data::ContainsStringFilter(const std::vector<std::string>& a_strings) const
