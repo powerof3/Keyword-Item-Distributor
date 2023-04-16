@@ -22,53 +22,66 @@ namespace Filter
 		traits(std::move(a_traits)),
 		chance(a_chance)
 	{}
+}
 
-	bool Data::PassedFilters(const RE::BGSKeyword* a_keyword, RE::TESForm* a_item)
+namespace Item
+{
+	Data::Data(RE::TESForm* a_item)
 	{
-		// Fail chance first to avoid running unnecessary checks
-		if (chance < 100) {
-			// create unique seed based on keyword editorID (can't use formID because it can be dynamic) and item formID
-			// item formID alone would result in same RNG chance for different keywords
-			const auto seed = hash::szudzik_pair(
-				hash::fnv1a_32<std::string_view>(a_keyword->GetFormEditorID()),
-				a_item->GetFormID());
-
-			const auto randNum = RNG(seed).Generate<Chance>(0, 100);
-			if (randNum > chance) {
-				return false;
-			}
-		}
-
 		item = a_item;
-		kywdForm = a_item->As<RE::BGSKeywordForm>();
 		edid = EDID::GetEditorID(a_item);
 		name = a_item->GetName();
 
 		if (const auto tesModel = a_item->As<RE::TESModel>()) {
 			model = tesModel->GetModel();
-			SanitizeString(model);
-		} else {
-			model.clear();
+			Filter::SanitizeString(model);
+		}
+
+        const auto kywdForm = a_item->As<RE::BGSKeywordForm>();
+		keywords = { kywdForm->keywords, kywdForm->keywords + kywdForm->numKeywords };
+	}
+
+	bool Data::PassedFilters(RE::BGSKeyword* a_keyword, const FilterData& a_filters)
+	{
+		// Skip if keyword exists
+	    if (keywords.contains(a_keyword)) {
+	        return false;
+		}
+
+	    // Fail chance first to avoid running unnecessary checks
+		if (a_filters.chance < 100) {
+			// create unique seed based on keyword editorID (can't use formID because it can be dynamic) and item formID
+			// item formID alone would result in same RNG chance for different keywords
+			const auto seed = hash::szudzik_pair(
+				hash::fnv1a_32<std::string_view>(a_keyword->GetFormEditorID()),
+				item->GetFormID());
+
+			const auto randNum = RNG(seed).Generate<Chance>(0, 100);
+			if (randNum > a_filters.chance) {
+				return false;
+			}
 		}
 
 		// STRING,FORM
-		if (!processedFilters.ALL.empty() && !HasFormOrStringFilter(processedFilters.ALL, true)) {
+		if (!a_filters.processedFilters.ALL.empty() && !HasFormOrStringFilter(a_filters.processedFilters.ALL, true)) {
 			return false;
 		}
-		if (!processedFilters.NOT.empty() && HasFormOrStringFilter(processedFilters.NOT)) {
+		if (!a_filters.processedFilters.NOT.empty() && HasFormOrStringFilter(a_filters.processedFilters.NOT)) {
 			return false;
 		}
-		if (!processedFilters.MATCH.empty() && !HasFormOrStringFilter(processedFilters.MATCH)) {
+		if (!a_filters.processedFilters.MATCH.empty() && !HasFormOrStringFilter(a_filters.processedFilters.MATCH)) {
 			return false;
 		}
-		if (!processedFilters.ANY.empty() && !ContainsStringFilter(processedFilters.ANY)) {
+		if (!a_filters.processedFilters.ANY.empty() && !ContainsStringFilter(a_filters.processedFilters.ANY)) {
 			return false;
 		}
 
 		// TRAITS
-		if (traits && !traits->PassFilter(a_item)) {
+		if (a_filters.traits && !a_filters.traits->PassFilter(item)) {
 			return false;
 		}
+
+		keywords.emplace(a_keyword);
 
 		return true;
 	}
@@ -114,7 +127,7 @@ namespace Filter
 		case RE::FormType::TalkingActivator:
 			return item == a_formFilter;
 		case RE::FormType::Keyword:
-			return kywdForm->HasKeyword(a_formFilter->As<RE::BGSKeyword>());
+			return keywords.contains(a_formFilter->As<RE::BGSKeyword>());
 		case RE::FormType::Armor:
 			{
 				if (const auto race = item->As<RE::TESRace>()) {
@@ -270,7 +283,7 @@ namespace Filter
 			return true;
 		}
 
-	    if (AV::map.contains(a_str)) {
+		if (AV::map.contains(a_str)) {
 			switch (item->GetFormType()) {
 			case RE::FormType::Weapon:
 				{
@@ -280,7 +293,7 @@ namespace Filter
 			case RE::FormType::MagicEffect:
 				{
 					const auto mgef = item->As<RE::EffectSetting>();
-					return  AV::GetActorValue(mgef->GetMagickSkill()) == a_str;
+					return AV::GetActorValue(mgef->GetMagickSkill()) == a_str;
 				}
 			case RE::FormType::Book:
 				{
@@ -328,7 +341,9 @@ namespace Filter
 			}
 			return string::icontains(name, str) ||
 			       string::icontains(edid, str) ||
-			       kywdForm->ContainsKeywordString(str);
+			       std::any_of(keywords.begin(), keywords.end(), [&](const auto& keyword) {
+					   return keyword->formEditorID.contains(str);
+				   });
 		});
 	}
 }
