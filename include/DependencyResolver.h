@@ -208,7 +208,7 @@ public:
 				os << " -> " << path.top();
 				path.pop();
 			}
-			buffered_logger::warn("\t\tINFO - {} and {} depend on each other. Distribution might not work as expected.", describe(e.first), describe(e.second));
+			buffered_logger::warn("\t\tINFO - {} and {} may depend on each other. Distribution might not work as expected. Ignore if using names as wildcards", describe(e.first), describe(e.second));
 			buffered_logger::warn("\t\t\tFull path: {}", os.str());
 		} catch (...) {
 			// we'll ignore other exceptions
