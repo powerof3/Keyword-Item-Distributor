@@ -160,10 +160,10 @@ namespace TRAITS
 						animationType = RE::WEAPON_TYPE::kOneHandMace;
 						break;
 					case "TwoHandSword"_h:
-						animationType = RE::WEAPON_TYPE::kOneHandSword;
+						animationType = RE::WEAPON_TYPE::kTwoHandSword;
 						break;
 					case "TwoHandAxe"_h:
-						animationType = RE::WEAPON_TYPE::kOneHandAxe;
+						animationType = RE::WEAPON_TYPE::kTwoHandAxe;
 						break;
 					case "Bow"_h:
 						animationType = RE::WEAPON_TYPE::kBow;
@@ -208,7 +208,7 @@ namespace TRAITS
 			if (weight && !weight->IsInRange(weapon->weight)) {
 				return false;
 			}
-			if (animationType && weapon->weaponData.animationType != *animationType) {
+			if (animationType && weapon->GetWeaponType() != *animationType) {
 				return false;
 			}
 			if (damage && !damage->IsInRange(weapon->GetAttackDamage())) {
