@@ -8,6 +8,7 @@
     "boost-stl-interfaces",
     "clib-util",
     "mergemapper",
+    "tsl-ordered-map",
     "rsm-binary-io",
     "spdlog",
     "srell",

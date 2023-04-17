@@ -133,6 +133,7 @@ else ()
 endif()
 
 find_package(unordered_dense CONFIG REQUIRED)
+find_package(tsl-ordered-map CONFIG REQUIRED)
 
 find_path(SRELL_INCLUDE_DIRS "srell.hpp")
 find_path(MERGEMAPPER_INCLUDE_DIRS "MergeMapperPluginAPI.h")
@@ -199,6 +200,7 @@ target_link_libraries(
 	PRIVATE
 		${CommonLibName}::${CommonLibName}
 		unordered_dense::unordered_dense
+		tsl::ordered_map
 )
 
 target_precompile_headers(

@@ -1,114 +1,20 @@
 #pragma once
 
-// See SPID for documentation
+#include <functional>
 
+/// DependencyResolver builds a dependency graph for any arbitrary Values
+/// and resolves it into a vector of the Values in the order
+/// that ensures that dependent Values are placed after those they depend on.
+/// <p>
+///	<b>Note: If custom Value type does not define overloaded operator `<` you may provide a Comparator functor,
+///	that will be used to control the order in which Values will be processed.
+///	This Comparator should indicate whether one value is less than the other.</b>
+///	</p>
 template <typename Value, typename Comparator = std::less<Value>>
 class DependencyResolver
 {
-public:
-	DependencyResolver() = default;
-	DependencyResolver(const std::vector<Value>& values) :
-		comparator(std::move(Comparator()))
-	{
-		for (const auto& value : values) {
-			nodes.try_emplace(value, new Node(value, comparator));
-		}
-	}
-	~DependencyResolver()
-	{
-		for (const auto& pair : nodes) {
-			delete pair.second;
-		}
-	}
-
-	void AddIsolated(const Value& value)
-	{
-		if (!nodes.contains(value)) {
-			nodes.try_emplace(value, new Node(value, comparator));
-		}
-	}
-	void AddDependency(const Value& lhs, const Value& rhs)
-	{
-		try {
-			addDependency(lhs, rhs);
-		} catch (SelfReferenceDependencyException& e) {
-			buffered_logger::warn("\t\tINFO - {} is referencing itself", describe(e.current));
-		} catch (CyclicDependencyException& e) {
-			std::ostringstream os;
-			os << e.path.top();
-			auto path = e.path;
-			path.pop();
-			while (!path.empty()) {
-				os << " -> " << path.top();
-				path.pop();
-			}
-			buffered_logger::warn("\t\tINFO - {} and {} depend on each other. Distribution might not work as expected.", describe(e.first), describe(e.second));
-			buffered_logger::warn("\t\t\tFull path: {}", os.str());
-		} catch (...) {
-			// we'll ignore other exceptions
-		}
-	}
-	[[nodiscard]] std::vector<Value> Resolve() const
-	{
-		std::vector<Value> result;
-
-		/// A vector of nodes that are ordered in a way that would make resolution the most efficient
-		///	by reducing number of lookups for all nodes to resolved the graph.
-		std::vector<Node*> orderedNodes;
-
-		std::transform(nodes.begin(), nodes.end(), std::back_inserter(orderedNodes), [](const auto& pair) {
-			return pair.second;
-		});
-		// Sort nodes in correct order of processing.
-		std::sort(orderedNodes.begin(), orderedNodes.end(), node_less());
-
-		for (const auto& node : orderedNodes) {
-			node->isResolved = false;
-		}
-
-		for (const auto& node : orderedNodes) {
-			resolveNode(node, result);
-		}
-
-		return result;
-	}
-
-	struct SelfReferenceDependencyException : std::exception
-	{
-		SelfReferenceDependencyException(const Value& current) :
-			current(current)
-		{}
-
-		const Value& current;
-	};
-
-	struct CyclicDependencyException : std::exception
-	{
-		CyclicDependencyException(Value first, Value second, std::stack<Value> path) :
-			first(std::move(first)),
-			second(std::move(second)),
-			path(std::move(path))
-		{}
-
-		const Value             first;
-		const Value             second;
-		const std::stack<Value> path;
-	};
-
-	struct SuperfluousDependencyException : std::exception
-	{
-		SuperfluousDependencyException(Value current, Value superfluous, std::stack<Value> path) :
-			current(std::move(current)),
-			superfluous(std::move(superfluous)),
-			path(std::move(path))
-		{}
-
-		const Value             current;
-		const Value             superfluous;
-		const std::stack<Value> path;
-	};
-
-private:
+	/// An object that represents each unique value passed to DependencyResolver
+	///	and carries information about it's dependencies.
 	struct Node
 	{
 		const Value value;
@@ -121,7 +27,7 @@ private:
 		/// <p>
 		///	<b>Use dependsOn() method to determine whether current node depends on another</b>.
 		///	</p>
-		Set<Node*> dependencies{};
+		std::set<Node*> dependencies{};
 
 		/// Flag that is used by DependencyResolver during resolution process
 		///	to detect whether given Node was already resolved.
@@ -202,6 +108,7 @@ private:
 		}
 	};
 
+	/// Custom functor that invokes Node's overloaded operator `<`.
 	struct node_less
 	{
 		bool operator()(const Node* lhs, const Node* rhs) const
@@ -210,6 +117,57 @@ private:
 		}
 	};
 
+	/// A comparator object that will be used to determine whether one value is less than the other.
+	///	This comparator is used to determine ordering in which nodes should be processed for the optimal resolution.
+	const Comparator comparator;
+
+	/// A container that holds nodes associated with each value that was added to DependencyResolver.
+	Map<Value, Node*> nodes{};
+
+	/// Looks up dependencies of a single node and places it into the result vector afterwards.
+	void resolveNode(Node* const node, std::vector<Value>& result) const
+	{
+		if (node->isResolved) {
+			return;
+		}
+		for (const auto& dependency : node->dependencies) {
+			resolveNode(dependency, result);
+		}
+		result.push_back(node->value);
+		node->isResolved = true;
+	}
+
+public:
+	DependencyResolver(const Comparator comparator = Comparator()) :
+		comparator(std::move(comparator)) {}
+
+	DependencyResolver(const std::vector<Value>& values,
+		const Comparator                         comparator = Comparator()) :
+		DependencyResolver(comparator)
+	{
+		for (const auto& value : values) {
+			nodes.try_emplace(value, new Node(value, comparator));
+		}
+	}
+
+	~DependencyResolver()
+	{
+		for (const auto& pair : nodes) {
+			delete pair.second;
+		}
+	}
+
+	/// Attempts to create a dependency rule between `parent` and `dependency` objects.
+	///	If either of those objects were not present in the original vector they'll be added in-place.
+	///
+	/// <p>
+	///	<b>May throw one of the following exceptions when Directed Acyclic Graph rules are being violated.</b>
+	///	<list>
+	///	CyclicDependencyException
+	///	SuperfluousDependencyException
+	///	SelfReferenceDependencyException
+	///	</list>
+	///	</p>
 	void addDependency(const Value& parent, const Value& dependency)
 	{
 		Node* parentNode;
@@ -233,19 +191,103 @@ private:
 			parentNode->addDependency(dependencyNode);
 		}
 	}
-	void resolveNode(Node* const node, std::vector<Value>& result) const
+
+	/// Wrapper function for addDependency
+	void AddDependency(const Value& lhs, const Value& rhs)
 	{
-		if (node->isResolved) {
-			return;
+		try {
+			addDependency(lhs, rhs);
+		} catch (SelfReferenceDependencyException& e) {
+			buffered_logger::warn("\t\tINFO - {} is referencing itself", describe(e.current));
+		} catch (CyclicDependencyException& e) {
+			std::ostringstream os;
+			os << e.path.top();
+			auto path = e.path;
+			path.pop();
+			while (!path.empty()) {
+				os << " -> " << path.top();
+				path.pop();
+			}
+			buffered_logger::warn("\t\tINFO - {} and {} depend on each other. Distribution might not work as expected.", describe(e.first), describe(e.second));
+			buffered_logger::warn("\t\t\tFull path: {}", os.str());
+		} catch (...) {
+			// we'll ignore other exceptions
 		}
-		for (const auto& dependency : node->dependencies) {
-			resolveNode(dependency, result);
-		}
-		result.push_back(node->value);
-		node->isResolved = true;
 	}
 
-	// members
-	const Comparator  comparator;
-	Map<Value, Node*> nodes{};
+	/// Add an isolated object to the resolver's graph.
+	///
+	/// Isolated object is the one that doesn't have any dependencies on the others.
+	/// However, dependencies can be added later using addDependency() method.
+	void AddIsolated(const Value& value)
+	{
+		if (!nodes.contains(value)) {
+			nodes.try_emplace(value, new Node(value, comparator));
+		}
+	}
+
+	/// Creates a vector that contains all values sorted topologically according to dependencies provided with addDependency method.
+	[[nodiscard]] std::vector<Value> Resolve() const
+	{
+		std::vector<Value> result;
+
+		/// A vector of nodes that are ordered in a way that would make resolution the most efficient
+		///	by reducing number of lookups for all nodes to resolved the graph.
+		std::vector<Node*> orderedNodes;
+
+		std::transform(nodes.begin(), nodes.end(), std::back_inserter(orderedNodes), [](const auto& pair) {
+			return pair.second;
+		});
+		// Sort nodes in correct order of processing.
+		std::sort(orderedNodes.begin(), orderedNodes.end(), node_less());
+
+		for (const auto& node : orderedNodes) {
+			node->isResolved = false;
+		}
+
+		for (const auto& node : orderedNodes) {
+			resolveNode(node, result);
+		}
+
+		return result;
+	}
+
+	/// An exception thrown when DependencyResolver attempts to add current value as a dependency of itself.
+	struct SelfReferenceDependencyException : std::exception
+	{
+		SelfReferenceDependencyException(const Value& current) :
+			current(current)
+		{}
+
+		const Value& current;
+	};
+
+	/// An exception thrown when DependencyResolver attempts to add a dependency that will create a cycle (e.g. A -> B -> A)
+	struct CyclicDependencyException : std::exception
+	{
+		CyclicDependencyException(Value first, Value second, std::stack<Value> path) :
+			first(std::move(first)),
+			second(std::move(second)),
+			path(std::move(path))
+		{}
+
+		const Value             first;
+		const Value             second;
+		const std::stack<Value> path;
+	};
+
+	/// An exception thrown when DependencyResolver attempts to add a dependency that can be inferred implicitly.
+	///	For example if (A -> B) and (B -> C) then (A -> C) is a superfluous dependency that is inferred from the first two.
+	struct SuperfluousDependencyException : std::exception
+	{
+		SuperfluousDependencyException(Value current, Value superfluous, std::stack<Value> path) :
+			current(std::move(current)),
+			superfluous(std::move(superfluous)),
+			path(std::move(path))
+		{}
+
+		const Value             current;
+		const Value             superfluous;
+		const std::stack<Value> path;
+	};
 };

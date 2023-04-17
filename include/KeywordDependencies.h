@@ -7,17 +7,41 @@ namespace Keyword
 {
 	inline std::once_flag init;
 
-    inline StringMap<RE::BGSKeyword*> allKeywords{};
+	inline StringMap<RE::BGSKeyword*> allKeywords{};
 
-    namespace Dependencies
+	namespace Dependencies
 	{
 		using KYWD = RE::BGSKeyword*;
 
+		/// Comparator that preserves relative order at which Keywords appeared in config files.
+		/// If that order is undefined it falls back to alphabetical order of EditorIDs.
 		struct keyword_less
 		{
+			using RelativeOrderMap = Map<KYWD, std::int32_t>;
+
+			const RelativeOrderMap relativeOrder;
+
 			bool operator()(const KYWD& a, const KYWD& b) const
 			{
+				const auto aIdx = getIndex(a);
+				const auto bIdx = getIndex(b);
+				if (aIdx > 0 && bIdx > 0) {
+					if (aIdx < bIdx) {
+						return true;
+					}
+					if (aIdx > bIdx) {
+						return false;
+					}
+				}
 				return a->GetFormEditorID() < b->GetFormEditorID();
+			}
+
+			[[nodiscard]] int getIndex(const KYWD& kwd) const
+			{
+				if (relativeOrder.contains(kwd)) {
+					return relativeOrder.at(kwd);
+				}
+				return -1;
 			}
 		};
 
@@ -26,14 +50,16 @@ namespace Keyword
 		/// Reads Forms::keywords and sorts them based on their relationship or alphabetical order.
 		/// This must be called after initial Lookup was performed.
 
-        template <class T>
-		void ResolveKeywords(Distributable<T> & keywords)
+		template <class T>
+		void ResolveKeywords(Distributable<T>& keywords)
 		{
 			if (!keywords) {
 				return;
 			}
 
-            std::call_once(init, []() {
+			auto& keywordForms = keywords.GetKeywords();
+
+			std::call_once(init, []() {
 				const auto dataHandler = RE::TESDataHandler::GetSingleton();
 				for (const auto& kwd : dataHandler->GetFormArray<RE::BGSKeyword>()) {
 					if (kwd) {
@@ -57,15 +83,19 @@ namespace Keyword
 				}
 			});
 
-			Resolver resolver;
+			keyword_less::RelativeOrderMap orderMap;
 
-			auto& keywordForms = keywords.GetKeywords();
+			for (std::int32_t index = 0; index < keywordForms.size(); ++index) {
+				orderMap.emplace(keywordForms[index].keyword, index);
+			}
+
+			Resolver resolver{ keyword_less(orderMap) };
 
 			/// A map that will be used to map back keywords to their data wrappers.
 			std::unordered_multimap<RE::BGSKeyword*, KeywordData> dataKeywords;
 
 			logger::info("\tSorting keywords...");
-            for (const auto& keywordData : keywordForms) {
+			for (const auto& keywordData : keywordForms) {
 				dataKeywords.emplace(keywordData.keyword, keywordData);
 				resolver.AddIsolated(keywordData.keyword);
 
@@ -79,12 +109,19 @@ namespace Keyword
 					}
 				};
 
+				const auto containsKeyword = [&](const std::string& name) -> RE::BGSKeyword* {
+					for (const auto& [keywordName, keyword] : allKeywords) {
+						if (keywordName.contains(name)) {
+							return keyword;
+						}
+					}
+					return nullptr;
+				};
+
 				const auto addANYDependencies = [&](const std::vector<std::string>& a_strings) {
 					for (const auto& filter : a_strings) {
-						for (const auto& [keywordName, kwd] : allKeywords) {
-							if (string::icontains(keywordName, filter)) {
-								resolver.AddDependency(keywordData.keyword, kwd);
-							}
+						if (const auto& kwd = containsKeyword(filter); kwd) {
+							resolver.AddDependency(keywordData.keyword, kwd);
 						}
 					}
 				};

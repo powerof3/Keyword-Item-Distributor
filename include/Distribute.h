@@ -38,12 +38,12 @@ namespace Distribute
 
 			const auto formArraySize = RE::TESDataHandler::GetSingleton()->GetFormArray<T>().size();
 
-			// Group the same entries together to show total number of distributed records in the log.
-			std::map<RE::FormID, Data> sums{};
+			// Group the same entries together to show total number of distributed records in the log.t
+		    tsl::ordered_map<RE::FormID, Data> sums{};
 			for (auto& keywordData : a_keywords.GetKeywords()) {
 				auto it = sums.find(keywordData.keyword->GetFormID());
 				if (it != sums.end()) {
-					it->second.count += keywordData.count;
+					it.value().count += keywordData.count;
 				} else {
 					sums.insert({ keywordData.keyword->GetFormID(), keywordData });
 				}
