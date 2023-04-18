@@ -64,9 +64,9 @@ namespace TRAITS
 		{
 			auto traits = distribution::split_entry(a_traits);
 			for (auto& trait : traits) {
-				if (trait.contains("AR")) {
+				if (trait.contains("AR(")) {
 					armorRating = Range<float>(trait);
-				} else if (trait.contains("W")) {
+				} else if (trait.contains("W(")) {
 					weight = Range<float>(trait);
 				} else {
 					switch (string::const_hash(trait)) {
@@ -138,9 +138,9 @@ namespace TRAITS
 		{
 			auto traits = distribution::split_entry(a_traits);
 			for (auto& trait : traits) {
-				if (trait.contains("W")) {
+				if (trait.contains("W(")) {
 					weight = Range<float>(trait);
-				} else if (trait.contains('D')) {
+				} else if (trait.contains("D(")) {
 					damage = Range<float>(trait);
 				} else {
 					switch (string::const_hash(trait)) {
@@ -233,7 +233,7 @@ namespace TRAITS
 		{
 			auto traits = distribution::split_entry(a_traits);
 			for (auto& trait : traits) {
-				if (trait.contains('D')) {
+				if (trait.contains("D(")) {
 					damage = Range<float>(trait);
 				} else {
 					switch (string::const_hash(a_traits)) {
@@ -277,11 +277,11 @@ namespace TRAITS
 		{
 			auto traits = distribution::split_entry(a_traits);
 			for (auto& trait : traits) {
-				if (trait.contains('D')) {
+				if (trait.contains("D(")) {
 					deliveryType = detail::get_single_value<RE::MagicSystem::Delivery>(trait);
-				} else if (trait.contains("CT")) {
+				} else if (trait.contains("CT(")) {
 					castingType = detail::get_single_value<RE::MagicSystem::CastingType>(trait);
-				} else if (trait.contains("R")) {
+				} else if (trait.contains("R(")) {
 					resistance = detail::get_single_value<RE::ActorValue>(trait);
 				} else if (trait.contains('(')) {
 					if (auto value = string::split(string::remove_non_numeric(trait), " "); !value.empty()) {
@@ -484,9 +484,9 @@ namespace TRAITS
 			for (auto& trait : traits) {
 				if (trait == "BLACK") {
 					black = true;
-				} else if (trait != "-BLACK") {
+				} else if (trait == "-BLACK") {
 					black = false;
-				} else if (trait.contains("SOUL")) {
+				} else if (trait.contains("SOUL(")) {
 					soulSize = detail::get_single_value<RE::SOUL_LEVEL>(trait);
 				} else {  // GEM
 					gemSize = detail::get_single_value<RE::SOUL_LEVEL>(trait);
@@ -527,11 +527,11 @@ namespace TRAITS
 		{
 			auto traits = distribution::split_entry(a_traits);
 			for (auto& trait : traits) {
-				if (trait.contains("ST")) {
+				if (trait.contains("ST(")) {
 					spellType = detail::get_single_value<RE::MagicSystem::SpellType>(trait);
-				} else if (trait.contains('D')) {
+				} else if (trait.contains("D(")) {
 					deliveryType = detail::get_single_value<RE::MagicSystem::Delivery>(trait);
-				} else if (trait.contains("CT")) {
+				} else if (trait.contains("CT(")) {
 					castingType = detail::get_single_value<RE::MagicSystem::CastingType>(trait);
 				} else {
 					skill = detail::get_single_value<RE::ActorValue>(trait);
@@ -576,11 +576,11 @@ namespace TRAITS
 		{
 			auto traits = distribution::split_entry(a_traits);
 			for (auto& trait : traits) {
-				if (trait.contains("BT")) {
+				if (trait.contains("BT(")) {
 					benchType = detail::get_single_value<RE::TESFurniture::WorkBenchData::BenchType>(trait);
-				} else if (trait.contains('T')) {
+				} else if (trait.contains("T(")) {
 					furnitureType = detail::get_single_value<std::int32_t>(trait);
-				} else if (trait.contains("US")) {
+				} else if (trait.contains("US(")) {
 					useSkill = detail::get_single_value<RE::ActorValue>(trait);
 				}
 			}
