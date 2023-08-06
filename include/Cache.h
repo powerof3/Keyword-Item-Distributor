@@ -2,13 +2,6 @@
 
 namespace Cache
 {
-	namespace EditorID
-	{
-		using _GetFormEditorID = const char* (*)(std::uint32_t);
-
-		std::string GetEditorID(const RE::TESForm* a_form);
-	}
-
 	namespace Item
 	{
 		enum TYPE : std::uint32_t
@@ -498,7 +491,7 @@ namespace Cache
 		RE::ActorValue   GetActorValue(std::string_view a_av);
 	}
 }
-namespace EDID = Cache::EditorID;
+namespace EDID = clib_util::editorID;
 namespace ITEM = Cache::Item;
 namespace AV = Cache::ActorValue;
 namespace ARCHETYPE = Cache::Archetype;

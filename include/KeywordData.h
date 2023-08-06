@@ -48,7 +48,7 @@ namespace Keyword
 			}
 		}
 
-		inline bool formID_to_form(RawVec& a_rawFormVec, ProcessedVec& a_formVec)
+		inline bool formID_to_form(RawVec& a_rawFormVec, ProcessedVec& a_formVec, bool a_all = false)
 		{
 			if (a_rawFormVec.empty()) {
 				return true;
@@ -107,7 +107,7 @@ namespace Keyword
 					formOrEditorID);
 			}
 
-			return !a_formVec.empty();
+			return !a_all && !a_formVec.empty() || a_formVec.size() == a_rawFormVec.size();
 		}
 	}
 
@@ -321,7 +321,7 @@ void Keyword::Distributable<T>::LookupForms()
 
 		ProcessedFilters processedFilters{};
 
-		bool validEntry = detail::formID_to_form(rawFilters.ALL, processedFilters.ALL);
+		bool validEntry = detail::formID_to_form(rawFilters.ALL, processedFilters.ALL, true);
 		if (validEntry) {
 			validEntry = detail::formID_to_form(rawFilters.NOT, processedFilters.NOT);
 		}
@@ -338,7 +338,7 @@ void Keyword::Distributable<T>::LookupForms()
 		}
 
 		if (!validEntry) {
-			logger::error("\t\tNo filters were processed, skipping distribution");
+			logger::error("\t\tInvalid/missing filters, skipping distribution");
 			continue;
 		}
 

@@ -56,7 +56,7 @@ inline std::ostream& operator<<(std::ostream& os, const RE::TESFile* file)
 
 inline std::ostream& operator<<(std::ostream& os, const RE::TESForm* form)
 {
-	if (const auto& edid = Cache::EditorID::GetEditorID(form); !edid.empty()) {
+	if (const auto& edid = EDID::get_editorID(form); !edid.empty()) {
 		os << edid << " ";
 	}
 	os << "["

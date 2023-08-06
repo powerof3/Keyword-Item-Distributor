@@ -29,7 +29,7 @@ namespace Item
 	Data::Data(RE::TESForm* a_item)
 	{
 		item = a_item;
-		edid = EDID::GetEditorID(a_item);
+		edid = EDID::get_editorID(a_item);
 		name = a_item->GetName();
 
 		if (const auto tesModel = a_item->As<RE::TESModel>()) {

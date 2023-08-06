@@ -10,15 +10,17 @@
 #include "SKSE/SKSE.h"
 
 #include <ClibUtil/distribution.hpp>
+#include <ClibUtil/numeric.hpp>
 #include <ClibUtil/rng.hpp>
 #include <ClibUtil/simpleINI.hpp>
-#include <ClibUtil/numeric.hpp>
 #include <MergeMapperPluginAPI.h>
 #include <ankerl/unordered_dense.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <srell.hpp>
 #include <tsl/ordered_map.h>
 #include <tsl/ordered_set.h>
+
+#include <ClibUtil/editorID.hpp>
 
 #include "LogBuffer.h"
 
