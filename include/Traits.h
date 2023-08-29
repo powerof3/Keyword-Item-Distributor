@@ -68,6 +68,8 @@ namespace TRAITS
 					armorRating = Range<float>(trait);
 				} else if (trait.contains("W(")) {
 					weight = Range<float>(trait);
+				} else if (string::is_only_digit(trait)) {
+					slot = RE::BIPED_MODEL::BipedObjectSlot(1 << (string::to_num<std::uint32_t>(trait) - 30));
 				} else {
 					switch (string::const_hash(trait)) {
 					case "HEAVY"_h:
@@ -119,16 +121,20 @@ namespace TRAITS
 			if (weight && !weight->IsInRange(armor->weight)) {
 				return false;
 			}
+			if (slot && !armor->HasPartOf(*slot)) {
+				return false;
+			}
 			return true;
 		}
 
 	private:
 		// members
-		nullable<bool>                       enchanted{};
-		nullable<bool>                       templated{};
-		nullable<Range<float>>               armorRating{};
-		nullable<RE::BIPED_MODEL::ArmorType> armorType{};
-		nullable<Range<float>>               weight;
+		nullable<bool>                             enchanted{};
+		nullable<bool>                             templated{};
+		nullable<Range<float>>                     armorRating{};
+		nullable<RE::BIPED_MODEL::ArmorType>       armorType{};
+		nullable<Range<float>>                     weight;
+		nullable<RE::BIPED_MODEL::BipedObjectSlot> slot{};
 	};
 
 	class WeaponTraits : public Traits
