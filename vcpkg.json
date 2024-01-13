@@ -1,11 +1,10 @@
 {
   "name": "kid",
-  "version-string": "3.0.4",
+  "version-string": "3.1.0",
   "description": "Keyword Item Distributor",
   "homepage": "https://github.com/powerof3/Keyword-Item-Distributor",
   "license": "MIT",
   "dependencies": [
-    "boost-stl-interfaces",
     "clib-util",
     "mergemapper",
     "tsl-ordered-map",
@@ -14,12 +13,5 @@
     "srell",
     "unordered-dense",
     "xbyak"
-  ],
-  "overrides": [
-    {
-      "name": "fmt",
-      "version": "9.1.0"
-    }
-  ],
-  "builtin-baseline": "78b61582c9e093fda56a01ebb654be15a0033897"
+  ]
 }

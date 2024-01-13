@@ -7,25 +7,31 @@ namespace Distribute
 	using namespace Keyword;
 
 	template <class T>
+	void distribute(T* a_item, KeywordDataVec& a_keywords)
+	{
+		Item::Data itemData(a_item);
+
+		std::vector<RE::BGSKeyword*> processedKeywords;
+		processedKeywords.reserve(a_keywords.size());
+		for (auto& [count, keyword, filters] : a_keywords) {
+			if (itemData.PassedFilters(keyword, filters)) {
+				processedKeywords.emplace_back(keyword);
+				++count;
+			}
+		}
+
+		if (!processedKeywords.empty()) {
+			a_item->AddKeywords(processedKeywords);
+		}
+	}
+
+	template <class T>
 	void distribute(Distributable<T>& a_keywords)
 	{
 		if (a_keywords) {
 			auto& keywords = a_keywords.GetKeywords();
-
 		    for (auto& item : RE::TESDataHandler::GetSingleton()->GetFormArray<T>()) {
-				Item::Data itemData(item);
-
-		        std::vector<RE::BGSKeyword*> processedKeywords;
-				processedKeywords.reserve(keywords.size());
-				for (auto& [count, keyword, filters] : keywords) {
-					if (itemData.PassedFilters(keyword, filters)) {
-						processedKeywords.emplace_back(keyword);
-						++count;
-					}
-				}
-				if (!processedKeywords.empty()) {
-					item->AddKeywords(processedKeywords);
-				}
+				distribute(item, keywords);
 			}
 		}
 	}

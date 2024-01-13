@@ -56,7 +56,7 @@ namespace Item
 				hash::fnv1a_32<std::string_view>(a_keyword->GetFormEditorID()),
 				item->GetFormID());
 
-			const auto randNum = RNG(seed).Generate<Chance>(0, 100);
+			const auto randNum = RNG(seed).generate<Chance>(0, 100);
 			if (randNum > a_filters.chance) {
 				return false;
 			}
@@ -254,6 +254,13 @@ namespace Item
 				}
 				return false;
 			}
+		case RE::FormType::Perk:
+			{
+				if (const auto spell = item->As<RE::SpellItem>()) {
+					return spell->data.castingPerk == a_formFilter;
+				}
+				return false;
+			}
 		case RE::FormType::FormList:
 			{
 				if (const auto enchantment = item->As<RE::EnchantmentItem>()) {
@@ -279,7 +286,7 @@ namespace Item
 
 	bool Data::HasStringFilter(const std::string& a_str) const
 	{
-		if (string::iequals(name, a_str) || string::iequals(edid, a_str)) {
+		if (string::iequals(edid, a_str) || string::iequals(name, a_str)) {
 			return true;
 		}
 

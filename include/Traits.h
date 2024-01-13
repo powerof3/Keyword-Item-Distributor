@@ -69,7 +69,7 @@ namespace TRAITS
 				} else if (trait.contains("W(")) {
 					weight = Range<float>(trait);
 				} else if (string::is_only_digit(trait)) {
-					slot = RE::BIPED_MODEL::BipedObjectSlot(1 << (string::to_num<std::uint32_t>(trait) - 30));
+					slot = static_cast<RE::BIPED_MODEL::BipedObjectSlot>(1 << (string::to_num<std::uint32_t>(trait) - 30));
 				} else {
 					switch (string::const_hash(trait)) {
 					case "HEAVY"_h:

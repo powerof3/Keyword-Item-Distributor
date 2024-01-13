@@ -3,6 +3,7 @@ set(headers ${headers}
 	include/Defs.h
 	include/DependencyResolver.h
 	include/Distribute.h
+	include/Hooks.h
 	include/KeywordData.h
 	include/KeywordDependencies.h
 	include/LogBuffer.h
@@ -10,6 +11,5 @@ set(headers ${headers}
 	include/LookupFilters.h
 	include/LookupForms.h
 	include/PCH.h
-	include/Timer.h
 	include/Traits.h
 )

@@ -9,11 +9,4 @@ namespace Keyword
 		}
 		return keyword->GetFormID() == a_rhs.keyword->GetFormID();
 	}
-
-	void Clear()
-	{
-		ForEachDistributable([]<typename T>(Distributable<T>& a_distributable) {
-			a_distributable.clear();
-		});
-	}
 }

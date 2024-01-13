@@ -91,6 +91,7 @@ namespace Cache
 			RE::FormType::VoiceType,
 			RE::FormType::LeveledItem,
 			RE::FormType::Water,
+			RE::FormType::Perk,
 			RE::FormType::FormList
 		};
 

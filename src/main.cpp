@@ -1,7 +1,7 @@
 #include "Distribute.h"
+#include "Hooks.h"
 #include "LookupConfigs.h"
 #include "LookupForms.h"
-#include "Timer.h"
 
 namespace MessageHandler
 {
@@ -12,7 +12,10 @@ namespace MessageHandler
 	{
 		switch (a_message->type) {
 		case SKSE::MessagingInterface::kPostLoad:
-			std::tie(shouldLookupForms, shouldLogErrors) = INI::GetConfigs();
+			{
+				std::tie(shouldLookupForms, shouldLogErrors) = INI::GetConfigs();
+				Hooks::Install();
+			}
 			break;
 		case SKSE::MessagingInterface::kPostPostLoad:
 			{
@@ -28,10 +31,10 @@ namespace MessageHandler
 			break;
 		case SKSE::MessagingInterface::kDataLoaded:
 			{
-                if (shouldLookupForms) {
-                    Timer timer;
-                    timer.start();
-				    if (Forms::LookupForms()) {
+				if (shouldLookupForms) {
+					Timer timer;
+					timer.start();
+					if (Forms::LookupForms()) {
 						Forms::LogFormLookup();
 						timer.end();
 						logger::info("Form lookup took {}μs / {}ms", timer.duration_μs(), timer.duration_ms());
@@ -52,7 +55,7 @@ namespace MessageHandler
 				SKSE::GetModCallbackEventSource()->SendEvent(&modEvent);
 
 				if (shouldLogErrors) {
-					const auto error = fmt::format("[KID] Errors found when reading configs. Check {}.log in {} for more info\n", Version::PROJECT, SKSE::log::log_directory()->string());
+					const auto error = std::format("[KID] Errors found when reading configs. Check {}.log in {} for more info\n", Version::PROJECT, SKSE::log::log_directory()->string());
 					RE::ConsoleLog::GetSingleton()->Print(error.c_str());
 				}
 			}

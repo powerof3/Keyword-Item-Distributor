@@ -193,8 +193,6 @@ namespace Keyword
 		process(talkingActivators);
 		process(enchantments);
 	}
-
-	void Clear();
 }
 using KeywordData = Keyword::Data;
 using KeywordDataVec = Keyword::DataVec;

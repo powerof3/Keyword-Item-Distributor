@@ -9,16 +9,18 @@
 #include "RE/Skyrim.h"
 #include "SKSE/SKSE.h"
 
-#include <ClibUtil/distribution.hpp>
-#include <ClibUtil/numeric.hpp>
-#include <ClibUtil/rng.hpp>
-#include <ClibUtil/simpleINI.hpp>
 #include <MergeMapperPluginAPI.h>
 #include <ankerl/unordered_dense.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <srell.hpp>
 #include <tsl/ordered_map.h>
 #include <tsl/ordered_set.h>
+
+#include <ClibUtil/distribution.hpp>
+#include <ClibUtil/numeric.hpp>
+#include <ClibUtil/rng.hpp>
+#include <ClibUtil/simpleINI.hpp>
+#include <ClibUtil/timer.hpp>
 
 #include <ClibUtil/editorID.hpp>
 
@@ -59,6 +61,13 @@ using StringSet = ankerl::unordered_dense::set<std::string_view, string_hash, st
 namespace stl
 {
 	using namespace SKSE::stl;
+
+	template <class F, class T>
+	void write_vfunc()
+	{
+		REL::Relocation<std::uintptr_t> vtbl{ F::VTABLE[0] };
+		T::func = vtbl.write_vfunc(T::idx, T::thunk);
+	}
 }
 
 #include "Cache.h"
