@@ -31,7 +31,9 @@ namespace Distribute
 		if (a_keywords) {
 			auto& keywords = a_keywords.GetKeywords();
 		    for (auto& item : RE::TESDataHandler::GetSingleton()->GetFormArray<T>()) {
-				distribute(item, keywords);
+				if (item) {
+					distribute(item, keywords);
+				}
 			}
 		}
 	}

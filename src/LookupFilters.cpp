@@ -259,6 +259,9 @@ namespace Item
 				if (const auto spell = item->As<RE::SpellItem>()) {
 					return spell->data.castingPerk == a_formFilter;
 				}
+				if (const auto mgef = item->As<RE::EffectSetting>()) {
+					return mgef->data.perk == a_formFilter;
+				}
 				return false;
 			}
 		case RE::FormType::FormList:
@@ -300,7 +303,7 @@ namespace Item
 			case RE::FormType::MagicEffect:
 				{
 					const auto mgef = item->As<RE::EffectSetting>();
-					return AV::GetActorValue(mgef->GetMagickSkill()) == a_str;
+					return AV::GetActorValue(mgef->data.associatedSkill) == a_str || AV::GetActorValue(mgef->data.primaryAV) == a_str || AV::GetActorValue(mgef->data.secondaryAV) == a_str || AV::GetActorValue(mgef->data.resistVariable) == a_str;
 				}
 			case RE::FormType::Book:
 				{
@@ -346,8 +349,8 @@ namespace Item
 			if (str.contains(".nif")) {
 				return model.contains(str);
 			}
-			return string::icontains(name, str) ||
-			       string::icontains(edid, str) ||
+			return string::icontains(edid, str) ||
+			       string::icontains(name, str) ||
 			       std::any_of(keywords.begin(), keywords.end(), [&](const auto& keyword) {
 					   return keyword->formEditorID.contains(str);
 				   });
