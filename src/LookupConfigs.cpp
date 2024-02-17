@@ -89,6 +89,7 @@ namespace INI
 					break;
 				case ITEM::kSpell:
 				case ITEM::kEnchantmentItem:
+				case ITEM::kScroll:
 					data.traits = std::make_unique<TRAITS::SpellTraits>(traitsStr);
 					break;
 				case ITEM::kFurniture:

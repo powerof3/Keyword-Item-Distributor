@@ -37,18 +37,18 @@ namespace Item
 			Filter::SanitizeString(model);
 		}
 
-        const auto kywdForm = a_item->As<RE::BGSKeywordForm>();
+		const auto kywdForm = a_item->As<RE::BGSKeywordForm>();
 		keywords = { kywdForm->keywords, kywdForm->keywords + kywdForm->numKeywords };
 	}
 
 	bool Data::PassedFilters(RE::BGSKeyword* a_keyword, const FilterData& a_filters)
 	{
 		// Skip if keyword exists
-	    if (keywords.contains(a_keyword)) {
-	        return false;
+		if (keywords.contains(a_keyword)) {
+			return false;
 		}
 
-	    // Fail chance first to avoid running unnecessary checks
+		// Fail chance first to avoid running unnecessary checks
 		if (a_filters.chance < 100) {
 			// create unique seed based on keyword editorID (can't use formID because it can be dynamic) and item formID
 			// item formID alone would result in same RNG chance for different keywords
@@ -111,6 +111,19 @@ namespace Item
 		}
 	}
 
+	static RE::EffectSetting* GetCostliestMGEF(RE::TESForm* a_form)
+	{
+		if (a_form) {
+			if (const auto magicItem = a_form->As<RE::MagicItem>()) {
+				auto effect = magicItem->GetCostliestEffectItem();
+				if (const auto mgef = effect ? effect->baseEffect : nullptr) {
+					return mgef;
+				}
+			}
+		}
+		return nullptr;
+	}
+
 	bool Data::HasFormFilter(RE::TESForm* a_formFilter) const
 	{
 		switch (a_formFilter->GetFormType()) {
@@ -127,7 +140,31 @@ namespace Item
 		case RE::FormType::TalkingActivator:
 			return item == a_formFilter;
 		case RE::FormType::Keyword:
-			return keywords.contains(a_formFilter->As<RE::BGSKeyword>());
+			{
+				auto keyword = a_formFilter->As<RE::BGSKeyword>();
+				if (keywords.contains(keyword)) {
+					return true;
+				}
+				if (auto mgef = GetCostliestMGEF(item)) {
+					return mgef->HasKeyword(keyword);
+				}
+				if (const auto book = item->As<RE::TESObjectBOOK>()) {
+					if (auto mgef = GetCostliestMGEF(book->GetSpell())) {
+						return mgef->HasKeyword(keyword);
+					}
+				}
+				if (const auto armor = item->As<RE::TESObjectARMO>()) {
+					if (auto mgef = GetCostliestMGEF(armor->formEnchanting)) {
+						return mgef->HasKeyword(keyword);
+					}
+				}
+				if (const auto weapon = item->As<RE::TESObjectWEAP>()) {
+					if (auto mgef = GetCostliestMGEF(weapon->formEnchanting)) {
+						return mgef->HasKeyword(keyword);
+					}
+				}
+				return false;
+			}
 		case RE::FormType::Armor:
 			{
 				if (const auto race = item->As<RE::TESRace>()) {
@@ -274,8 +311,8 @@ namespace Item
 
 				bool       result = false;
 				const auto list = a_formFilter->As<RE::BGSListForm>();
-				list->ForEachForm([&](RE::TESForm& a_form) {
-					if (result = HasFormFilter(&a_form); result) {
+				list->ForEachForm([&](auto* a_form) {
+					if (result = HasFormFilter(a_form); result) {
 						return RE::BSContainer::ForEachResult::kStop;
 					}
 					return RE::BSContainer::ForEachResult::kContinue;
@@ -303,7 +340,10 @@ namespace Item
 			case RE::FormType::MagicEffect:
 				{
 					const auto mgef = item->As<RE::EffectSetting>();
-					return AV::GetActorValue(mgef->data.associatedSkill) == a_str || AV::GetActorValue(mgef->data.primaryAV) == a_str || AV::GetActorValue(mgef->data.secondaryAV) == a_str || AV::GetActorValue(mgef->data.resistVariable) == a_str;
+					return AV::GetActorValue(mgef->data.associatedSkill) == a_str ||
+					       AV::GetActorValue(mgef->data.primaryAV) == a_str ||
+					       AV::GetActorValue(mgef->data.secondaryAV) == a_str ||
+					       AV::GetActorValue(mgef->data.resistVariable) == a_str;
 				}
 			case RE::FormType::Book:
 				{
@@ -323,7 +363,16 @@ namespace Item
 			case RE::FormType::Enchantment:
 				{
 					const auto magicItem = item->As<RE::MagicItem>();
-					return AV::GetActorValue(magicItem->GetAssociatedSkill()) == a_str;
+					if (AV::GetActorValue(magicItem->GetAssociatedSkill()) == a_str) {
+						return true;
+					}
+					if (const auto mgef = GetCostliestMGEF(magicItem)) {
+						return AV::GetActorValue(mgef->data.associatedSkill) == a_str ||
+						       AV::GetActorValue(mgef->data.primaryAV) == a_str ||
+						       AV::GetActorValue(mgef->data.secondaryAV) == a_str ||
+						       AV::GetActorValue(mgef->data.resistVariable) == a_str;
+					}
+					return false;
 				}
 			default:
 				return false;
@@ -331,7 +380,9 @@ namespace Item
 		}
 
 		if (ARCHETYPE::map.contains(a_str)) {
-			if (const auto mgef = item->As<RE::EffectSetting>()) {
+			if (auto mgef = item->As<RE::EffectSetting>()) {
+				return std::to_string(mgef->data.archetype) == a_str;
+			} else if (mgef = GetCostliestMGEF(item); mgef) {
 				return std::to_string(mgef->data.archetype) == a_str;
 			}
 		}

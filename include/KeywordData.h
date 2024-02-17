@@ -173,10 +173,10 @@ namespace Keyword
 			a_func(container, std::forward<Args>(args)...);
 		};
 
+		process(magicEffects);		
 		process(armors);
 		process(weapons);
 		process(ammo);
-		process(magicEffects);
 		process(potions);
 		process(scrolls);
 		process(locations);

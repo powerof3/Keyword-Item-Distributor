@@ -304,6 +304,10 @@ namespace TRAITS
 					isHostile = true;
 				} else if (trait == "-H") {
 					isHostile = false;
+				} else if (trait == "DISPEL") {
+					dispelWithKeywords = true;
+				} else if (trait == "-DISPEL") {
+					dispelWithKeywords = false;
 				}
 			}
 		}
@@ -335,6 +339,9 @@ namespace TRAITS
 			if (resistance && mgef->data.resistVariable != *resistance) {
 				return false;
 			}
+			if (dispelWithKeywords && mgef->data.flags.all(RE::EffectSetting::EffectSettingData::Flag::kDispelWithKeywords) != *dispelWithKeywords) {
+				return false;
+			}
 			return true;
 		}
 
@@ -345,6 +352,7 @@ namespace TRAITS
 		nullable<RE::MagicSystem::Delivery>                      deliveryType;
 		nullable<std::pair<RE::ActorValue, Range<std::int32_t>>> skill;
 		nullable<RE::ActorValue>                                 resistance;
+		nullable<bool>                                           dispelWithKeywords;
 	};
 
 	class PotionTraits : public Traits
@@ -539,6 +547,10 @@ namespace TRAITS
 					deliveryType = detail::get_single_value<RE::MagicSystem::Delivery>(trait);
 				} else if (trait.contains("CT(")) {
 					castingType = detail::get_single_value<RE::MagicSystem::CastingType>(trait);
+				} else if (trait == "H") {
+					isHostile = true;
+				} else if (trait == "-H") {
+					isHostile = false;
 				} else {
 					skill = detail::get_single_value<RE::ActorValue>(trait);
 				}
@@ -563,7 +575,9 @@ namespace TRAITS
 			if (skill && spell->GetAssociatedSkill() != *skill) {
 				return false;
 			}
-
+			if (isHostile && spell->IsHostile() != *isHostile) {
+				return false;
+			}
 			return true;
 		}
 
@@ -573,6 +587,7 @@ namespace TRAITS
 		nullable<RE::MagicSystem::CastingType> castingType{};
 		nullable<RE::MagicSystem::Delivery>    deliveryType{};
 		nullable<RE::ActorValue>               skill{};
+		nullable<bool>                         isHostile{};
 	};
 
 	class FurnitureTraits : public Traits
