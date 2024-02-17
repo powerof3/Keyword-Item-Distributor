@@ -561,7 +561,7 @@ namespace TRAITS
 
 		bool PassFilter(RE::TESForm* a_item) const override
 		{
-			const auto spell = a_item->As<RE::SpellItem>();
+			const auto spell = a_item->As<RE::MagicItem>();
 
 			if (spellType && spell->GetSpellType() != *spellType) {
 				return false;
@@ -578,6 +578,7 @@ namespace TRAITS
 			if (isHostile && spell->IsHostile() != *isHostile) {
 				return false;
 			}
+
 			return true;
 		}
 
