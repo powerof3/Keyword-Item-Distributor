@@ -2,7 +2,7 @@
 
 void Distribute::AddKeywords()
 {
-	ForEachDistributable([]<typename T>(Distributable<T>& a_distributable) {
+	ForEachDistributable_MT([]<typename T>(Distributable<T>& a_distributable) {
 		distribute(a_distributable);
 	});
 

@@ -173,7 +173,8 @@ namespace Keyword
 			a_func(container, std::forward<Args>(args)...);
 		};
 
-		process(magicEffects);		
+		process(magicEffects);
+
 		process(armors);
 		process(weapons);
 		process(ammo);
@@ -192,6 +193,41 @@ namespace Keyword
 		process(races);
 		process(talkingActivators);
 		process(enchantments);
+	}
+
+	template <typename Func, typename... Args>
+	void ForEachDistributable_MT(Func&& a_func, Args&&... args)
+	{
+		std::vector<std::jthread> threads;
+
+		const auto process = [&](auto&& container) {
+			a_func(container, std::forward<Args>(args)...);
+		};
+
+		process(magicEffects);
+
+		threads.emplace_back([&] { process(armors); });
+		threads.emplace_back([&] { process(weapons); });
+		threads.emplace_back([&] { process(ammo); });
+		threads.emplace_back([&] { process(potions); });
+		threads.emplace_back([&] { process(scrolls); });
+		threads.emplace_back([&] { process(locations); });
+		threads.emplace_back([&] { process(ingredients); });
+		threads.emplace_back([&] { process(books); });
+		threads.emplace_back([&] { process(miscItems); });
+		threads.emplace_back([&] { process(keys); });
+		threads.emplace_back([&] { process(soulGems); });
+		threads.emplace_back([&] { process(spells); });
+		threads.emplace_back([&] { process(activators); });
+		threads.emplace_back([&] { process(flora); });
+		threads.emplace_back([&] { process(furniture); });
+		threads.emplace_back([&] { process(races); });
+		threads.emplace_back([&] { process(talkingActivators); });
+		threads.emplace_back([&] { process(enchantments); });
+
+		for (auto& t : threads) {
+			t.join();
+		}
 	}
 }
 using KeywordData = Keyword::Data;
