@@ -99,7 +99,6 @@ namespace TRAITS
 				}
 			}
 		}
-
 		~ArmorTraits() override = default;
 
 		[[nodiscard]] bool PassFilter(RE::TESForm* a_item) const override
@@ -198,7 +197,6 @@ namespace TRAITS
 				}
 			}
 		}
-
 		~WeaponTraits() override = default;
 
 		bool PassFilter(RE::TESForm* a_item) const override
@@ -311,7 +309,6 @@ namespace TRAITS
 				}
 			}
 		}
-
 		~MagicEffectTraits() override = default;
 
 		bool PassFilter(RE::TESForm* a_item) const override
@@ -380,7 +377,6 @@ namespace TRAITS
 				}
 			}
 		}
-
 		~PotionTraits() override = default;
 
 		bool PassFilter(RE::TESForm* a_item) const override
@@ -418,7 +414,6 @@ namespace TRAITS
 				break;
 			}
 		}
-
 		~IngredientTraits() override = default;
 
 		bool PassFilter(RE::TESForm* a_item) const override
@@ -460,7 +455,6 @@ namespace TRAITS
 				}
 			}
 		}
-
 		~BookTraits() override = default;
 
 		bool PassFilter(RE::TESForm* a_item) const override
@@ -475,7 +469,7 @@ namespace TRAITS
 			}
 			if (actorValue) {
 				const auto taughtSpell = book->GetSpell();
-				if (book->GetSkill() != *actorValue && (taughtSpell && taughtSpell->GetAssociatedSkill() != *actorValue)) {
+				if (book->GetSkill() != *actorValue && (taughtSpell && AV::GetAssociatedSkill(taughtSpell) != *actorValue)) {
 					return false;
 				}
 			}
@@ -507,7 +501,6 @@ namespace TRAITS
 				}
 			}
 		}
-
 		~SoulGemTraits() override = default;
 
 		bool PassFilter(RE::TESForm* a_item) const override
@@ -556,7 +549,6 @@ namespace TRAITS
 				}
 			}
 		}
-
 		~SpellTraits() override = default;
 
 		bool PassFilter(RE::TESForm* a_item) const override
@@ -572,7 +564,7 @@ namespace TRAITS
 			if (deliveryType && spell->GetDelivery() != *deliveryType) {
 				return false;
 			}
-			if (skill && spell->GetAssociatedSkill() != *skill) {
+			if (skill && AV::GetAssociatedSkill(spell) != *skill) {
 				return false;
 			}
 			if (isHostile && spell->IsHostile() != *isHostile) {
@@ -607,7 +599,6 @@ namespace TRAITS
 				}
 			}
 		}
-
 		~FurnitureTraits() override = default;
 
 		bool PassFilter(RE::TESForm* a_item) const override

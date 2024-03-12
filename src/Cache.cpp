@@ -32,4 +32,12 @@ namespace Cache
 		const auto it = map.find(a_av);
 		return it != map.end() ? it->second : RE::ActorValue::kNone;
 	}
+
+	RE::ActorValue ActorValue::GetAssociatedSkill(RE::MagicItem* a_spell)
+	{
+		if (auto effect = a_spell->GetCostliestEffectItem(); effect && effect->baseEffect) {
+			return effect->baseEffect->data.associatedSkill;
+		}
+		return RE::ActorValue::kNone;
+	}
 }

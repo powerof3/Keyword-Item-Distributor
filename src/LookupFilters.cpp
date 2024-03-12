@@ -352,7 +352,7 @@ namespace Item
 					if (book->TeachesSkill()) {
 						skill = book->data.teaches.actorValueToAdvance;
 					} else if (book->TeachesSpell() && book->data.teaches.spell) {
-						skill = book->data.teaches.spell->GetAssociatedSkill();
+						skill = AV::GetAssociatedSkill(book->data.teaches.spell);
 					}
 					return AV::GetActorValue(skill) == a_str;
 				}
@@ -363,7 +363,7 @@ namespace Item
 			case RE::FormType::Enchantment:
 				{
 					const auto magicItem = item->As<RE::MagicItem>();
-					if (AV::GetActorValue(magicItem->GetAssociatedSkill()) == a_str) {
+					if (AV::GetActorValue(AV::GetAssociatedSkill(magicItem)) == a_str) {
 						return true;
 					}
 					if (const auto mgef = GetCostliestMGEF(magicItem)) {

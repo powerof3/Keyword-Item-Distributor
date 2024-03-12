@@ -47,8 +47,8 @@ namespace Cache
 			std::pair{ "Activator"sv, "activators"sv },
 			std::pair{ "Flora"sv, "flora"sv },
 			std::pair{ "Furniture"sv, "furniture"sv },
-		    std::pair{ "Race"sv, "races"sv },
-		    std::pair{ "Talking Activator"sv, "talking activators"sv },
+			std::pair{ "Race"sv, "races"sv },
+			std::pair{ "Talking Activator"sv, "talking activators"sv },
 			std::pair{ "Enchantment"sv, "enchantments"sv }
 		};
 
@@ -490,6 +490,8 @@ namespace Cache
 
 		std::string_view GetActorValue(RE::ActorValue a_av);
 		RE::ActorValue   GetActorValue(std::string_view a_av);
+
+		RE::ActorValue GetAssociatedSkill(RE::MagicItem* a_spell);
 	}
 }
 namespace EDID = clib_util::editorID;

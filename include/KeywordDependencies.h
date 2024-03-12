@@ -25,7 +25,7 @@ namespace Keyword
 			{
 				const auto aIdx = getIndex(a);
 				const auto bIdx = getIndex(b);
-				if (aIdx > 0 && bIdx > 0) {
+				if (aIdx >= 0 && bIdx >= 0) {
 					if (aIdx < bIdx) {
 						return true;
 					}
@@ -138,7 +138,7 @@ namespace Keyword
 			const auto result = resolver.Resolve();
 
 			keywordForms.clear();
-			logger::info("\tSorted keywords :");
+			logger::info("\tSorted keywords: ");
 			for (const auto& keyword : result) {
 				const auto& [begin, end] = dataKeywords.equal_range(keyword);
 				if (begin != end) {
