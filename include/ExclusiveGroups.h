@@ -1,6 +1,6 @@
 #pragma once
+
 #include "LookupConfigs.h"
-#include <unordered_set>
 
 namespace ExclusiveGroups
 {
@@ -26,19 +26,13 @@ namespace ExclusiveGroups
 	}
 
 	using Group = std::string;
-	using KeywordGroupMap = std::unordered_map<RE::BGSKeyword*, std::unordered_set<Group>>;
-	using GroupKeywordsMap = std::unordered_map<Group, std::unordered_set<RE::BGSKeyword*>>;
+	using KeywordGroupMap = Map<RE::BGSKeyword*, Set<Group>>;
+	using GroupKeywordsMap = Map<Group, Set<RE::BGSKeyword*>>;
 
-	class Manager
+	class Manager : public ISingleton<Manager>
 	{
 		
 	public:
-		static Manager* GetSingleton()
-		{
-			static Manager singleton;
-			return std::addressof(singleton);
-		}
-
 		/// <summary>
 		/// Does a forms lookup similar to what Filters do.
 		///
@@ -55,7 +49,7 @@ namespace ExclusiveGroups
 		/// </summary>
 		/// <param name="keyword">A keyword for which mutually exclusive keywords will be returned.</param>
 		/// <returns>A union of all groups that contain a given keyword.</returns>
-		std::unordered_set<RE::BGSKeyword*> MutuallyExclusiveKeywordsForKeyword(RE::BGSKeyword*) const;
+		Set<RE::BGSKeyword*> MutuallyExclusiveKeywordsForKeyword(RE::BGSKeyword*) const;
 
 		/// <summary>
 		/// Retrieves all exclusive groups.
@@ -74,13 +68,5 @@ namespace ExclusiveGroups
 		///  A map of exclusive groups names and the keywords that are part of each exclusive group.
 		/// </summary>
 		GroupKeywordsMap groups{};
-
-		Manager() = default;
-		~Manager() = default;
-
-		Manager(const Manager&) = delete;
-		Manager(Manager&&) = delete;
-		Manager& operator=(const Manager&) = delete;
-		Manager& operator=(Manager&&) = delete;
 	};
 }

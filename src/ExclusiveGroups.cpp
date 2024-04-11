@@ -147,14 +147,14 @@ namespace ExclusiveGroups
 		for (const auto& [group, forms] : groups) {
 			logger::info("Adding '{}' exclusive group", group);
 			for (const auto& form : forms) {
-				logger::info("  {}", describe(form));
+				logger::info("\t{}", describe(form));
 			}
 		}
 	}
 
-	std::unordered_set<RE::BGSKeyword*> Manager::MutuallyExclusiveKeywordsForKeyword(RE::BGSKeyword* form) const
+	Set<RE::BGSKeyword*> Manager::MutuallyExclusiveKeywordsForKeyword(RE::BGSKeyword* form) const
 	{
-		std::unordered_set<RE::BGSKeyword*> forms{};
+		Set<RE::BGSKeyword*> forms{};
 		if (auto it = linkedGroups.find(form); it != linkedGroups.end()) {
 			std::ranges::for_each(it->second, [&](const Group& name) {
 				const auto& group = groups.at(name);

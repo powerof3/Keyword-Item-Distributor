@@ -21,6 +21,7 @@
 #include <ClibUtil/rng.hpp>
 #include <ClibUtil/simpleINI.hpp>
 #include <ClibUtil/timer.hpp>
+#include <ClibUtil/singleton.hpp>
 
 #include <ClibUtil/editorID.hpp>
 
@@ -32,6 +33,7 @@ namespace logger = SKSE::log;
 namespace buffered_logger = LogBuffer;
 
 using namespace clib_util;
+using namespace clib_util::singleton;
 using namespace std::literals;
 using namespace string::literals;
 
