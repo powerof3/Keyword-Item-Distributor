@@ -3,6 +3,7 @@ set(headers ${headers}
 	include/Defs.h
 	include/DependencyResolver.h
 	include/Distribute.h
+	include/ExclusiveGroups.h
 	include/Hooks.h
 	include/KeywordData.h
 	include/KeywordDependencies.h

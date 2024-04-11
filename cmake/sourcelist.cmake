@@ -1,6 +1,7 @@
 set(sources ${sources}
 	src/Cache.cpp
 	src/Distribute.cpp
+	src/ExclusiveGroups.cpp
 	src/Hooks.cpp
 	src/KeywordData.cpp
 	src/LogBuffer.cpp
