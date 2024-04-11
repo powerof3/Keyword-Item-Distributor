@@ -40,5 +40,12 @@ namespace Item
 		[[nodiscard]] bool HasFormFilter(RE::TESForm* a_formFilter) const;
 		[[nodiscard]] bool HasStringFilter(const std::string& a_str) const;
 		[[nodiscard]] bool ContainsStringFilter(const std::vector<std::string>& a_strings) const;
+
+		/// <summary>
+		/// Checks whether given Item already has another Keyword that is mutually exclusive with the given keyword,
+		/// according to the exclusive groups configuration.
+		/// </summary>
+		/// <param name="otherKeyword">A Keyword that needs to be checked.</param>
+		[[nodiscard]] bool HasMutuallyExclusiveKeyword(RE::BGSKeyword* otherKeyword) const;
 	};
 }

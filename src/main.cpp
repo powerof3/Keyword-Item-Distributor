@@ -2,6 +2,7 @@
 #include "Hooks.h"
 #include "LookupConfigs.h"
 #include "LookupForms.h"
+#include "ExclusiveGroups.h"
 
 namespace MessageHandler
 {
@@ -38,6 +39,9 @@ namespace MessageHandler
 						Forms::LogFormLookup();
 						timer.end();
 						logger::info("Form lookup took {}μs / {}ms", timer.duration_μs(), timer.duration_ms());
+						
+						ExclusiveGroups::Manager::GetSingleton()->LookupExclusiveGroups();
+						ExclusiveGroups::Manager::GetSingleton()->LogExclusiveGroupsLookup();
 
 						timer.start();
 						Distribute::AddKeywords();

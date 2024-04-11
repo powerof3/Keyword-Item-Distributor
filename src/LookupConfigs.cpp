@@ -1,4 +1,5 @@
 #include "LookupConfigs.h"
+#include "ExclusiveGroups.h"
 
 namespace INI
 {
@@ -147,9 +148,14 @@ namespace INI
 			string::replace_first_instance(path, "Data\\", "");
 
 			if (const auto values = ini.GetSection(""); values) {
-				for (const auto& entry : *values | std::views::values) {
+				for (auto& [key, entry] : *values) {
 					try {
 						std::string entryStr{ entry };
+
+						if (ExclusiveGroups::INI::TryParse(key.pItem, entryStr, path)) {
+							continue;
+						}
+
 						auto [data, type] = detail::parse_config(entryStr, path);
 						INIs[type].emplace_back(std::move(data));
 					} catch (...) {

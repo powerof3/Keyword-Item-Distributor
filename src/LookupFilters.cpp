@@ -1,4 +1,5 @@
 #include "LookupFilters.h"
+#include "ExclusiveGroups.h"
 
 namespace Filter
 {
@@ -48,6 +49,11 @@ namespace Item
 			return false;
 		}
 
+		// Skip if keyword from related exclusive groups is already present.
+		if (HasMutuallyExclusiveKeyword(a_keyword)) {
+			return false;
+		}
+
 		// Fail chance first to avoid running unnecessary checks
 		if (a_filters.chance < 100) {
 			// create unique seed based on keyword editorID (can't use formID because it can be dynamic) and item formID
@@ -84,6 +90,17 @@ namespace Item
 		keywords.emplace(a_keyword);
 
 		return true;
+	}
+
+	bool Data::HasMutuallyExclusiveKeyword(RE::BGSKeyword* otherKeyword) const
+	{
+		auto excludedForms = ExclusiveGroups::Manager::GetSingleton()->MutuallyExclusiveKeywordsForKeyword(otherKeyword);
+		if (excludedForms.empty()) {
+			return false;
+		}
+		return std::ranges::any_of(excludedForms, [&](auto keyword) {
+			return keywords.contains(keyword);
+		});
 	}
 
 	bool Data::HasFormOrStringFilter(const ProcessedVec& a_processed, bool a_all) const
