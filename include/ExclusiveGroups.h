@@ -29,7 +29,7 @@ namespace ExclusiveGroups
 	using KeywordGroupMap = Map<RE::BGSKeyword*, Set<Group>>;
 	using GroupKeywordsMap = Map<Group, Set<RE::BGSKeyword*>>;
 
-	class Manager : public ISingleton<Manager>
+	class Manager : public REX::Singleton<Manager>
 	{
 		
 	public:

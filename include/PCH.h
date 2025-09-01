@@ -7,6 +7,7 @@
 #include <ranges>
 
 #include "RE/Skyrim.h"
+#include "REX/REX/Singleton.h"
 #include "SKSE/SKSE.h"
 
 #include <MergeMapperPluginAPI.h>
@@ -21,7 +22,6 @@
 #include <ClibUtil/rng.hpp>
 #include <ClibUtil/simpleINI.hpp>
 #include <ClibUtil/timer.hpp>
-#include <ClibUtil/singleton.hpp>
 
 #include <ClibUtil/editorID.hpp>
 
@@ -33,7 +33,6 @@ namespace logger = SKSE::log;
 namespace buffered_logger = LogBuffer;
 
 using namespace clib_util;
-using namespace clib_util::singleton;
 using namespace std::literals;
 using namespace string::literals;
 
