@@ -56,7 +56,7 @@ using Set = boost::unordered_flat_set<K, H, KEqual>;
 
 struct string_hash
 {
-	using is_transparent = void;
+	using is_transparent = void;  // enable heterogeneous overloads
 
 	std::size_t operator()(const std::string& str) const
 	{
@@ -69,9 +69,38 @@ struct string_hash
 	}
 };
 
+struct istring_hash
+{
+	using is_transparent = void;  // enable heterogeneous overloads
+
+	std::size_t operator()(std::string_view str) const
+	{
+		std::size_t seed = 0;
+		for (auto it = str.begin(); it != str.end(); ++it) {
+			boost::hash_combine(seed, std::tolower(*it));
+		}
+		return seed;
+	}
+};
+
+struct istring_cmp
+{
+	using is_transparent = void;  // enable heterogeneous overloads
+
+	bool operator()(const std::string& str1, const std::string& str2) const
+	{
+		return string::iequals(str1, str2);
+	}
+	bool operator()(std::string_view str1, std::string_view str2) const
+	{
+		return string::iequals(str1, str2);
+	}
+};
+
 template <class D>
 using StringMap = Map<std::string, D, string_hash>;
 using StringSet = Set<std::string, string_hash>;
+using IStringSet = Set<std::string, istring_hash, istring_cmp>;
 
 namespace stl
 {
