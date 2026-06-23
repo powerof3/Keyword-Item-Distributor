@@ -2,8 +2,10 @@
 
 void Distribute::AddKeywords()
 {
-	ForEachDistributable_MT([]<typename T>(Distributable<T>& a_distributable) {
-		distribute(a_distributable);
+	bool hasExclusions = ExclusiveGroups::Manager::GetSingleton()->HasExclusions();
+	
+	ForEachDistributable([hasExclusions]<typename T>(Distributable<T>& a_distributable) {
+		distribute(a_distributable, hasExclusions);
 	});
 
 	logger::info("{:*^50}", "RESULT");
@@ -13,7 +15,7 @@ void Distribute::AddKeywords()
 	});
 
 	ForEachDistributable([]<typename T>(Distributable<T>& a_distributable) {
-		if (a_distributable.GetType() != ITEM::kBook) {
+		if (a_distributable.GetType() != DISTRIBUTION::TYPE::kBook) {
 			a_distributable.clear();
 		}
 	});

@@ -3,116 +3,56 @@
 
 namespace INI
 {
-	namespace detail
+	Data::Data(std::string& a_value, const std::string& a_path):
+		path(a_path)
 	{
-		inline std::pair<Data, ITEM::TYPE> parse_config(std::string& a_value, const std::string& a_path)
-		{
 #ifdef SKYRIMVR
-			// swap dawnguard and dragonborn forms
-			// VR apparently does not load masters in order so the lookup fails
-			static const srell::regex re_dawnguard(R"((0x0*2)([0-9a-f]{6}))", srell::regex_constants::optimize | srell::regex::icase);
-			a_value = regex_replace(a_value, re_dawnguard, "0x$2~Dawnguard.esm");
+		// swap dawnguard and dragonborn forms
+		// VR apparently does not load masters in order so the lookup fails
+		static const srell::regex re_dawnguard(R"((0x0*2)([0-9a-f]{6}))", srell::regex_constants::optimize | srell::regex::icase);
+		a_value = regex_replace(a_value, re_dawnguard, "0x$2~Dawnguard.esm");
 
-			static const srell::regex re_dragonborn(R"((0x0*4)([0-9a-f]{6}))", srell::regex_constants::optimize | srell::regex::icase);
-			a_value = regex_replace(a_value, re_dragonborn, "0x$2~Dragonborn.esm");
+		static const srell::regex re_dragonborn(R"((0x0*4)([0-9a-f]{6}))", srell::regex_constants::optimize | srell::regex::icase);
+		a_value = regex_replace(a_value, re_dragonborn, "0x$2~Dragonborn.esm");
 #endif
 
-			Data       data{};
-			ITEM::TYPE type{ ITEM::kNone };
-
-			const auto sections = string::split(a_value, "|");
-			const auto size = sections.size();
-
-			//[FORMID/ESP] / string
-			if (kFormID < size) {
-				data.rawForm = distribution::get_record(sections[kFormID]);
+		const auto sections = string::split(a_value, "|");
+		const auto size = sections.size();
+	
+		//TYPE
+		if (kType < size) {
+			if (const auto& typeStr = sections[kType]; !typeStr.empty()) {
+				type = DISTRIBUTION::GetType(typeStr);
 			}
+		}
 
-			//TYPE
-			if (kType < size) {
-				if (const auto& typeStr = sections[kType]; !typeStr.empty()) {
-					type = ITEM::GetType(typeStr);
-				}
+		if (type == DISTRIBUTION::TYPE::kNone) {
+			return;
+		}
+		
+		//[FORMID/ESP] / string
+		if (kFormID < size) {
+			rawForm = RawForm(sections[kFormID]);
+		}
+
+		//FILTERS
+		if (kFilters < size) {
+			criteria.filters = ConfigFilterSet(sections[kFilters]);
+		}
+
+		//TRAITS
+		if (kTraits < size) {
+			if (const auto& traits = sections[kTraits]; distribution::is_valid_entry(traits)) {
+				criteria.traits = Traits::Create(type, traits);
 			}
+		}
 
-			//FILTERS
-			if (kFilters < size) {
-				auto filterStr = distribution::split_entry(sections[kFilters]);
-
-				for (auto& filter : filterStr) {
-					if (filter.contains('+')) {
-						auto ALL = distribution::split_entry(filter, "+");
-						std::ranges::transform(ALL, std::back_inserter(data.rawFilters.ALL), [](const auto& filter_str) {
-							return distribution::get_record(filter_str);
-						});
-					} else if (filter.at(0) == '-') {
-						filter.erase(0, 1);
-
-					    data.rawFilters.NOT.emplace_back(distribution::get_record(filter));
-
-					} else if (filter.at(0) == '*') {
-						filter.erase(0, 1);
-						data.rawFilters.ANY.emplace_back(filter);
-
-					} else {
-						data.rawFilters.MATCH.emplace_back(distribution::get_record(filter));
-					}
-				}
+		//CHANCE
+		if (INI::kChance < size) {
+			const auto& chanceStr = sections[kChance];
+			if (distribution::is_valid_entry(chanceStr)) {
+				criteria.chance.value = string::to_num<float>(chanceStr);
 			}
-
-			//TRAITS
-			if (kTraits < size) {
-				auto& traitsStr = sections[kTraits];
-				switch (type) {
-				case ITEM::kArmor:
-					data.traits = std::make_unique<TRAITS::ArmorTraits>(traitsStr);
-					break;
-				case ITEM::kWeapon:
-					data.traits = std::make_unique<TRAITS::WeaponTraits>(traitsStr);
-					break;
-				case ITEM::kAmmo:
-					data.traits = std::make_unique<TRAITS::AmmoTraits>(traitsStr);
-					break;
-				case ITEM::kMagicEffect:
-					data.traits = std::make_unique<TRAITS::MagicEffectTraits>(traitsStr);
-					break;
-				case ITEM::kPotion:
-					data.traits = std::make_unique<TRAITS::PotionTraits>(traitsStr);
-					break;
-				case ITEM::kIngredient:
-					data.traits = std::make_unique<TRAITS::IngredientTraits>(traitsStr);
-					break;
-				case ITEM::kBook:
-					data.traits = std::make_unique<TRAITS::BookTraits>(traitsStr);
-					break;
-				case ITEM::kSoulGem:
-					data.traits = std::make_unique<TRAITS::SoulGemTraits>(traitsStr);
-					break;
-				case ITEM::kSpell:
-				case ITEM::kEnchantmentItem:
-				case ITEM::kScroll:
-					data.traits = std::make_unique<TRAITS::SpellTraits>(traitsStr);
-					break;
-				case ITEM::kFurniture:
-					data.traits = std::make_unique<TRAITS::FurnitureTraits>(traitsStr);
-					break;
-				default:
-					break;
-				}
-			}
-
-			//CHANCE
-			if (INI::kChance < size) {
-				const auto& chanceStr = sections[kChance];
-				if (distribution::is_valid_entry(chanceStr)) {
-					data.chance = string::to_num<Chance>(chanceStr);
-				}
-			}
-
-			//PATH
-			data.path = a_path;
-
-			return std::make_pair(std::move(data), type);
 		}
 	}
 
@@ -156,8 +96,13 @@ namespace INI
 							continue;
 						}
 
-						auto [data, type] = detail::parse_config(entryStr, path);
-						INIs[type].emplace_back(std::move(data));
+						Data data(entryStr, path);
+						if (data.type == DISTRIBUTION::TYPE::kNone) {
+							continue;
+						}
+
+						INIs[data.type].emplace_back(std::move(data));
+
 					} catch (...) {
 						logger::error("\t\tFailed to parse entry [Keyword = {}]", entry);
 						shouldLogErrors = true;

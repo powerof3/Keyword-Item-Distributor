@@ -5,23 +5,22 @@
 
 namespace Keyword
 {
-	inline std::once_flag init;
-
+	inline std::once_flag             init;
 	inline StringMap<RE::BGSKeyword*> allKeywords{};
 
 	namespace Dependencies
 	{
-		using KYWD = RE::BGSKeyword*;
+		using Keyword = RE::BGSKeyword*;
 
 		/// Comparator that preserves relative order at which Keywords appeared in config files.
 		/// If that order is undefined it falls back to alphabetical order of EditorIDs.
 		struct keyword_less
 		{
-			using RelativeOrderMap = Map<KYWD, std::int32_t>;
+			using RelativeOrderMap = Map<Keyword, std::int32_t>;
 
 			const RelativeOrderMap relativeOrder;
 
-			bool operator()(const KYWD& a, const KYWD& b) const
+			bool operator()(const Keyword& a, const Keyword& b) const
 			{
 				const auto aIdx = getIndex(a);
 				const auto bIdx = getIndex(b);
@@ -36,16 +35,16 @@ namespace Keyword
 				return a->GetFormEditorID() < b->GetFormEditorID();
 			}
 
-			[[nodiscard]] int getIndex(const KYWD& kwd) const
+			[[nodiscard]] std::int32_t getIndex(const Keyword& kwd) const
 			{
-				if (relativeOrder.contains(kwd)) {
-					return relativeOrder.at(kwd);
+				if (auto it = relativeOrder.find(kwd); it != relativeOrder.end()) {
+					return it->second;
 				}
 				return -1;
 			}
 		};
 
-		using Resolver = DependencyResolver<KYWD, keyword_less>;
+		using Resolver = DependencyResolver<Keyword, keyword_less>;
 
 		/// Reads Forms::keywords and sorts them based on their relationship or alphabetical order.
 		/// This must be called after initial Lookup was performed.
@@ -95,18 +94,14 @@ namespace Keyword
 			std::unordered_multimap<RE::BGSKeyword*, KeywordData> dataKeywords;
 
 			logger::info("\tSorting keywords...");
+
 			for (const auto& keywordData : keywordForms) {
 				dataKeywords.emplace(keywordData.keyword, keywordData);
 				resolver.AddIsolated(keywordData.keyword);
 
-				const auto addDependencies = [&](const ProcessedVec& a_processed) {
-					for (const auto& filter : a_processed) {
-						if (const auto formPtr = std::get_if<RE::TESForm*>(&filter)) {
-							if (const auto& kwd = (*formPtr)->As<RE::BGSKeyword>()) {
-								resolver.AddDependency(keywordData.keyword, kwd);
-							}
-						}
-					}
+				const auto findKeyword = [&](const std::string& name) -> RE::BGSKeyword* {
+					auto it = allKeywords.find(name);
+					return it != allKeywords.end() ? it->second : nullptr;
 				};
 
 				const auto containsKeyword = [&](const std::string& name) -> RE::BGSKeyword* {
@@ -118,26 +113,43 @@ namespace Keyword
 					return nullptr;
 				};
 
-				const auto addANYDependencies = [&](const std::vector<std::string>& a_strings) {
-					for (const auto& filter : a_strings) {
-						if (const auto& kwd = containsKeyword(filter); kwd) {
-							resolver.AddDependency(keywordData.keyword, kwd);
-						}
+				const auto addFilterGroupDependencies = [&](const FilterGroup<ResolvedFilter>& a_group) {
+					for (const auto& rule : a_group) {
+						std::visit(overload{
+									   [&](const ResolvedFilter& a_resolvedFilter) {
+										   if (const auto form = a_resolvedFilter.GetForm()) {
+											   if (const auto kwd = form->As<RE::BGSKeyword>()) {
+												   resolver.AddDependency(keywordData.keyword, kwd);
+											   }
+										   } else if (auto stringPtr = std::get_if<FullString>(&a_resolvedFilter.filter)) {
+											   if (const auto kywd = findKeyword(*stringPtr)) {
+												   resolver.AddDependency(keywordData.keyword, kywd);
+											   }
+										   }
+									   },
+									   [&](const PartialString& a_str) {
+										   if (const auto kywd = containsKeyword(a_str)) {
+											   resolver.AddDependency(keywordData.keyword, kywd);
+										   }
+									   } },
+							rule.value);
 					}
 				};
 
-				const auto& filters = keywordData.filters.processedFilters;
-
-				addDependencies(filters.ALL);
-				addDependencies(filters.NOT);
-				addDependencies(filters.MATCH);
-
-				addANYDependencies(filters.ANY);
+				// Collect all dependencies from merged criteria
+				for (const auto& criteria : keywordData.filters) {
+					const auto& filters = criteria.filters;
+					for (const auto& group : filters.ALL) {
+						addFilterGroupDependencies(group);
+					}
+					addFilterGroupDependencies(filters.ANY);
+				}
 			}
 
 			const auto result = resolver.Resolve();
 
 			keywordForms.clear();
+
 			logger::info("\tSorted keywords: ");
 			for (const auto& keyword : result) {
 				const auto& [begin, end] = dataKeywords.equal_range(keyword);

@@ -43,13 +43,13 @@ namespace LogBuffer
 
 /// Add hashing for custom log entries.
 template <>
-struct ankerl::unordered_dense::hash<LogBuffer::Entry>
+struct boost::hash<LogBuffer::Entry>
 {
-	using is_avalanching = void;
+	using is_transparent = void;
 
 	[[nodiscard]] std::uint64_t operator()(const LogBuffer::Entry& entry) const noexcept
 	{
-		return detail::wyhash::hash(entry.message.c_str(), entry.message.size());
+		return boost::hash<std::string>()(entry.message);
 	}
 };
 
@@ -59,7 +59,7 @@ struct ankerl::unordered_dense::hash<LogBuffer::Entry>
 /// Each log function checks whether given message was already logged and skips the log.
 namespace LogBuffer
 {
-	inline ankerl::unordered_dense::set<Entry> buffer{};
+	inline boost::unordered_flat_set<Entry> buffer{};
 
 	/// Clears already buffered messages to allow them to be logged once again.
 	inline void clear()

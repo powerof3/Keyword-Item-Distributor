@@ -5,17 +5,19 @@
 
 #include <functional>
 #include <ranges>
+#include <unordered_set>
 
 #include "RE/Skyrim.h"
 #include "REX/REX/Singleton.h"
 #include "SKSE/SKSE.h"
 
 #include <MergeMapperPluginAPI.h>
-#include <ankerl/unordered_dense.h>
+#include <boost/unordered/unordered_flat_map.hpp>
+#include <boost/unordered/unordered_flat_set.hpp>
 #include <spdlog/sinks/basic_file_sink.h>
+#include <frozen/unordered_map.h>
+#include <frozen/bits/elsa_std.h>
 #include <srell.hpp>
-#include <tsl/ordered_map.h>
-#include <tsl/ordered_set.h>
 
 #include <ClibUtil/distribution.hpp>
 #include <ClibUtil/numeric.hpp>
@@ -31,33 +33,45 @@
 
 namespace logger = SKSE::log;
 namespace buffered_logger = LogBuffer;
+namespace distribution = clib_util::distribution;
+namespace string = clib_util::string;
+namespace hash = clib_util::hash;
+namespace EDID = clib_util::editorID;
 
-using namespace clib_util;
 using namespace std::literals;
 using namespace string::literals;
 
-template <class T>
-using nullable = std::optional<T>;
+// for visting variants
+template <class... Ts>
+struct overload : Ts...
+{
+	using Ts::operator()...;
+};
 
-template <class K, class D>
-using Map = ankerl::unordered_dense::map<K, D>;
-template <class K>
-using Set = ankerl::unordered_dense::set<K>;
+template <class K, class D, class H = boost::hash<K>, class KEqual = std::equal_to<K>>
+using Map = boost::unordered_flat_map<K, D, H, KEqual>;
+
+template <class K, class H = boost::hash<K>, class KEqual = std::equal_to<K>>
+using Set = boost::unordered_flat_set<K, H, KEqual>;
 
 struct string_hash
 {
-	using is_transparent = void;  // enable heterogeneous overloads
-	using is_avalanching = void;  // mark class as high quality avalanching hash
+	using is_transparent = void;
 
-	[[nodiscard]] std::uint64_t operator()(std::string_view str) const noexcept
+	std::size_t operator()(const std::string& str) const
 	{
-		return ankerl::unordered_dense::hash<std::string_view>{}(str);
+		return boost::hash<std::string>()(str);
+	}
+
+	std::size_t operator()(std::string_view str) const
+	{
+		return boost::hash<std::string_view>()(str);
 	}
 };
 
 template <class D>
-using StringMap = ankerl::unordered_dense::map<std::string_view, D, string_hash, std::equal_to<>>;
-using StringSet = ankerl::unordered_dense::set<std::string_view, string_hash, std::equal_to<>>;
+using StringMap = Map<std::string, D, string_hash>;
+using StringSet = Set<std::string, string_hash>;
 
 namespace stl
 {
@@ -71,6 +85,45 @@ namespace stl
 	}
 }
 
+/// A standardized way of converting any object to string.
+///
+///	<p>
+///	Overload `operator<<` to provide custom formatting for your value.
+///	Alternatively, specialize this method and provide your own implementation.
+///	</p>
+template <typename Value>
+std::string describe(Value value)
+{
+	std::ostringstream os;
+	os << value;
+	return os.str();
+}
+
+inline std::ostream& operator<<(std::ostream& os, const RE::TESFile* file)
+{
+	os << file->fileName;
+	return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const RE::TESForm* form)
+{
+	if (const auto& edid = EDID::get_editorID(form); !edid.empty()) {
+		os << edid << " ";
+	}
+	os << "["
+	   << std::to_string(form->GetFormType())
+	   << ":"
+	   << std::setfill('0')
+	   << std::setw(sizeof(RE::FormID) * 2)
+	   << std::uppercase
+	   << std::hex
+	   << form->GetFormID()
+	   << "]";
+
+	return os;
+}
+
 #include "Cache.h"
 #include "Defs.h"
+#include "RE.h"
 #include "Version.h"

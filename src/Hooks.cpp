@@ -1,5 +1,6 @@
 #include "Hooks.h"
 #include "Distribute.h"
+#include "ExclusiveGroups.h"
 
 namespace Hooks
 {
@@ -11,7 +12,7 @@ namespace Hooks
 
 			// if InitItem fires after DataLoaded
 		    if (Keyword::books) {
-		        Distribute::distribute(a_this, Keyword::books.GetKeywords());
+				Distribute::distribute(a_this, Keyword::books.GetKeywords(), ExclusiveGroups::Manager::GetSingleton()->HasExclusions());
 			}
 		}
 		static inline REL::Relocation<decltype(thunk)> func;

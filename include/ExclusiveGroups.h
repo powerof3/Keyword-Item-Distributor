@@ -1,6 +1,6 @@
 #pragma once
 
-#include "LookupConfigs.h"
+#include "Defs.h"
 
 namespace ExclusiveGroups
 {
@@ -11,8 +11,9 @@ namespace ExclusiveGroups
 			std::string name{};
 
 			/// Raw filters in RawExclusiveGroup only use NOT and MATCH, there is no meaning for ALL, so it's ignored.
-			Filters<FormIDOrString> formIDs{};
-			std::string             path{};
+			std::vector<RawForm> matchIDs{};
+			std::vector<RawForm> notIDs{};
+			std::string                 path{};
 		};
 
 		using ExclusiveGroupsVec = std::vector<RawExclusiveGroup>;
@@ -31,7 +32,6 @@ namespace ExclusiveGroups
 
 	class Manager : public REX::Singleton<Manager>
 	{
-		
 	public:
 		/// <summary>
 		/// Does a forms lookup similar to what Filters do.
@@ -49,13 +49,15 @@ namespace ExclusiveGroups
 		/// </summary>
 		/// <param name="keyword">A keyword for which mutually exclusive keywords will be returned.</param>
 		/// <returns>A union of all groups that contain a given keyword.</returns>
-		Set<RE::BGSKeyword*> MutuallyExclusiveKeywordsForKeyword(RE::BGSKeyword*) const;
+		const Set<RE::BGSKeyword*>& MutuallyExclusiveKeywordsForKeyword(RE::BGSKeyword*) const;
 
 		/// <summary>
 		/// Retrieves all exclusive groups.
 		/// </summary>
 		/// <returns>A reference to discovered exclusive groups</returns>
 		const GroupKeywordsMap& GetGroups() const;
+
+		bool HasExclusions() const { return !mutualExclusionCache.empty(); }
 
 	private:
 		/// <summary>
@@ -68,5 +70,8 @@ namespace ExclusiveGroups
 		///  A map of exclusive groups names and the keywords that are part of each exclusive group.
 		/// </summary>
 		GroupKeywordsMap groups{};
+
+		// mutually-exclusive keywords per keyword
+		Map<RE::BGSKeyword*, Set<RE::BGSKeyword*>> mutualExclusionCache{};
 	};
 }

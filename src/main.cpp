@@ -1,8 +1,8 @@
 #include "Distribute.h"
+#include "ExclusiveGroups.h"
 #include "Hooks.h"
 #include "LookupConfigs.h"
 #include "LookupForms.h"
-#include "ExclusiveGroups.h"
 
 namespace MessageHandler
 {
@@ -32,24 +32,28 @@ namespace MessageHandler
 			break;
 		case SKSE::MessagingInterface::kDataLoaded:
 			{
-				if (shouldLookupForms) {
-					Timer timer;
+				if (shouldLookupForms) {								
+					clib_util::Timer timer;
 					timer.start();
 					if (Forms::LookupForms()) {
 						Forms::LogFormLookup();
-						timer.end();
+						timer.stop();
 						logger::info("Form lookup took {}μs / {}ms", timer.duration_μs(), timer.duration_ms());
-						
+
 						ExclusiveGroups::Manager::GetSingleton()->LookupExclusiveGroups();
 						ExclusiveGroups::Manager::GetSingleton()->LogExclusiveGroupsLookup();
 
 						timer.start();
 						Distribute::AddKeywords();
-						timer.end();
+						timer.stop();
 
 						logger::info("{:*^50}", "STATS");
 						logger::info("Distribution took {}μs / {}ms", timer.duration_μs(), timer.duration_ms());
+					} else {
+						logger::error("No valid keywords found in configs. Distribution will be skipped.");
 					}
+				} else {		
+					logger::warn("No configs or valid keyword entries found. Distribution will be skipped.");
 				}
 
 				// Clear logger's buffer to free some memory :)

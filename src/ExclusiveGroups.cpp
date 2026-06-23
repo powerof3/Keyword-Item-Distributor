@@ -1,5 +1,4 @@
 #include "ExclusiveGroups.h"
-#include "KeywordData.h"
 
 namespace ExclusiveGroups
 {
@@ -31,9 +30,9 @@ namespace ExclusiveGroups
 		for (auto& IDs : split_IDs) {
 			if (IDs.at(0) == '-') {
 				IDs.erase(0, 1);
-				group.formIDs.NOT.push_back(distribution::get_record(IDs));
+				group.notIDs.emplace_back(IDs);
 			} else {
-				group.formIDs.MATCH.push_back(distribution::get_record(IDs));
+				group.matchIDs.emplace_back(IDs);
 			}
 		}
 
@@ -42,55 +41,28 @@ namespace ExclusiveGroups
 		return true;
 	}
 
-	void formID_to_form(RE::TESDataHandler* const dataHandler, const std::string& groupName, RawVec& a_rawFormVec, ProcessedVec& a_formVec)
+	namespace detail
 	{
-		if (a_rawFormVec.empty()) {
-			return;
-		}
+		// Resolves a raw entry to a keyword, only accepting actual Keyword forms.
+		RE::BGSKeyword* lookup_keyword(const std::string& a_groupName, const RawForm& a_id)
+		{
+			ResolvedFilter resolvedFilter(a_id);
 
-		const auto& keywordArray = dataHandler->GetFormArray<RE::BGSKeyword>();
+			if (const auto form = resolvedFilter.GetForm()) {
+				if (const auto keyword = form->As<RE::BGSKeyword>()) {
+					return keyword;
+				}
+				buffered_logger::error("\t\tExclusive Group ({}): Attempted to add invalid Form {} to the group.", a_groupName, a_id.to_string());
+				return nullptr;
+			}
 
-		for (auto& formOrEditorID : a_rawFormVec) {
-			std::visit(overload{
-						   [&](FormModPair& formMod) {
-							   auto& [formID, modName] = formMod;
-							   if (g_mergeMapperInterface) {
-								   Keyword::detail::get_merged_IDs(formID, modName);
-							   }
-							   if (modName && !formID) {
-								   buffered_logger::error("\t\tExclusive Group ({}): Attempted to add plugin ({}) to the group.", groupName, *modName);
-							   } else if (formID) {
-								   if (auto filterForm = modName ?
-					                                         dataHandler->LookupForm(*formID, *modName) :
-					                                         RE::TESForm::LookupByID(*formID)) {
-									   const auto formType = filterForm->GetFormType();
-									   if (const auto keyword = filterForm->As<RE::BGSKeyword>(); keyword && formType == RE::FormType::Keyword) {
-										   a_formVec.push_back(keyword);
-									   } else {
-										   buffered_logger::error("\t\tExclusive Group ({}): Attempted to add invalid Form {} [0x{:X}] ({}) to the group.", groupName, formType, *formID, modName.value_or(""));
-									   }
-								   } else {
-									   buffered_logger::error("\t\tExclusive Group ({}): Form doesn't exist", groupName, *formID, modName.value_or(""));
-								   }
-							   }
-						   },
-						   [&](std::string& editorID) {
-							   if (auto filterForm = RE::TESForm::LookupByEditorID(editorID)) {
-								   const auto formType = filterForm->GetFormType();
-								   if (const auto keyword = filterForm->As<RE::BGSKeyword>(); keyword && formType == RE::FormType::Keyword) {
-									   a_formVec.push_back(keyword);
-								   } else {
-									   buffered_logger::error("\t\tExclusive Group ({}): Attempted to add invalid Form {} to the group. Expected {}, but got {}", groupName, editorID, RE::FormType::Keyword, formType);
-								   }
-							   } else {
-								   if (auto keyword = Keyword::detail::find_existing_keyword(keywordArray, editorID, true)) {
-									   a_formVec.push_back(keyword);
-								   } else {
-									   buffered_logger::error("\t\tExclusive Group ({}): Attempted to add unknown Keyword {} to the group.", groupName, editorID);
-								   }
-							   }
-						   } },
-				formOrEditorID);
+			if (a_id.IsMod()) {
+				buffered_logger::error("\t\tExclusive Group ({}): Attempted to add plugin ({}) to the group.", a_groupName, a_id.to_string());
+			} else {
+				buffered_logger::error("\t\tExclusive Group ({}): Attempted to add unknown Keyword {} to the group..", a_groupName, a_id.to_string());
+			}
+
+			return nullptr;
 		}
 	}
 
@@ -98,40 +70,41 @@ namespace ExclusiveGroups
 	{
 		groups.clear();
 		linkedGroups.clear();
+		mutualExclusionCache.clear();
 
-		const auto dataHandler = RE::TESDataHandler::GetSingleton();
+		for (auto& [name, matchIDs, notIDs, path] : exclusiveGroups) {
+			auto& forms = groups[name];
 
-		for (auto& [name, filterIDs, path] : exclusiveGroups) {
-			auto&        forms = groups[name];
-			ProcessedVec match{};
-			ProcessedVec formsNot{};
-
-			formID_to_form(dataHandler, name, filterIDs.MATCH, match);
-			formID_to_form(dataHandler, name, filterIDs.NOT, formsNot);
-
-			for (const auto& form : match) {
-				if (std::holds_alternative<RE::TESForm*>(form)) {
-					if (const auto keyword = std::get<RE::TESForm*>(form)->As<RE::BGSKeyword>(); keyword) {
-						forms.insert(keyword);
-					}
+			for (const auto& id : matchIDs) {
+				if (const auto keyword = detail::lookup_keyword(name, id)) {
+					forms.insert(keyword);
 				}
 			}
 
-			for (auto& form : formsNot) {
-				if (std::holds_alternative<RE::TESForm*>(form)) {
-					if (const auto keyword = std::get<RE::TESForm*>(form)->As<RE::BGSKeyword>(); keyword) {
-						forms.erase(keyword);
-					}
+			for (const auto& id : notIDs) {
+				if (const auto keyword = detail::lookup_keyword(name, id)) {
+					forms.erase(keyword);
 				}
 			}
 		}
-
 		// Remove empty groups
-		std::erase_if(groups, [](const auto& pair) { return pair.second.empty(); });
+		erase_if(groups, [](const auto& pair) { return pair.second.empty(); });
 
 		for (auto& [name, forms] : groups) {
 			for (auto& form : forms) {
 				linkedGroups[form].insert(name);
+			}
+		}
+
+		for (const auto& [form, groupNames] : linkedGroups) {
+			Set<RE::BGSKeyword*> excluded;
+			for (const auto& name : groupNames) {
+				const auto& group = groups.at(name);
+				excluded.insert(group.begin(), group.end());
+			}
+			excluded.erase(form);
+			if (!excluded.empty()) {
+				mutualExclusionCache.emplace(form, std::move(excluded));
 			}
 		}
 	}
@@ -152,20 +125,12 @@ namespace ExclusiveGroups
 		}
 	}
 
-	Set<RE::BGSKeyword*> Manager::MutuallyExclusiveKeywordsForKeyword(RE::BGSKeyword* form) const
+	const Set<RE::BGSKeyword*>& Manager::MutuallyExclusiveKeywordsForKeyword(RE::BGSKeyword* form) const
 	{
-		Set<RE::BGSKeyword*> forms{};
-		if (auto it = linkedGroups.find(form); it != linkedGroups.end()) {
-			std::ranges::for_each(it->second, [&](const Group& name) {
-				const auto& group = groups.at(name);
-				forms.insert(group.begin(), group.end());
-			});
-		}
-
-		// Remove self from the list.
-		forms.erase(form);
-
-		return forms;
+		static Set<RE::BGSKeyword*> empty{};
+		
+		const auto it = mutualExclusionCache.find(form);
+		return it != mutualExclusionCache.end() ? it->second : empty;
 	}
 
 	const GroupKeywordsMap& ExclusiveGroups::Manager::GetGroups() const

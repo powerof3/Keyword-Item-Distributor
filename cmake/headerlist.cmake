@@ -1,5 +1,11 @@
 set(headers ${headers}
 	include/Cache.h
+	include/Data/BaseFilters.h
+	include/Data/EnumDefs.h
+	include/Data/FormData.h
+	include/Data/ItemData.h
+	include/Data/Ranges.h
+	include/Data/Traits.h
 	include/Defs.h
 	include/DependencyResolver.h
 	include/Distribute.h
@@ -9,8 +15,7 @@ set(headers ${headers}
 	include/KeywordDependencies.h
 	include/LogBuffer.h
 	include/LookupConfigs.h
-	include/LookupFilters.h
 	include/LookupForms.h
 	include/PCH.h
-	include/Traits.h
+	include/RE.h
 )

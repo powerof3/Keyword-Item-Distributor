@@ -1,18 +1,18 @@
 {
   "name": "kid",
-  "version-string": "3.5.0",
+  "version-string": "4.0.0",
   "description": "Keyword Item Distributor",
   "homepage": "https://github.com/powerof3/Keyword-Item-Distributor",
   "license": "MIT",
   "dependencies": [
+    "boost-unordered",
     "clib-util",
+    "frozen",
     "mergemapper",
-    "tsl-ordered-map",
     "rsm-binary-io",
     "spdlog",
     "srell",
-    "unordered-dense",
     "xbyak"
   ],
-  "builtin-baseline": "6ecbbbdf31cba47aafa7cf6189b1e73e10ac61f8"
+  "builtin-baseline": "32305df7d0b9a308e6ac454dd98ebfe550342c09"
 }

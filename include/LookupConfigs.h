@@ -1,6 +1,6 @@
 #pragma once
 
-#include "LookupFilters.h"
+#include "Defs.h"
 
 namespace INI
 {
@@ -17,15 +17,18 @@ namespace INI
 
 	struct Data
 	{
-		FormIDOrString rawForm{};
-		RawFilters     rawFilters{};
-		TraitsPtr      traits{};
-		Chance         chance{ 100 };
+		Data() = default;
+		Data(std::string& a_value, const std::string& a_path);
+		
+		// members
+		DISTRIBUTION::TYPE type{ DISTRIBUTION::TYPE::kNone };
+		RawForm rawForm{};
+		ConfigCriteria criteria{};
 		std::string    path{};
 	};
 	using DataVec = std::vector<Data>;
 
-	inline std::map<ITEM::TYPE, DataVec> INIs{};
+	inline std::map<DISTRIBUTION::TYPE, DataVec> INIs{};
 
 	std::pair<bool, bool> GetConfigs();
 }

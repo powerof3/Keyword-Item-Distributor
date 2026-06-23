@@ -2,31 +2,27 @@
 
 namespace Cache
 {
-	bool FormType::IsFilter(RE::FormType a_type)
+	RE::BGSKeyword* FindKeyword(const std::string& a_edid, bool a_skipEDID)
 	{
-		return std::ranges::find(set, a_type) != set.end();
+		if (!a_skipEDID) {
+			if (const auto keyword = RE::TESForm::LookupByEditorID<RE::BGSKeyword>(a_edid)) {
+				return keyword;
+			}
+		}
+
+		if (const auto it = addedKeywords.find(a_edid); it != addedKeywords.end()) {
+			return it->second;
+		}
+
+		return nullptr;
 	}
 
-	Item::TYPE Item::GetType(const std::string& a_type)
+	void AddKeyword(RE::BSTArray<RE::BGSKeyword*>& a_keywordArray, RE::BGSKeyword* a_keyword)
 	{
-		const auto it = std::ranges::find_if(itemTypes,
-			[&](const auto& element) { return element.first == a_type; });
-		return it != itemTypes.end() ?
-		           static_cast<TYPE>(it - std::begin(itemTypes)) :
-		           kNone;
+		a_keywordArray.emplace_back(a_keyword);
+		addedKeywords.insert_or_assign(a_keyword->GetFormEditorID(), a_keyword);
 	}
-
-	std::string_view Item::GetType(TYPE a_type)
-	{
-		return itemTypes[a_type].first;
-	}
-
-	std::string_view ActorValue::GetActorValue(RE::ActorValue a_av)
-	{
-		const auto it = r_map.find(a_av);
-		return it != r_map.end() ? it->second : "None";
-	}
-
+	
 	RE::ActorValue ActorValue::GetActorValue(std::string_view a_av)
 	{
 		const auto it = map.find(a_av);

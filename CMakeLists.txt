@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 set(NAME "po3_KeywordItemDistributor" CACHE STRING "")
-set(VERSION 3.5.0 CACHE STRING "")
+set(VERSION 4.0.0 CACHE STRING "")
 set(AE_VERSION 1)
 set(VR_VERSION 1)
 
@@ -132,8 +132,8 @@ else ()
 	)
 endif()
 
-find_package(unordered_dense CONFIG REQUIRED)
-find_package(tsl-ordered-map CONFIG REQUIRED)
+find_package(boost_unordered CONFIG REQUIRED)
+find_package(frozen CONFIG REQUIRED)
 
 find_path(SRELL_INCLUDE_DIRS "srell.hpp")
 find_path(MERGEMAPPER_INCLUDE_DIRS "MergeMapperPluginAPI.h")
@@ -199,8 +199,9 @@ target_link_libraries(
 	${PROJECT_NAME}
 	PRIVATE
 		${CommonLibName}::${CommonLibName}
-		unordered_dense::unordered_dense
-		tsl::ordered_map
+		Boost::unordered
+		frozen::frozen
+		frozen::frozen-headers
 )
 
 target_precompile_headers(
