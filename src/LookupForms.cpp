@@ -31,12 +31,18 @@ namespace Forms
 		ForEachDistributable([]<typename T>(const Distributable<T>& a_distributable) {
 			const auto type = a_distributable.GetType();
 			if (const auto& rawKeywords = INI::INIs[type]; !rawKeywords.empty()) {
-				logger::info("Adding {}/{} keywords to {}", a_distributable.size(), rawKeywords.size(), DISTRIBUTION::form_strings[type]);
+				IStringSet uniqueRawKeywords;
+				uniqueRawKeywords.reserve(rawKeywords.size());
+				for (const auto& iniData : rawKeywords) {
+					uniqueRawKeywords.emplace(iniData.rawForm.to_string());
+				}
+				logger::info("Adding {}/{} unique keywords to {} ({} total entries)", a_distributable.size(), uniqueRawKeywords.size(), DISTRIBUTION::form_strings[type], rawKeywords.size());
 			}
 		});
 
 		// clear raw configs
 		INI::INIs.clear();
+
 		// clear dependencies map
 	    allKeywords.clear();
 
