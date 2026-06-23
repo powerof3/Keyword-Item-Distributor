@@ -37,17 +37,17 @@ git submodule update
 
 ### SSE
 ```
-cmake --preset vs2022-windows-vcpkg-se
+cmake --preset vs2026-windows-vcpkg-se
 cmake --build build --config Release
 ```
 ### AE
 ```
-cmake --preset vs2022-windows-vcpkg-ae
+cmake --preset vs2026-windows-vcpkg-ae
 cmake --build buildae --config Release
 ```
 ### VR
 ```
-cmake --preset vs2022-windows-vcpkg-vr
+cmake --preset vs2026-windows-vcpkg-vr
 cmake --build buildvr --config Release
 ```
 
