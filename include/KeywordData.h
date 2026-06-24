@@ -161,25 +161,36 @@ void Keyword::Distributable<T>::LookupForms()
 
 	keywords.reserve(INIDataVec.size());
 
-	// Merge multiple entries into one
+	// 1. Create all keywords
+	std::vector<RE::BGSKeyword*> processedKeywords;
+	processedKeywords.reserve(INIDataVec.size());
+
+	for (const auto& iniData : INIDataVec) {
+		RE::BGSKeyword* keyword = iniData.rawForm.to_keyword();
+
+		if (!keyword) {
+			buffered_logger::error("\t[{}] {} FAIL - keyword doesn't exist", iniData.path, iniData.rawForm.to_string());
+		} else if (keyword->formEditorID.empty()) {
+			buffered_logger::error("\t[{}] {} FAIL - keyword editorID is empty!", iniData.path, iniData.rawForm.to_string());
+			keyword = nullptr;
+		}
+
+		processedKeywords.push_back(keyword);
+	}
+
+	// 2. Resolve filters after
 	Map<RE::BGSKeyword*, std::size_t> keywordToData;
 	keywordToData.reserve(INIDataVec.size());
 
-	for (auto& iniData : INIDataVec) {
-		const auto& formStr = iniData.rawForm.to_string();
-		
-		buffered_logger::info("\t[{}] {}", iniData.path, formStr);
-		
-		RE::BGSKeyword* keyword = iniData.rawForm.to_keyword();
+	for (std::size_t i = 0; i < INIDataVec.size(); ++i) {
+		RE::BGSKeyword* keyword = processedKeywords[i];
+		if (!keyword) {
+			continue;
+		}
 
-        if (!keyword) {
-			buffered_logger::error("\t[{}] {} FAIL - keyword doesn't exist", iniData.path, formStr);
-			continue;
-		}
-		if (keyword->formEditorID.empty()) {
-			buffered_logger::error("\t[{}] {} FAIL - keyword editorID is empty!", iniData.path, formStr);
-			continue;
-		}
+		const auto& iniData = INIDataVec[i];
+
+		buffered_logger::info("\t[{}] {}", iniData.path, iniData.rawForm.to_string());
 
 		DistributableCriteria criteria(iniData.criteria);
 
@@ -188,10 +199,10 @@ void Keyword::Distributable<T>::LookupForms()
 			continue;
 		}
 
-        if (auto [it, inserted] = keywordToData.try_emplace(keyword, keywords.size()); inserted) {
+		if (auto [it, inserted] = keywordToData.try_emplace(keyword, keywords.size()); inserted) {
 			keywords.emplace_back(keyword, std::move(criteria));
 		} else {
 			keywords[it->second].filters.emplace_back(std::move(criteria));
-		}		
+		}
 	}
 }
