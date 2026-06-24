@@ -38,7 +38,9 @@ namespace INI
 
 		//FILTERS
 		if (kFilters < size) {
-			criteria.filters = ConfigFilterSet(sections[kFilters]);
+			if (const auto& filters = sections[kFilters]; distribution::is_valid_entry(filters)) {
+				criteria.filters = ConfigFilterSet(sections[kFilters]);
+			}
 		}
 
 		//TRAITS
@@ -50,8 +52,7 @@ namespace INI
 
 		//CHANCE
 		if (INI::kChance < size) {
-			const auto& chanceStr = sections[kChance];
-			if (distribution::is_valid_entry(chanceStr)) {
+			if (const auto& chanceStr = sections[kChance]; distribution::is_valid_entry(chanceStr)) {
 				criteria.chance.value = string::to_num<float>(chanceStr);
 			}
 		}

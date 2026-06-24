@@ -52,39 +52,68 @@ DistributableFilterSet::DistributableFilterSet(const ConfigFilterSet& a_rawFilte
 		return;
 	}
 
-	const auto convert_group = [&](const FilterGroup<RawForm>& a_from, FilterGroup<ResolvedFilter>& a_to, bool a_allFilter, std::size_t a_idx = 0) {
-		a_to.reserve(a_from.size());
+	bool entryValid = true;
 
-		for (const auto& fromFilter : a_from) {
-			auto toFilter = FilterRule<ResolvedFilter>(fromFilter, a_allFilter, a_idx);
-			if (toFilter.Valid()) {
-				if (auto resolvedFilter = std::get_if<ResolvedFilter>(&toFilter.value)) {
-					if (auto form = resolvedFilter->GetDependentForm()) {
-						dependencies.push_back(form);
-					}
-				}
-				a_to.emplace_back(std::move(toFilter));
+	const auto add_dependency = [&](const FilterRule<ResolvedFilter>& a_rule) {
+		if (auto resolved = std::get_if<ResolvedFilter>(&a_rule.value)) {
+			if (auto form = resolved->GetDependentForm()) {
+				dependencies.push_back(form);
 			}
 		}
-
-		std::ranges::stable_sort(a_to, {}, [&](const auto& a_filter) {
-			return a_filter.GetFilterCost(a_allFilter);
-		});
-
-		return a_to.size() == a_from.size();
 	};
 
-	convert_group(a_rawFilters.ANY, ANY, false);
+	std::size_t rawMatch = 0;
+	std::size_t okMatch = 0;
+
+	std::size_t rawNot = 0;
+	std::size_t okNot = 0;
+
+	ANY.reserve(a_rawFilters.ANY.size());
+	for (const auto& fromFilter : a_rawFilters.ANY) {
+		const bool isPartial = std::holds_alternative<PartialString>(fromFilter.value);
+		const bool isExclude = fromFilter.excludeModifier;
+		if (isExclude) {
+			++rawNot;
+		} else if (!isPartial) {
+			++rawMatch;
+		}
+		auto toFilter = FilterRule<ResolvedFilter>(fromFilter, false, 0);
+		if (toFilter.Valid()) {
+			if (isExclude) {
+				++okNot;
+			} else if (!isPartial) {
+				++okMatch;
+			}
+			add_dependency(toFilter);
+			ANY.emplace_back(std::move(toFilter));
+		}
+	}
+	std::ranges::stable_sort(ANY, {}, [&](const auto& f) { return f.GetFilterCost(false); });
+
+	if ((rawMatch > 0 && okMatch == 0) || (rawNot > 0 && okNot == 0)) {
+		entryValid = false;
+	}
 
 	ALL.reserve(a_rawFilters.ALL.size());
 	for (std::size_t i = 0; i < a_rawFilters.ALL.size(); ++i) {
+		const auto&                 fromGroup = a_rawFilters.ALL[i];
 		FilterGroup<ResolvedFilter> toGroup{};
-		if (convert_group(a_rawFilters.ALL[i], toGroup, true, i)) {
+		toGroup.reserve(fromGroup.size());
+		for (const auto& fromFilter : fromGroup) {
+			auto toFilter = FilterRule<ResolvedFilter>(fromFilter, true, i);
+			if (toFilter.Valid()) {
+				add_dependency(toFilter);
+				toGroup.emplace_back(std::move(toFilter));
+			}
+		}
+		std::ranges::stable_sort(toGroup, {}, [&](const auto& f) { return f.GetFilterCost(true); });
+
+		if (toGroup.size() == fromGroup.size()) {
 			ALL.emplace_back(std::move(toGroup));
 		}
 	}
 
-	isValid = !ALL.empty() || !ANY.empty();
+	isValid = entryValid && (!ALL.empty() || !ANY.empty());
 }
 
 bool DistributableFilterSet::Pass(ItemData& a_refData) const
