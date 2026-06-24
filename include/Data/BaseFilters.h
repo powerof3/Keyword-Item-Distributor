@@ -139,7 +139,7 @@ struct FilterRule : RuleData<T>
 		return cost;
 	}
 
-	std::string to_string()
+	std::string to_string() const
 	{
 		std::string token;
 		if (excludeModifier) {

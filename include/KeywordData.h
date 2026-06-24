@@ -32,11 +32,11 @@ namespace Keyword
 		[[nodiscard]] std::size_t size() const;
 		void                      clear();
 
-		[[nodiscard]] DISTRIBUTION::TYPE        GetType() const;
-		[[nodiscard]] std::string_view          GetTypeString() const;
-		[[nodiscard]] const DataVec&            GetKeywords() const;
-		[[nodiscard]] DataVec&                  GetKeywords();
-		void                                    LookupForms();
+		[[nodiscard]] DISTRIBUTION::TYPE GetType() const;
+		[[nodiscard]] std::string_view   GetTypeString() const;
+		[[nodiscard]] const DataVec&     GetKeywords() const;
+		[[nodiscard]] DataVec&           GetKeywords();
+		void                             LookupForms();
 
 	private:
 		DISTRIBUTION::TYPE type;
@@ -164,18 +164,21 @@ void Keyword::Distributable<T>::LookupForms()
 	Map<RE::BGSKeyword*, std::size_t> keywordToData;
 	keywordToData.reserve(INIDataVec.size());
 
-	for (auto& iniData: INIDataVec) {	
-		RE::BGSKeyword* keyword = iniData.resolvedKeyword; 
+	std::size_t entryIdx = 0;
+
+	for (auto& iniData : INIDataVec) {
+		RE::BGSKeyword* keyword = iniData.resolvedKeyword;
 		if (!keyword) {
 			continue;
 		}
+		entryIdx++;
 
 		buffered_logger::info("\t\t[{}] {}", iniData.path, iniData.rawForm.to_string());
 
 		DistributableCriteria criteria(iniData.criteria);
 
 		if (!criteria.Validated()) {
-			logger::error("\t\t\tInvalid/missing filters, skipping distribution");
+			buffered_logger::error("\t\t\tInvalid/missing filters, skipping distribution\n\t\t\t\t\t\t--------------------------------------------- [{}]", entryIdx);
 			continue;
 		}
 
