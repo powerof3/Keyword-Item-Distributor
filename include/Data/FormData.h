@@ -3,7 +3,7 @@
 #include "Data\EnumDefs.h"
 #include "Data\Ranges.h"
 
-using FullString = std::string;
+using ExactString = std::string;
 
 struct RawForm
 {
@@ -38,7 +38,7 @@ struct ResolvedFilter
 	std::string to_string() const;
 
 	// members
-	std::variant<RE::TESForm*, const RE::TESFile*, FullString>  filter{};
+	std::variant<RE::TESForm*, const RE::TESFile*, ExactString> filter{};
 	std::optional<RE::FormType>                                 formType{};
 	bool                                                        isValid{ false };
 };

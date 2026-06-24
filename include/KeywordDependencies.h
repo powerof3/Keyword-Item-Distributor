@@ -5,7 +5,6 @@
 
 namespace Keyword
 {
-	inline std::once_flag             init;
 	inline StringMap<RE::BGSKeyword*> allKeywords{};
 
 	namespace Dependencies
@@ -46,6 +45,31 @@ namespace Keyword
 
 		using Resolver = DependencyResolver<Keyword, keyword_less>;
 
+		inline void InitGlobalKeywordMap()
+		{
+			const auto dataHandler = RE::TESDataHandler::GetSingleton();
+			for (const auto& kwd : dataHandler->GetFormArray<RE::BGSKeyword>()) {
+				if (kwd) {
+					if (const auto edid = kwd->GetFormEditorID(); !string::is_empty(edid)) {
+						allKeywords[edid] = kwd;
+					} else {
+						if (const auto file = kwd->GetFile(0)) {
+							const auto  modname = file->GetFilename();
+							const auto  formID = kwd->GetLocalFormID();
+							std::string mergeDetails;
+							if (g_mergeMapperInterface && g_mergeMapperInterface->isMerge(modname.data())) {
+								const auto [mergedModName, mergedFormID] = g_mergeMapperInterface->GetOriginalFormID(
+									modname.data(),
+									formID);
+								mergeDetails = std::format("->0x{:X}~{}", mergedFormID, mergedModName);
+							}
+							logger::error("\tWARN : [0x{:X}~{}{}] keyword has an empty editorID!", formID, modname, mergeDetails);
+						}
+					}
+				}
+			}
+		}
+
 		/// Reads Forms::keywords and sorts them based on their relationship or alphabetical order.
 		/// This must be called after initial Lookup was performed.
 
@@ -56,34 +80,9 @@ namespace Keyword
 				return;
 			}
 
-			auto& keywordForms = keywords.GetKeywords();
-
-			std::call_once(init, []() {
-				const auto dataHandler = RE::TESDataHandler::GetSingleton();
-				for (const auto& kwd : dataHandler->GetFormArray<RE::BGSKeyword>()) {
-					if (kwd) {
-						if (const auto edid = kwd->GetFormEditorID(); !string::is_empty(edid)) {
-							allKeywords[edid] = kwd;
-						} else {
-							if (const auto file = kwd->GetFile(0)) {
-								const auto  modname = file->GetFilename();
-								const auto  formID = kwd->GetLocalFormID();
-								std::string mergeDetails;
-								if (g_mergeMapperInterface && g_mergeMapperInterface->isMerge(modname.data())) {
-									const auto [mergedModName, mergedFormID] = g_mergeMapperInterface->GetOriginalFormID(
-										modname.data(),
-										formID);
-									mergeDetails = std::format("->0x{:X}~{}", mergedFormID, mergedModName);
-								}
-								logger::error("\tWARN : [0x{:X}~{}{}] keyword has an empty editorID!", formID, modname, mergeDetails);
-							}
-						}
-					}
-				}
-			});
-
 			keyword_less::RelativeOrderMap orderMap;
-
+			
+			auto& keywordForms = keywords.GetKeywords();
 			for (std::int32_t index = 0; index < keywordForms.size(); ++index) {
 				orderMap.emplace(keywordForms[index].keyword, index);
 			}
@@ -93,7 +92,7 @@ namespace Keyword
 			/// A map that will be used to map back keywords to their data wrappers.
 			std::unordered_multimap<RE::BGSKeyword*, KeywordData> dataKeywords;
 
-			logger::info("\tSorting keywords...");
+			logger::info("\t\tSorting keywords...");
 
 			for (const auto& keywordData : keywordForms) {
 				dataKeywords.emplace(keywordData.keyword, keywordData);
@@ -121,7 +120,7 @@ namespace Keyword
 											   if (const auto kwd = form->As<RE::BGSKeyword>()) {
 												   resolver.AddDependency(keywordData.keyword, kwd);
 											   }
-										   } else if (auto stringPtr = std::get_if<FullString>(&a_resolvedFilter.filter)) {
+										   } else if (auto stringPtr = std::get_if<ExactString>(&a_resolvedFilter.filter)) {
 											   if (const auto kywd = findKeyword(*stringPtr)) {
 												   resolver.AddDependency(keywordData.keyword, kywd);
 											   }
@@ -150,11 +149,11 @@ namespace Keyword
 
 			keywordForms.clear();
 
-			logger::info("\tSorted keywords: ");
+			logger::info("\t\tSorted keywords: ");
 			for (const auto& keyword : result) {
 				const auto& [begin, end] = dataKeywords.equal_range(keyword);
 				if (begin != end) {
-					logger::info("\t\t{}", describe(begin->second.keyword));
+					logger::info("\t\t\t{}", describe(begin->second.keyword));
 				}
 				for (auto it = begin; it != end; ++it) {
 					keywordForms.push_back(it->second);

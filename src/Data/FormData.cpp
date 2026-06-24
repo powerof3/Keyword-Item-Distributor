@@ -159,7 +159,7 @@ ResolvedFilter::ResolvedFilter(const RawForm& a_id)
 				   [&](const RE::TESFile* mod) {
 					   isValid = mod != nullptr;
 				   },
-				   [&](FullString&) {
+				   [&](ExactString&) {
 					   isValid = true;
 				   } },
 		filter);
@@ -189,6 +189,6 @@ std::string ResolvedFilter::to_string() const
 		                                                                  std::format("{}~{}", a_form->GetLocalFormID(), a_form->GetFile(0)->fileName) :
 		                                                                  std::string{}; },
 						  [](const RE::TESFile* a_file) { return a_file ? a_file->fileName : std::string{}; },
-						  [](const FullString& a_str) { return a_str; } },
+						  [](const ExactString& a_str) { return a_str; } },
 		filter);
 }

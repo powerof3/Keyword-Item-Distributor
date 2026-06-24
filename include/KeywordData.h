@@ -157,45 +157,25 @@ void Keyword::Distributable<T>::LookupForms()
 		return;
 	}
 
-	logger::info("{}", GetTypeString());
+	logger::info("\t{}", GetTypeString());
 
 	keywords.reserve(INIDataVec.size());
 
-	// 1. Create all keywords
-	std::vector<RE::BGSKeyword*> processedKeywords;
-	processedKeywords.reserve(INIDataVec.size());
-
-	for (const auto& iniData : INIDataVec) {
-		RE::BGSKeyword* keyword = iniData.rawForm.to_keyword();
-
-		if (!keyword) {
-			buffered_logger::error("\t[{}] {} FAIL - keyword doesn't exist", iniData.path, iniData.rawForm.to_string());
-		} else if (keyword->formEditorID.empty()) {
-			buffered_logger::error("\t[{}] {} FAIL - keyword editorID is empty!", iniData.path, iniData.rawForm.to_string());
-			keyword = nullptr;
-		}
-
-		processedKeywords.push_back(keyword);
-	}
-
-	// 2. Resolve filters after
 	Map<RE::BGSKeyword*, std::size_t> keywordToData;
 	keywordToData.reserve(INIDataVec.size());
 
-	for (std::size_t i = 0; i < INIDataVec.size(); ++i) {
-		RE::BGSKeyword* keyword = processedKeywords[i];
+	for (auto& iniData: INIDataVec) {	
+		RE::BGSKeyword* keyword = iniData.resolvedKeyword; 
 		if (!keyword) {
 			continue;
 		}
 
-		const auto& iniData = INIDataVec[i];
-
-		buffered_logger::info("\t[{}] {}", iniData.path, iniData.rawForm.to_string());
+		buffered_logger::info("\t\t[{}] {}", iniData.path, iniData.rawForm.to_string());
 
 		DistributableCriteria criteria(iniData.criteria);
 
 		if (!criteria.Validated()) {
-			logger::error("\t\tInvalid/missing filters, skipping distribution");
+			logger::error("\t\t\tInvalid/missing filters, skipping distribution");
 			continue;
 		}
 

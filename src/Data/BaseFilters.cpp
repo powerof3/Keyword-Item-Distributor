@@ -54,7 +54,7 @@ DistributableFilterSet::DistributableFilterSet(const ConfigFilterSet& a_rawFilte
 
 	const auto convert_group = [&](const FilterGroup<RawForm>& a_from, FilterGroup<ResolvedFilter>& a_to, bool a_allFilter, std::size_t a_idx = 0) {
 		a_to.reserve(a_from.size());
-		
+
 		for (const auto& fromFilter : a_from) {
 			auto toFilter = FilterRule<ResolvedFilter>(fromFilter, a_allFilter, a_idx);
 			if (toFilter.Valid()) {
@@ -104,7 +104,7 @@ bool DistributableFilterSet::Pass(ItemData& a_refData) const
 										  [&](const RE::TESFile* a_file) {
 											  result = a_file && a_file->IsFormInMod(a_refData.GetFormID());
 										  },
-										  [&](const FullString& a_str) {
+										  [&](const ExactString& a_str) {
 											  result = a_refData.HasStringFilter(a_str, f.stringType.get(), f.parsedEnum);
 										  } },
 							   a_resolvedFilter.filter);
@@ -117,25 +117,34 @@ bool DistributableFilterSet::Pass(ItemData& a_refData) const
 	};
 
 	const auto matches_any = [&](const std::vector<FilterRule<ResolvedFilter>>& a_group) {
-		bool hasMatch = false;
-		bool matchPassed = false;
+		bool hasExact = false;
+		bool exactPassed = false;
+
+		bool hasPartial = false;
+		bool partialPassed = false;
 
 		for (const auto& f : a_group) {
 			if (f.excludeModifier) {
 				if (matches(f)) {
 					return false;
 				}
+				continue;
+			}
+
+			if (std::holds_alternative<PartialString>(f.value)) {
+				hasPartial = true;
+				if (!partialPassed && matches(f)) {
+					partialPassed = true;
+				}
 			} else {
-				hasMatch = true;
-				if (!matchPassed) {
-					if (matches(f)) {
-						matchPassed = true;
-					}
+				hasExact = true;
+				if (!exactPassed && matches(f)) {
+					exactPassed = true;
 				}
 			}
 		}
 
-		return !hasMatch || matchPassed;
+		return (!hasExact || exactPassed) && (!hasPartial || partialPassed);
 	};
 
 	const auto matches_all = [&](const FilterGroup<ResolvedFilter>& a_group) {

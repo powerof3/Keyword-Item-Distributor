@@ -19,12 +19,13 @@ namespace INI
 	{
 		Data() = default;
 		Data(std::string& a_value, const std::string& a_path);
-		
+
 		// members
 		DISTRIBUTION::TYPE type{ DISTRIBUTION::TYPE::kNone };
-		RawForm rawForm{};
-		ConfigCriteria criteria{};
-		std::string    path{};
+		RawForm            rawForm{};
+		ConfigCriteria     criteria{};
+		std::string        path{};
+		RE::BGSKeyword*    resolvedKeyword;
 	};
 	using DataVec = std::vector<Data>;
 

@@ -76,13 +76,13 @@ struct FilterRule : RuleData<T>
 							   isValid = false;
 							   const auto tag = a_allFilter ? std::format("ALL #{}", a_idx) : "ANY";
 							   if (resolvedFilter.formType) {
-								   logger::warn("\t\t[{}][{}] SKIP - (invalid form type {})", tag, rawFilter, *resolvedFilter.formType);
+								   logger::warn("\t\t\t[{}][{}] SKIP - (invalid form type {})", tag, rawFilter, *resolvedFilter.formType);
 							   } else {
-								   logger::warn("\t\t[{}][{}] SKIP - ({} not found)", tag, rawFilter, rawFilter.IsMod() ? "mod" : "form");
+								   logger::warn("\t\t\t[{}][{}] SKIP - ({} not found)", tag, rawFilter, rawFilter.IsMod() ? "mod" : "form");
 							   }
 							   return;
 						   }
-						   if (const auto* str = std::get_if<FullString>(&resolvedFilter.filter)) {
+						   if (const auto* str = std::get_if<ExactString>(&resolvedFilter.filter)) {
 							   RuleData<ResolvedFilter>::SetStringData(*str);
 							   resolvedFilter.filter = string::tolower(*str); 
 						   }
@@ -124,7 +124,7 @@ struct FilterRule : RuleData<T>
 						   std::visit(overload{
 										  [&](RE::TESForm*) { cost += 10; },
 										  [&](const RE::TESFile*) { cost += 20; },
-										  [&](const FullString&) { calc_string_cost(false); } },
+										  [&](const ExactString&) { calc_string_cost(false); } },
 							   resolvedFilter.filter);
 					   },
 					   [&](const PartialString&) {

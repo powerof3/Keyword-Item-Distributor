@@ -3,8 +3,9 @@
 
 namespace INI
 {
-	Data::Data(std::string& a_value, const std::string& a_path):
-		path(a_path)
+	Data::Data(std::string& a_value, const std::string& a_path) :
+		path(a_path),
+		resolvedKeyword(nullptr)
 	{
 #ifdef SKYRIMVR
 		// swap dawnguard and dragonborn forms
@@ -18,7 +19,7 @@ namespace INI
 
 		const auto sections = string::split(a_value, "|");
 		const auto size = sections.size();
-	
+
 		//TYPE
 		if (kType < size) {
 			if (const auto& typeStr = sections[kType]; !typeStr.empty()) {
@@ -29,7 +30,7 @@ namespace INI
 		if (type == DISTRIBUTION::TYPE::kNone) {
 			return;
 		}
-		
+
 		//[FORMID/ESP] / string
 		if (kFormID < size) {
 			rawForm = RawForm(sections[kFormID]);

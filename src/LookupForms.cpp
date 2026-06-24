@@ -8,12 +8,42 @@ namespace Forms
 {
 	using namespace Keyword;
 
+	void CreateKeywords()
+	{	
+		logger::info("Keywords");
+
+		for (auto& [type, dataVec] : INI::INIs) {
+			if (dataVec.empty()) {
+				continue;
+			}		
+			logger::info("\t{}", DISTRIBUTION::GetType(type));
+			for (auto& iniData : dataVec) {
+				RE::BGSKeyword* keyword = iniData.rawForm.to_keyword();
+				if (!keyword) {
+					buffered_logger::error("\t\t[{}] {} FAIL - keyword doesn't exist", iniData.path, iniData.rawForm.to_string());
+					continue;
+				}
+				if (keyword->formEditorID.empty()) {
+					buffered_logger::error("\t\t[{}] {} FAIL - keyword editorID is empty!", iniData.path, iniData.rawForm.to_string());
+					continue;
+				}
+				iniData.resolvedKeyword = keyword;
+			}
+		}
+
+		Dependencies::InitGlobalKeywordMap();
+	}
+
 	bool LookupForms()
 	{
 		logger::info("{:*^50}", "LOOKUP");
 
+		CreateKeywords();
+
+		logger::info("Filters");
+
 		bool empty = true;
-	    ForEachDistributable([&]<typename T>(Distributable<T>& a_distributable) {
+		ForEachDistributable([&]<typename T>(Distributable<T>& a_distributable) {
 			a_distributable.LookupForms();
 			Dependencies::ResolveKeywords(a_distributable);
 			if (!a_distributable.empty()) {
@@ -44,7 +74,7 @@ namespace Forms
 		INI::INIs.clear();
 
 		// clear dependencies map
-	    allKeywords.clear();
+		allKeywords.clear();
 
 		// Clear logger's buffer to free some memory :)
 		buffered_logger::clear();
