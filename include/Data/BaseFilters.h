@@ -5,6 +5,11 @@
 struct ItemData;
 class Traits;
 
+namespace filter
+{
+	inline std::vector<std::string> skipLog;
+}
+
 enum class StringType : std::uint8_t
 {
 	kPlain = 0,  // editorID/name
@@ -76,9 +81,9 @@ struct FilterRule : RuleData<T>
 							   isValid = false;
 							   const auto tag = a_allFilter ? std::format("ALL #{}", a_idx) : "ANY";
 							   if (resolvedFilter.formType) {
-								   logger::warn("\t\t\t[{}][{}] SKIP - (invalid form type {})", tag, rawFilter, *resolvedFilter.formType);
+								   filter::skipLog.emplace_back(std::format("[{}][{}] SKIP - (invalid form type {})", tag, rawFilter, *resolvedFilter.formType));
 							   } else {
-								   logger::warn("\t\t\t[{}][{}] SKIP - ({} not found)", tag, rawFilter, rawFilter.IsMod() ? "mod" : "form");
+								   filter::skipLog.emplace_back(std::format("[{}][{}] SKIP - ({} not found)", tag, rawFilter, rawFilter.IsMod() ? "mod" : "form"));
 							   }
 							   return;
 						   }

@@ -76,6 +76,9 @@ namespace Forms
 		// clear dependencies map
 		allKeywords.clear();
 
+		filter::skipLog.clear();
+		filter::skipLog.shrink_to_fit();
+
 		// Clear logger's buffer to free some memory :)
 		buffered_logger::clear();
 	}

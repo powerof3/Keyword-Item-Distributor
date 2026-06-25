@@ -189,12 +189,19 @@ void Keyword::Distributable<T>::LookupForms()
 		}
 		entryIdx++;
 
-		buffered_logger::info("\t\t[{}] {}", iniData.path, iniData.rawForm.to_string());
+		filter::skipLog.clear();
 
 		DistributableCriteria criteria(iniData.criteria);
 
+		if (!filter::skipLog.empty()) {		
+			logger::info("\t\t[{}] {} [{}]", iniData.path, iniData.rawForm.to_string(), entryIdx);
+			for (const auto& msg : filter::skipLog) {
+				logger::warn("\t\t\t{}", msg);
+			}
+		}
+
 		if (!criteria.Validated()) {
-			buffered_logger::error("\t\t\tInvalid/missing filters, skipping distribution\n\t\t\t\t\t\t--------------------------------------------- [{}]", entryIdx);
+			logger::error("\t\t\tInvalid/missing filters, skipping distribution");
 			continue;
 		}
 
