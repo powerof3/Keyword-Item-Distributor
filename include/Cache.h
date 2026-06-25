@@ -2,7 +2,7 @@
 
 namespace Cache
 {
-	inline StringMap<RE::BGSKeyword*> addedKeywords;
+	inline IStringMap<RE::BGSKeyword*> addedKeywords;
 
 	RE::BGSKeyword* FindKeyword(const std::string& a_edid, bool a_skipEDID = false);
 	void            AddKeyword(RE::BSTArray<RE::BGSKeyword*>& a_keywordArray, RE::BGSKeyword* a_keyword);

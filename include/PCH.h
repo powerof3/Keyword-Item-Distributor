@@ -14,9 +14,9 @@
 #include <MergeMapperPluginAPI.h>
 #include <boost/unordered/unordered_flat_map.hpp>
 #include <boost/unordered/unordered_flat_set.hpp>
-#include <spdlog/sinks/basic_file_sink.h>
-#include <frozen/unordered_map.h>
 #include <frozen/bits/elsa_std.h>
+#include <frozen/unordered_map.h>
+#include <spdlog/sinks/basic_file_sink.h>
 #include <srell.hpp>
 
 #include <ClibUtil/distribution.hpp>
@@ -100,6 +100,8 @@ struct istring_cmp
 template <class D>
 using StringMap = Map<std::string, D, string_hash>;
 using StringSet = Set<std::string, string_hash>;
+template <class D>
+using IStringMap = Map<std::string, D, istring_hash, istring_cmp>;
 using IStringSet = Set<std::string, istring_hash, istring_cmp>;
 
 namespace stl
