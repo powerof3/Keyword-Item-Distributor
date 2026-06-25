@@ -5,7 +5,7 @@
 
 namespace Keyword
 {
-	inline StringMap<RE::BGSKeyword*> allKeywords{};
+	inline IStringMap<RE::BGSKeyword*> allKeywords{};
 
 	namespace Dependencies
 	{

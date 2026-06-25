@@ -24,7 +24,7 @@ namespace MessageHandler
 				MergeMapperPluginAPI::GetMergeMapperInterface001();  // Request interface
 				if (g_mergeMapperInterface) {                        // Use Interface
 					const auto version = g_mergeMapperInterface->GetBuildNumber();
-					logger::info("\tGot MergeMapper interface buildnumber {}", version);
+					logger::info("Got MergeMapper interface buildnumber {}", version);
 				} else {
 					logger::info("INFO - MergeMapper not detected");
 				}
