@@ -300,9 +300,9 @@ public:
 		if (isHostile && mgef->IsHostile() != *isHostile) {
 			return false;
 		}
-		if (skill.first != RE::ActorValue::kNone && skill.second.IsValid()) {
+		if (skill.second.IsValid()) {
 			auto& [skillType, minMax] = skill;
-			if (skillType != mgef->GetMagickSkill()) {
+			if (skillType != RE::ActorValue::kNone && skillType != mgef->GetMagickSkill()) {
 				return false;
 			}
 			if (!minMax.IsInRange(mgef->GetMinimumSkillLevel())) {
