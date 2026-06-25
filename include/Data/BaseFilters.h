@@ -81,9 +81,9 @@ struct FilterRule : RuleData<T>
 							   isValid = false;
 							   const auto tag = a_allFilter ? std::format("ALL #{}", a_idx) : "ANY";
 							   if (resolvedFilter.formType) {
-								   filter::skipLog.emplace_back(std::format("[{}][{}] SKIP - (invalid form type {})", tag, rawFilter, *resolvedFilter.formType));
+								   filter::skipLog.emplace_back(fmt::format("[{}][{}] SKIP - (invalid form type {})", tag, rawFilter, *resolvedFilter.formType));
 							   } else {
-								   filter::skipLog.emplace_back(std::format("[{}][{}] SKIP - ({} not found)", tag, rawFilter, rawFilter.IsMod() ? "mod" : "form"));
+								   filter::skipLog.emplace_back(fmt::format("[{}][{}] SKIP - ({} not found)", tag, rawFilter, rawFilter.IsMod() ? "mod" : "form"));
 							   }
 							   return;
 						   }

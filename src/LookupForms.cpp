@@ -10,8 +10,6 @@ namespace Forms
 
 	void CreateKeywords()
 	{	
-		logger::info("Keywords");
-
 		for (auto& [type, dataVec] : INI::INIs) {
 			if (dataVec.empty()) {
 				continue;
@@ -38,13 +36,24 @@ namespace Forms
 	{
 		logger::info("{:*^50}", "LOOKUP");
 
+		logger::info("Keywords");
+		
 		CreateKeywords();
 
 		logger::info("Filters");
 
-		bool empty = true;
 		ForEachDistributable([&]<typename T>(Distributable<T>& a_distributable) {
 			a_distributable.LookupForms();
+		});
+
+		logger::info("Resolution");
+
+		bool empty = true;
+		ForEachDistributable([&]<typename T>(Distributable<T>& a_distributable) {
+			if (!a_distributable) {
+				return;
+			}
+			logger::info("\t{}", a_distributable.GetTypeString());
 			Dependencies::ResolveKeywords(a_distributable);
 			if (!a_distributable.empty()) {
 				empty = false;

@@ -198,7 +198,7 @@ public:
 		try {
 			addDependency(lhs, rhs);
 		} catch (SelfReferenceDependencyException& e) {
-			buffered_logger::warn("\t\tINFO - {} is referencing itself", describe(e.current));
+			logger::warn("\t\tINFO - {} is referencing itself", describe(e.current));
 		} catch (CyclicDependencyException& e) {
 			std::ostringstream os;
 			os << e.path.top();
@@ -208,8 +208,8 @@ public:
 				os << " -> " << path.top();
 				path.pop();
 			}
-			buffered_logger::warn("\t\tINFO - {} and {} may depend on each other. Distribution might not work as expected. Ignore if using names as wildcards", describe(e.first), describe(e.second));
-			buffered_logger::warn("\t\t\tFull path: {}", os.str());
+			logger::warn("\t\tINFO - {} and {} may depend on each other. Distribution might not work as expected. Ignore if using names as wildcards", describe(e.first), describe(e.second));
+			logger::warn("\t\t\tFull path: {}", os.str());
 		} catch (...) {
 			// we'll ignore other exceptions
 		}

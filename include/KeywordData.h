@@ -14,7 +14,6 @@ namespace Keyword
 		bool operator==(const Data& a_rhs) const;
 
 		// members
-		std::atomic_uint32_t               count{ 0 };
 		RE::BGSKeyword*                    keyword{ nullptr };
 		std::vector<DistributableCriteria> filters{};
 	};

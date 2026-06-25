@@ -19,7 +19,7 @@ namespace Distribute
 		std::vector<RE::BGSKeyword*> processedKeywords;
 		processedKeywords.reserve(a_keywords.size());
 
-		for (auto& [count, keyword, criteriaList] : a_keywords) {
+		for (auto& [keyword, criteriaList] : a_keywords) {
 			// Skip if the item already has this keyword.
 			if (itemData.HasKeyword(keyword)) {
 				continue;
@@ -36,7 +36,7 @@ namespace Distribute
 
 					processedKeywords.emplace_back(keyword);
 					itemData.AddKeyword(keyword);
-					count.fetch_add(1, std::memory_order_relaxed);
+
 					break;
 				}
 			}
@@ -99,35 +99,37 @@ namespace Distribute
 	}
 
 	template <class T>
-	void log_keyword_count(const Distributable<T>& a_keywords)
+	void log_keyword_count(Distributable<T>& a_keywords)
 	{
 		if (a_keywords) {
 			logger::info("{}", a_keywords.GetTypeString());
 
 			const auto formArraySize = RE::TESDataHandler::GetSingleton()->GetFormArray<T>().size();
 
-			const auto& distributedForms = a_keywords.GetDistributedForms();
+			auto& distributedForms = a_keywords.GetDistributedForms();
 
 			for (const auto& keywordData : a_keywords.GetKeywords()) {
 				const auto keyword = keywordData.keyword;
-				const auto count = keywordData.count.load(std::memory_order_relaxed);
-				if (const auto file = keyword->GetFile(0)) {
-					logger::info("\t{} [0x{:X}~{}] added to {}/{}", keyword->GetFormEditorID(), keyword->GetLocalFormID(), file->GetFilename(), count, formArraySize);
-				} else {
-					logger::info("\t{} [0x{:X}] added to {}/{}", keyword->GetFormEditorID(), keyword->GetFormID(), count, formArraySize);
-				}
-				distributedForms.cvisit(keyword, [](const auto& entry) {
-					for (const auto& form : entry.second) {
-						if (form) {
-							if (const auto file = form->GetFile(0)) {
-								logger::info("\t\t{} [0x{:X}~{}]", EDID::get_editorID(form), form->GetLocalFormID(), file->GetFilename());
-							} else {
-								logger::info("\t\t{} [0x{:X}]", EDID::get_editorID(form), form->GetFormID());
-							}
-						}
+
+				bool distributed = distributedForms.cvisit(keyword, [&](const auto& entry) {
+					const auto count = entry.second.size();
+					if (const auto file = keyword->GetFile(0)) {
+						logger::info("\t{} [0x{:X}~{}] added to {}/{}", keyword->GetFormEditorID(), keyword->GetLocalFormID(), file->GetFilename(), count, formArraySize);
+					} else {
+						logger::info("\t{} [0x{:X}] added to {}/{}", keyword->GetFormEditorID(), keyword->GetFormID(), count, formArraySize);
 					}
 				});
+
+				if (!distributed) {
+					if (const auto file = keyword->GetFile(0)) {
+						logger::info("\t{} [0x{:X}~{}] added to 0/{}", keyword->GetFormEditorID(), keyword->GetLocalFormID(), file->GetFilename(), formArraySize);
+					} else {
+						logger::info("\t{} [0x{:X}] added to 0/{}", keyword->GetFormEditorID(), keyword->GetFormID(), formArraySize);
+					}
+				}
 			}
+
+			distributedForms.clear();
 		}
 	}
 
