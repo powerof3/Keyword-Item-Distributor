@@ -18,4 +18,5 @@ set(headers ${headers}
 	include/LookupForms.h
 	include/PCH.h
 	include/RE.h
+	include/Settings.h
 )

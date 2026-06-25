@@ -12,9 +12,9 @@
 #include "SKSE/SKSE.h"
 
 #include <MergeMapperPluginAPI.h>
+#include <boost/unordered/concurrent_flat_map.hpp>
 #include <boost/unordered/unordered_flat_map.hpp>
 #include <boost/unordered/unordered_flat_set.hpp>
-#include <boost/unordered/concurrent_flat_map.hpp>
 #include <frozen/bits/elsa_std.h>
 #include <frozen/unordered_map.h>
 #include <spdlog/sinks/basic_file_sink.h>
@@ -34,6 +34,7 @@
 
 namespace logger = SKSE::log;
 namespace buffered_logger = LogBuffer;
+namespace ini = clib_util::ini;
 namespace distribution = clib_util::distribution;
 namespace string = clib_util::string;
 namespace hash = clib_util::hash;

@@ -3,6 +3,7 @@
 #include "Hooks.h"
 #include "LookupConfigs.h"
 #include "LookupForms.h"
+#include "Settings.h"
 
 namespace MessageHandler
 {
@@ -16,6 +17,9 @@ namespace MessageHandler
 			{
 				std::tie(shouldLookupForms, shouldLogErrors) = INI::GetConfigs();
 				Hooks::Install();
+				if (shouldLookupForms) {
+					Settings::GetSingleton()->LoadSettings();
+				}
 			}
 			break;
 		case SKSE::MessagingInterface::kPostPostLoad:

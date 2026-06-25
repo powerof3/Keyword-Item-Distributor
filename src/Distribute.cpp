@@ -1,4 +1,5 @@
 #include "Distribute.h"
+#include "Settings.h"
 
 void Distribute::AddKeywords()
 {
@@ -10,8 +11,10 @@ void Distribute::AddKeywords()
 
 	logger::info("{:*^50}", "RESULT");
 
-	ForEachDistributable([]<typename T>(Distributable<T>& a_distributable) {
-		log_keyword_count(a_distributable);
+	bool shouldEnableVerboseLogging = Settings::GetSingleton()->ShouldEnableVerboseLogging();
+
+	ForEachDistributable([&]<typename T>(Distributable<T>& a_distributable) {
+		log_keyword_count(a_distributable, shouldEnableVerboseLogging);
 	});
 
 	ForEachDistributable([]<typename T>(Distributable<T>& a_distributable) {

@@ -47,7 +47,6 @@ namespace Distribute
 		}
 	}
 
-
 	template <class T>
 	void distribute(T* a_item, KeywordDataVec& a_keywords, bool a_hasExclusions)
 	{
@@ -99,7 +98,7 @@ namespace Distribute
 	}
 
 	template <class T>
-	void log_keyword_count(Distributable<T>& a_keywords)
+	void log_keyword_count(Distributable<T>& a_keywords, bool a_enableVerboseLogging)
 	{
 		if (a_keywords) {
 			logger::info("{}", a_keywords.GetTypeString());
@@ -110,22 +109,33 @@ namespace Distribute
 
 			for (const auto& keywordData : a_keywords.GetKeywords()) {
 				const auto keyword = keywordData.keyword;
+				if (!keyword) {
+					continue;
+				}
 
-				bool distributed = distributedForms.cvisit(keyword, [&](const auto& entry) {
-					const auto count = entry.second.size();
-					if (const auto file = keyword->GetFile(0)) {
-						logger::info("\t{} [0x{:X}~{}] added to {}/{}", keyword->GetFormEditorID(), keyword->GetLocalFormID(), file->GetFilename(), count, formArraySize);
+				const auto log_form = [](RE::TESForm* a_form) {
+					if (const auto file = a_form->GetFile(0)) {
+						return std::format("{} [0x{:X}~{}]", EDID::get_editorID(a_form), a_form->GetLocalFormID(), file->GetFilename());
 					} else {
-						logger::info("\t{} [0x{:X}] added to {}/{}", keyword->GetFormEditorID(), keyword->GetFormID(), count, formArraySize);
+						return std::format("{} [0x{:X}]", EDID::get_editorID(a_form), a_form->GetFormID());
 					}
-				});
+				};
 
-				if (!distributed) {
-					if (const auto file = keyword->GetFile(0)) {
-						logger::info("\t{} [0x{:X}~{}] added to 0/{}", keyword->GetFormEditorID(), keyword->GetLocalFormID(), file->GetFilename(), formArraySize);
-					} else {
-						logger::info("\t{} [0x{:X}] added to 0/{}", keyword->GetFormEditorID(), keyword->GetFormID(), formArraySize);
-					}
+				const auto log_keyword_count_impl = [&](std::size_t a_addedCount) {
+					logger::info("\t{} added to {}/{}", log_form(keyword), a_addedCount, formArraySize);
+				};
+
+				if (!distributedForms.cvisit(keyword, [&](const auto& entry) {
+						log_keyword_count_impl(entry.second.size());
+						if (a_enableVerboseLogging) {
+							for (const auto& form : entry.second) {
+								if (form) {
+									logger::info("\t\t{}", log_form(form));
+								}
+							}
+						}
+					})) {
+					log_keyword_count_impl(0);
 				}
 			}
 
