@@ -20,6 +20,7 @@ namespace Keyword
 	};
 
 	using DataVec = std::vector<Data>;
+	using DistributedFormMap = ConcurrentMap<RE::BGSKeyword*, std::vector<RE::TESForm*>>;
 
 	template <class T>
 	class Distributable
@@ -32,15 +33,18 @@ namespace Keyword
 		[[nodiscard]] std::size_t size() const;
 		void                      clear();
 
-		[[nodiscard]] DISTRIBUTION::TYPE GetType() const;
-		[[nodiscard]] std::string_view   GetTypeString() const;
-		[[nodiscard]] const DataVec&     GetKeywords() const;
-		[[nodiscard]] DataVec&           GetKeywords();
-		void                             LookupForms();
+		[[nodiscard]] DISTRIBUTION::TYPE        GetType() const;
+		[[nodiscard]] std::string_view          GetTypeString() const;
+		[[nodiscard]] const DataVec&            GetKeywords() const;
+		[[nodiscard]] DataVec&                  GetKeywords();
+		[[nodiscard]] const DistributedFormMap& GetDistributedForms() const;
+		[[nodiscard]] DistributedFormMap&       GetDistributedForms();
+		void                                    LookupForms();
 
 	private:
 		DISTRIBUTION::TYPE type;
 		DataVec            keywords{};
+		DistributedFormMap addedForms;
 	};
 
 	inline Distributable<RE::TESObjectARMO>       armors{ DISTRIBUTION::TYPE::kArmor };
@@ -147,6 +151,18 @@ template <class T>
 KeywordDataVec& Keyword::Distributable<T>::GetKeywords()
 {
 	return keywords;
+}
+
+template <class T>
+const Keyword::DistributedFormMap& Keyword::Distributable<T>::GetDistributedForms() const
+{
+	return addedForms;
+}
+
+template <class T>
+Keyword::DistributedFormMap& Keyword::Distributable<T>::GetDistributedForms()
+{
+	return addedForms;
 }
 
 template <class T>

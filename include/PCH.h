@@ -14,6 +14,7 @@
 #include <MergeMapperPluginAPI.h>
 #include <boost/unordered/unordered_flat_map.hpp>
 #include <boost/unordered/unordered_flat_set.hpp>
+#include <boost/unordered/concurrent_flat_map.hpp>
 #include <frozen/bits/elsa_std.h>
 #include <frozen/unordered_map.h>
 #include <spdlog/sinks/basic_file_sink.h>
@@ -53,6 +54,9 @@ using Map = boost::unordered_flat_map<K, D, H, KEqual>;
 
 template <class K, class H = boost::hash<K>, class KEqual = std::equal_to<K>>
 using Set = boost::unordered_flat_set<K, H, KEqual>;
+
+template <class K, class D, class H = boost::hash<K>, class KEqual = std::equal_to<K>>
+using ConcurrentMap = boost::concurrent_flat_map<K, D, H, KEqual>;
 
 struct string_hash
 {
