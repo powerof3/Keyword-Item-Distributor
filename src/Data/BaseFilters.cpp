@@ -94,6 +94,9 @@ DistributableFilterSet::DistributableFilterSet(const ConfigFilterSet& a_rawFilte
 		entryValid = false;
 	}
 
+	const std::size_t rawAll = a_rawFilters.ALL.size();
+	std::size_t       okAll = 0;
+
 	ALL.reserve(a_rawFilters.ALL.size());
 	for (std::size_t i = 0; i < a_rawFilters.ALL.size(); ++i) {
 		const auto&                 fromGroup = a_rawFilters.ALL[i];
@@ -109,8 +112,13 @@ DistributableFilterSet::DistributableFilterSet(const ConfigFilterSet& a_rawFilte
 		std::ranges::stable_sort(toGroup, {}, [&](const auto& f) { return f.GetFilterCost(true); });
 
 		if (toGroup.size() == fromGroup.size()) {
+			++okAll;
 			ALL.emplace_back(std::move(toGroup));
 		}
+	}
+
+	if (rawAll > 0 && okAll == 0) {
+		entryValid = false;
 	}
 
 	isValid = entryValid && (!ALL.empty() || !ANY.empty());
