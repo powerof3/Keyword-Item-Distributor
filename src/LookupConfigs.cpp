@@ -17,7 +17,7 @@ namespace INI
 		a_value = regex_replace(a_value, re_dragonborn, "0x$2~Dragonborn.esm");
 #endif
 
-		const auto sections = string::split(a_value, "|");
+		const auto sections = STR::SPLIT(a_value, "|");
 		const auto size = sections.size();
 
 		//TYPE
@@ -53,41 +53,41 @@ namespace INI
 		//CHANCE
 		if (INI::kChance < size) {
 			if (const auto& chanceStr = sections[kChance]; distribution::is_valid_entry(chanceStr)) {
-				criteria.chance.value = string::to_num<float>(chanceStr);
+				criteria.chance.value = STR::TO_NUM<float>(chanceStr);
 			}
 		}
 	}
 
 	std::pair<bool, bool> GetConfigs()
 	{
-		logger::info("{:*^50}", "INI");
+		REX::INFO("{:*^50}", "INI");
 
 		std::vector<std::string> configs = distribution::get_configs(R"(Data\)", "_KID"sv);
 
 		if (configs.empty()) {
-			logger::warn("No .ini files with _KID suffix were found within the Data folder, aborting...");
+			REX::WARN("No .ini files with _KID suffix were found within the Data folder, aborting...");
 			return { false, false };
 		}
 
-		logger::info("{} matching inis found", configs.size());
+		REX::INFO("{} matching inis found", configs.size());
 
 		std::ranges::sort(configs);
 
 		bool shouldLogErrors{ false };
 
 		for (auto& path : configs) {
-			logger::info("\tINI : {}", path);
+			REX::INFO("\tINI : {}", path);
 
 			CSimpleIniA ini;
 			ini.SetUnicode();
 			ini.SetMultiKey();
 
 			if (const auto rc = ini.LoadFile(path.c_str()); rc < 0) {
-				logger::error("\t\tcouldn't read INI");
+				REX::ERROR("\t\tcouldn't read INI");
 				continue;
 			}
 
-			string::replace_first_instance(path, "Data\\", "");
+			STR::REPLACE_FIRST_INSTANCE(path, "Data\\", "");
 
 			if (const auto values = ini.GetSection(""); values) {
 				for (auto& [key, entry] : *values) {
@@ -106,7 +106,7 @@ namespace INI
 						INIs[data.type].emplace_back(std::move(data));
 
 					} catch (...) {
-						logger::error("\t\tFailed to parse entry [Keyword = {}]", entry);
+						REX::ERROR("\t\tFailed to parse entry [Keyword = {}]", entry);
 						shouldLogErrors = true;
 					}
 				}

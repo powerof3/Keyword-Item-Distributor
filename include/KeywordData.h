@@ -172,7 +172,7 @@ void Keyword::Distributable<T>::LookupForms()
 		return;
 	}
 
-	logger::info("\t{}", GetTypeString());
+	REX::INFO("\t{}", GetTypeString());
 
 	keywords.reserve(INIDataVec.size());
 
@@ -193,14 +193,14 @@ void Keyword::Distributable<T>::LookupForms()
 		DistributableCriteria criteria(iniData.criteria);
 
 		if (!filter::skipLog.empty()) {		
-			logger::info("\t\t[{}] {} [{}]", iniData.path, iniData.rawForm.to_string(), entryIdx);
+			REX::INFO("\t\t[{}] {} [{}]", iniData.path, iniData.rawForm.to_string(), entryIdx);
 			for (const auto& msg : filter::skipLog) {
-				logger::warn("\t\t\t{}", msg);
+				REX::WARN("\t\t\t{}", msg);
 			}
 		}
 
 		if (!criteria.Validated()) {
-			logger::error("\t\t\tInvalid/missing filters, skipping distribution");
+			REX::ERROR("\t\t\tInvalid/missing filters, skipping distribution");
 			continue;
 		}
 

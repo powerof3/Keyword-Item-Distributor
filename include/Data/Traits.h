@@ -18,7 +18,7 @@ protected:
 	{
 		static const srell::regex re{ R"([-+]?\d*\.?\d+)" };
 		if (srell::smatch m; srell::regex_search(a_str, m, re)) {
-			return string::to_num<T>(m[0].str());
+			return STR::TO_NUM<T>(m[0].str());
 		}
 		return std::nullopt;
 	}
@@ -39,10 +39,10 @@ public:
 				if (auto range = Range<float>(trait); range.IsValid()) {
 					weight = range;
 				}
-			} else if (string::is_only_digit(trait)) {
-				slot = static_cast<RE::BIPED_MODEL::BipedObjectSlot>(1 << (string::to_num<std::uint32_t>(trait) - 30));
+			} else if (STR::IS_ONLY_DIGIT(trait)) {
+				slot = static_cast<RE::BIPED_MODEL::BipedObjectSlot>(1 << (STR::TO_NUM<std::uint32_t>(trait) - 30));
 			} else {
-				switch (string::const_hash(trait)) {
+				switch (STR::CONST_HASH(trait)) {
 				case "HEAVY"_h:
 					armorType = RE::BIPED_MODEL::ArmorType::kHeavyArmor;
 					break;
@@ -123,7 +123,7 @@ public:
 					damage = range;
 				}
 			} else {
-				switch (string::const_hash(trait)) {
+				switch (STR::CONST_HASH(trait)) {
 				case "HandToHandMelee"_h:
 					animationType = RE::WEAPON_TYPE::kHandToHandMelee;
 					break;
@@ -217,7 +217,7 @@ public:
 					damage = range;
 				}
 			} else {
-				switch (string::const_hash(trait)) {
+				switch (STR::CONST_HASH(trait)) {
 				case "B"_h:
 					isBolt = true;
 					break;
@@ -277,10 +277,10 @@ public:
 					R"([^-+.\d]*([-+]?\d*\.?\d+)[^-+.\d]+([-+]?\d*\.?\d+)(?:[^-+.\d]+([-+]?\d*\.?\d+))?.*)"  // 0(0/25)
 				};
 				if (srell::smatch m; srell::regex_match(trait, m, re)) {
-					auto skillType = string::to_num<RE::ActorValue>(m[1].str());
-					auto min = string::to_num<std::int32_t>(m[2].str());
+					auto skillType = STR::TO_NUM<RE::ActorValue>(m[1].str());
+					auto min = STR::TO_NUM<std::int32_t>(m[2].str());
 					if (m[3].matched) {
-						auto max = string::to_num<std::int32_t>(m[3].str());
+						auto max = STR::TO_NUM<std::int32_t>(m[3].str());
 						skill = std::make_pair(skillType, Range<std::int32_t>{ min, max });
 					} else {
 						skill = std::make_pair(skillType, Range<std::int32_t>{ min });
@@ -339,7 +339,7 @@ public:
 	{
 		const auto traits = distribution::split_entry(a_traits);
 		for (const auto& trait : traits) {
-			switch (string::const_hash(trait)) {
+			switch (STR::CONST_HASH(trait)) {
 			case "P"_h:
 				isPoison = true;
 				break;
@@ -383,7 +383,7 @@ class IngredientTraits : public Traits
 public:
 	IngredientTraits(const std::string& a_traits)
 	{
-		switch (string::const_hash(a_traits)) {
+		switch (STR::CONST_HASH(a_traits)) {
 		case "F"_h:
 			isFood = true;
 			break;
@@ -416,7 +416,7 @@ public:
 	{
 		const auto traits = distribution::split_entry(a_traits);
 		for (const auto& trait : traits) {
-			switch (string::const_hash(trait)) {
+			switch (STR::CONST_HASH(trait)) {
 			case "S"_h:
 				teachesSpell = true;
 				break;
@@ -430,8 +430,8 @@ public:
 				teachesSkill = false;
 				break;
 			default:
-				if (string::is_only_digit(trait)) {
-					actorValue = string::to_num<RE::ActorValue>(trait);
+				if (STR::IS_ONLY_DIGIT(trait)) {
+					actorValue = STR::TO_NUM<RE::ActorValue>(trait);
 				}
 				break;
 			}
@@ -520,7 +520,7 @@ public:
 				isHostile = true;
 			} else if (trait == "-H") {
 				isHostile = false;
-			} else if (string::is_only_digit(trait)) {
+			} else if (STR::IS_ONLY_DIGIT(trait)) {
 				skill = extract_single_value<RE::ActorValue>(trait);
 			} else if (trait.contains("ST(")) {
 				spellType = extract_single_value<RE::MagicSystem::SpellType>(trait);

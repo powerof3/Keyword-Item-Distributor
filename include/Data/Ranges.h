@@ -23,8 +23,8 @@ struct Range
 		};
 		
 		if (srell::smatch m; srell::regex_match(a_str, m, re)) {
-			min = string::to_num<T>(m[1].str());
-			max = m[2].matched ? string::to_num<T>(m[2].str()) : min;
+			min = STR::TO_NUM<T>(m[1].str());
+			max = m[2].matched ? STR::TO_NUM<T>(m[2].str()) : min;
 		}
 	}
 
@@ -36,11 +36,9 @@ struct Range
 
 	[[nodiscard]] T GetRandom(bool a_fixed, RE::FormID a_seed1, RE::FormID a_seed2) const
 	{
-		using namespace clib_util;
-
 		return IsExact() ? min :
-		       a_fixed   ? RNG(hash::szudzik_pair(a_seed1, a_seed2)).generate<T>(min, max) :
-		                   RNG().generate<T>(min, max);
+		       a_fixed   ? REX::TRandom(REX::SZUDZIK_PAIR(a_seed1, a_seed2)).Generate(min, max) :
+		                   REX::TRandom().Generate(min, max);
 	}
 
 	// members

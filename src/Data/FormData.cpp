@@ -5,11 +5,11 @@
 
 RawForm::RawForm(const std::string& a_str)
 {
-	if (const auto splitID = string::split(a_str, "~"); splitID.size() == 2) {
-		formID = string::to_num<RE::FormID>(splitID[0], true);
+	if (const auto splitID = STR::SPLIT(a_str, "~"); splitID.size() == 2) {
+		formID = STR::TO_NUM<RE::FormID>(splitID[0], true);
 		modNameOrEDID = splitID[1];
-	} else if (string::is_only_hex(a_str, true)) {
-		formID = string::to_num<RE::FormID>(a_str, true);
+	} else if (STR::IS_ONLY_HEX(a_str, true)) {
+		formID = STR::TO_NUM<RE::FormID>(a_str, true);
 	} else {
 		modNameOrEDID = a_str;
 	}

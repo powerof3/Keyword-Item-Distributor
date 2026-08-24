@@ -4,7 +4,7 @@ namespace RE
 {
 	inline void SanitizePath(std::string& a_string)
 	{
-		a_string = string::tolower(a_string);
+		a_string = STR::TO_LOWER(a_string);
 
 		static const srell::regex slashPattern(R"(/+|\\+)");
 		static const srell::regex leadingSlashPattern(R"(^\\+)");

@@ -7,8 +7,10 @@
 #include <ranges>
 #include <unordered_set>
 
+#include <fmt/format.h>
+
 #include "RE/Skyrim.h"
-#include "REX/REX/Singleton.h"
+#include "REX/REX.h"
 #include "SKSE/SKSE.h"
 
 #include <MergeMapperPluginAPI.h>
@@ -20,28 +22,25 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <srell.hpp>
 
-#include <ClibUtil/distribution.hpp>
-#include <ClibUtil/numeric.hpp>
-#include <ClibUtil/rng.hpp>
-#include <ClibUtil/simpleINI.hpp>
-#include <ClibUtil/timer.hpp>
+#include "SimpleINI.h"
 
+#include <ClibUtil/distribution.hpp>
 #include <ClibUtil/editorID.hpp>
+
+#undef ERROR
+#undef MAX_PATH
 
 #include "LogBuffer.h"
 
 #define DLLEXPORT __declspec(dllexport)
 
-namespace logger = SKSE::log;
 namespace buffered_logger = LogBuffer;
-namespace ini = clib_util::ini;
 namespace distribution = clib_util::distribution;
-namespace string = clib_util::string;
-namespace hash = clib_util::hash;
+namespace STR = REX::STR;
 namespace EDID = clib_util::editorID;
 
 using namespace std::literals;
-using namespace string::literals;
+using namespace STR::literals;
 
 // for visting variants
 template <class... Ts>
@@ -94,11 +93,11 @@ struct istring_cmp
 
 	bool operator()(const std::string& str1, const std::string& str2) const
 	{
-		return string::iequals(str1, str2);
+		return STR::IEQUALS(str1, str2);
 	}
 	bool operator()(std::string_view str1, std::string_view str2) const
 	{
-		return string::iequals(str1, str2);
+		return STR::IEQUALS(str1, str2);
 	}
 };
 
@@ -111,8 +110,6 @@ using IStringSet = Set<std::string, istring_hash, istring_cmp>;
 
 namespace stl
 {
-	using namespace SKSE::stl;
-
 	template <class F, class T>
 	void write_vfunc()
 	{

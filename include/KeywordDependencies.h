@@ -50,8 +50,8 @@ namespace Keyword
 			const auto dataHandler = RE::TESDataHandler::GetSingleton();
 			for (const auto& kywd : dataHandler->GetFormArray<RE::BGSKeyword>()) {
 				if (kywd) {
-					if (const auto edid = kywd->GetFormEditorID(); !string::is_empty(edid)) {
-						allKeywords[string::tolower(edid)] = kywd;
+					if (const auto edid = kywd->GetFormEditorID(); !STR::IS_EMPTY(edid)) {
+						allKeywords[STR::TO_LOWER(edid)] = kywd;
 					} else {
 						if (const auto file = kywd->GetFile(0)) {
 							const auto  modname = file->GetFilename();
@@ -63,7 +63,7 @@ namespace Keyword
 									formID);
 								mergeDetails = std::format("->0x{:X}~{}", mergedFormID, mergedModName);
 							}
-							logger::error("\tWARN : [0x{:X}~{}{}] keyword has an empty editorID!", formID, modname, mergeDetails);
+							REX::ERROR("\tWARN : [0x{:X}~{}{}] keyword has an empty editorID!", formID, modname, mergeDetails);
 						}
 					}
 				}
@@ -91,7 +91,7 @@ namespace Keyword
 
 			Map<RE::BGSKeyword*, KeywordData> dataKeywords;
 
-			logger::info("\t\tSorting keywords...");
+			REX::INFO("\t\tSorting keywords...");
 
 			//v3.0
 			//addDependencies(filters.ALL);
@@ -180,10 +180,10 @@ namespace Keyword
 			keywordForms.clear();
 			keywordForms.reserve(result.size());
 
-			logger::info("\t\tSorted keywords: ");
+			REX::INFO("\t\tSorted keywords: ");
 			for (const auto& keyword : result) {
 				if (auto it = dataKeywords.find(keyword); it != dataKeywords.end()) {
-					logger::info("\t\t\t{}", describe(it->second.keyword));
+					REX::INFO("\t\t\t{}", describe(it->second.keyword));
 					keywordForms.push_back(it->second);
 				}
 			}

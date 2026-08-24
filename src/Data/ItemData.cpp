@@ -14,7 +14,7 @@ ItemData::ItemData(RE::TESForm* a_form) :
 const std::string& ItemData::GetEDID() const
 {
 	if (!cacheEDID) {
-		edid = string::tolower(EDID::get_editorID(item));
+		edid = STR::TO_LOWER(EDID::get_editorID(item));
 		cacheEDID = true;
 	}
 	return edid;
@@ -23,7 +23,7 @@ const std::string& ItemData::GetEDID() const
 const std::string& ItemData::GetName() const
 {
 	if (!cacheName) {
-		name = string::tolower(item->GetName());
+		name = STR::TO_LOWER(item->GetName());
 		cacheName = true;
 	}
 	return name;
@@ -33,7 +33,7 @@ const std::string& ItemData::GetModel() const
 {
 	if (!cacheModel) {
 		if (const auto tesModel = item->As<RE::TESModel>()) {
-			model = string::tolower(tesModel->GetModel());
+			model = STR::TO_LOWER(tesModel->GetModel());
 		}
 		cacheModel = true;
 	}

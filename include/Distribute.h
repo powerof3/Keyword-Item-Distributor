@@ -101,7 +101,7 @@ namespace Distribute
 	void log_keyword_count(Distributable<T>& a_keywords, bool a_enableVerboseLogging)
 	{
 		if (a_keywords) {
-			logger::info("{}", a_keywords.GetTypeString());
+			REX::INFO("{}", a_keywords.GetTypeString());
 
 			const auto formArraySize = RE::TESDataHandler::GetSingleton()->GetFormArray<T>().size();
 
@@ -122,7 +122,7 @@ namespace Distribute
 				};
 
 				const auto log_keyword_count_impl = [&](std::size_t a_addedCount) {
-					logger::info("\t{} added to {}/{}", log_form(keyword), a_addedCount, formArraySize);
+					REX::INFO("\t{} added to {}/{}", log_form(keyword), a_addedCount, formArraySize);
 				};
 
 				if (!distributedForms.cvisit(keyword, [&](const auto& entry) {
@@ -130,7 +130,7 @@ namespace Distribute
 						if (a_enableVerboseLogging) {
 							for (const auto& form : entry.second) {
 								if (form) {
-									logger::info("\t\t{}", log_form(form));
+									REX::INFO("\t\t{}", log_form(form));
 								}
 							}
 						}

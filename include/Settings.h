@@ -1,25 +1,22 @@
 #pragma once
 
-class Settings : public REX::Singleton<Settings>
+class Settings : public REX::TSingleton<Settings>
 {
 public:
 	void LoadSettings()
 	{
-		constexpr auto path = L"Data/SKSE/Plugins/po3_KeywordItemDistributor.ini";
+		constexpr auto path = "Data/SKSE/Plugins/po3_KeywordItemDistributor.ini";
 
-		CSimpleIniA ini;
-		ini.SetUnicode();
+		const auto store = REX::FIniSettingStore::GetSingleton();
+		store->Init(path, "");
 
-		ini.LoadFile(path);
-
-		ini::get_value(ini, verboseLogging, "Settings", "bVerboseLogging", nullptr);
-
-		(void)ini.SaveFile(path);
+		store->Load();
+		store->Save();
 	}
 
-	bool ShouldEnableVerboseLogging() { return verboseLogging; }
+	bool ShouldEnableVerboseLogging() { return verboseLogging.GetValue(); }
 
 private:
 	// members
-	bool verboseLogging{ false };
+	REX::TIniSetting<bool> verboseLogging{ "Settings", "bVerboseLogging", false };
 };

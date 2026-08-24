@@ -1,31 +1,29 @@
 #pragma once
 
-#define MAKE_BUFFERED_LOG(a_func, a_type)                                                             \
-                                                                                                      \
-	template <class... Args>                                                                          \
-	struct [[maybe_unused]] a_func                                                                    \
-	{                                                                                                 \
-		a_func() = delete;                                                                            \
-                                                                                                      \
-		explicit a_func(                                                                              \
-			fmt::format_string<Args...> a_fmt,                                                        \
-			Args&&... a_args,                                                                         \
-			std::source_location a_loc = std::source_location::current())                             \
-		{                                                                                             \
-			if (buffer.insert({ a_loc, fmt::format(a_fmt, std::forward<Args>(a_args)...) }).second) { \
-				spdlog::log(                                                                          \
-					spdlog::source_loc{                                                               \
-						a_loc.file_name(),                                                            \
-						static_cast<int>(a_loc.line()),                                               \
-						a_loc.function_name() },                                                      \
-					spdlog::level::a_type,                                                            \
-					a_fmt,                                                                            \
-					std::forward<Args>(a_args)...);                                                   \
-			}                                                                                         \
-		}                                                                                             \
-	};                                                                                                \
-	template <class... Args>                                                                          \
-	a_func(fmt::format_string<Args...>, Args&&...) -> a_func<Args...>;
+#define MAKE_BUFFERED_LOG(a_func, a_level)                                    \
+                                                                              \
+	template <class... Args>                                                  \
+	struct [[maybe_unused]] a_func                                            \
+	{                                                                         \
+		a_func() = delete;                                                    \
+                                                                              \
+		explicit a_func(                                                      \
+			std::format_string<Args...> a_fmt,                                \
+			Args&&... a_args,                                                 \
+			std::source_location a_loc = std::source_location::current())     \
+		{                                                                     \
+			auto message = std::format(a_fmt, std::forward<Args>(a_args)...); \
+			if (const auto [it, inserted] =                                   \
+					buffer.insert(Entry{ a_loc, std::move(message) });        \
+				inserted) {                                                   \
+				REX::Impl::Log(a_loc, REX::ELogLevel::a_level,                \
+					std::string_view{ it->message });                         \
+			}                                                                 \
+		}                                                                     \
+	};                                                                        \
+                                                                              \
+	template <class... Args>                                                  \
+	a_func(std::format_string<Args...>, Args&&...) -> a_func<Args...>;
 
 namespace LogBuffer
 {
@@ -36,7 +34,9 @@ namespace LogBuffer
 
 		bool operator==(const Entry& other) const
 		{
-			return strcmp(loc.file_name(), other.loc.file_name()) == 0 && loc.line() == other.loc.line() && message == other.message;
+			return std::strcmp(loc.file_name(), other.loc.file_name()) == 0 &&
+			       loc.line() == other.loc.line() &&
+			       message == other.message;
 		}
 	};
 }
@@ -54,9 +54,6 @@ struct boost::hash<LogBuffer::Entry>
 };
 
 /// LogBuffer proxies typical logging calls and buffers received entries to avoid duplication.
-///
-/// Main log proxy functions.
-/// Each log function checks whether given message was already logged and skips the log.
 namespace LogBuffer
 {
 	inline boost::unordered_flat_set<Entry> buffer{};
@@ -67,12 +64,12 @@ namespace LogBuffer
 		buffer.clear();
 	}
 
-	MAKE_BUFFERED_LOG(trace, trace);
-	MAKE_BUFFERED_LOG(debug, debug);
-	MAKE_BUFFERED_LOG(info, info);
-	MAKE_BUFFERED_LOG(warn, warn);
-	MAKE_BUFFERED_LOG(error, err);
-	MAKE_BUFFERED_LOG(critical, critical);
+	MAKE_BUFFERED_LOG(trace, Trace);
+	MAKE_BUFFERED_LOG(debug, Debug);
+	MAKE_BUFFERED_LOG(info, Info);
+	MAKE_BUFFERED_LOG(warn, Warning);
+	MAKE_BUFFERED_LOG(error, Error);
+	MAKE_BUFFERED_LOG(critical, Critical);
 }
 
 #undef MAKE_BUFFERED_LOG

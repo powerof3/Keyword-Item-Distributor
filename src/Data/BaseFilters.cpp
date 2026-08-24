@@ -15,23 +15,23 @@ ConfigFilterSet::ConfigFilterSet(const std::string& a_str)
 			filterEntry.erase(0, 1);  // Guard
 		}
 
-		if (string::icontains(filterEntry, ".nif")) {
+		if (STR::ICONTAINS(filterEntry, ".nif")) {
 			RE::SanitizePath(filterEntry);
 		}
 
 		return FilterRule<RawForm>(topLevelModifier == '-', partialModifier, filterEntry);
 	};
 
-	for (auto& entry : string::split(a_str, ",")) {
-		string::trim(entry);
+	for (auto& entry : STR::SPLIT(a_str, ",")) {
+		STR::TRIM(entry);
 		if (!distribution::is_valid_entry(entry)) {
 			continue;
 		}
 		if (entry.contains('+')) {
 			// A, (X + Y + Z), B
 			FilterGroup<RawForm> filterGroup;
-			for (auto& ALLEntry : string::split(entry, "+")) {
-				string::trim(ALLEntry);
+			for (auto& ALLEntry : STR::SPLIT(entry, "+")) {
+				STR::TRIM(ALLEntry);
 				if (ALLEntry.empty()) {
 					continue;
 				}
@@ -223,12 +223,12 @@ bool Chance::Pass(RE::BGSKeyword* a_keyword, const ItemData& a_data) const
 	if (value < 1.0f) [[unlikely]] {
 		// create unique seed based on keyword editorID (can't use formID because it can be dynamic) and item formID
 		// item formID alone would result in same RNG chance for different keywords
-		const auto seed = hash::szudzik_pair(
-			hash::fnv1a_32<std::string_view>(a_keyword->GetFormEditorID()),
+		const auto seed = REX::SZUDZIK_PAIR(
+			REX::FNV1A_32<std::string_view>(a_keyword->GetFormEditorID()),
 			a_data.GetFormID());
 
-		auto       RNG = clib_util::RNG(seed);
-		const auto randNum = RNG.generate();
+		auto       RNG = REX::TRandom<std::uint32_t>(seed);
+		const auto randNum = RNG.Generate();
 		if (randNum > value) {
 			return false;
 		}

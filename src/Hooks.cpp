@@ -21,10 +21,10 @@ namespace Hooks
 
 	void Install()
 	{
-		logger::info("{:*^50}", "HOOKS");
+		REX::INFO("{:*^50}", "HOOKS");
 
 		stl::write_vfunc<RE::TESObjectBOOK, InitItemImpl>();
 
-		logger::info("Installed TESObjectBOOK InitItemImpl hook");
+		REX::INFO("Installed TESObjectBOOK InitItemImpl hook");
 	}
 }

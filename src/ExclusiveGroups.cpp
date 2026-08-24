@@ -8,18 +8,18 @@ namespace ExclusiveGroups
 			return false;
 		}
 
-		const auto sections = string::split(a_value, "|");
+		const auto sections = STR::SPLIT(a_value, "|");
 		const auto size = sections.size();
 
 		if (size < 2) {
-			logger::warn("IGNORED: ExclusiveGroup must have a name and at least one Form Filter: {} = {}"sv, a_key, a_value);
+			REX::WARN("IGNORED: ExclusiveGroup must have a name and at least one Form Filter: {} = {}"sv, a_key, a_value);
 			return true;
 		}
 
 		auto split_IDs = distribution::split_entry(sections[1]);
 
 		if (split_IDs.empty()) {
-			logger::warn("ExclusiveGroup must have at least one Form Filter : {} = {}"sv, a_key, a_value);
+			REX::WARN("ExclusiveGroup must have at least one Form Filter : {} = {}"sv, a_key, a_value);
 			return true;
 		}
 
@@ -115,12 +115,12 @@ namespace ExclusiveGroups
 			return;
 		}
 
-		logger::info("{:*^50}", "EXCLUSIVE GROUPS");
+		REX::INFO("{:*^50}", "EXCLUSIVE GROUPS");
 
 		for (const auto& [group, forms] : groups) {
-			logger::info("Adding '{}' exclusive group", group);
+			REX::INFO("Adding '{}' exclusive group", group);
 			for (const auto& form : forms) {
-				logger::info("\t{}", describe(form));
+				REX::INFO("\t{}", describe(form));
 			}
 		}
 	}

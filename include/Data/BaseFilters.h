@@ -89,13 +89,13 @@ struct FilterRule : RuleData<T>
 						   }
 						   if (const auto* str = std::get_if<ExactString>(&resolvedFilter.filter)) {
 							   RuleData<ResolvedFilter>::SetStringData(*str);
-							   resolvedFilter.filter = string::tolower(*str); 
+							   resolvedFilter.filter = STR::TO_LOWER(*str); 
 						   }
 						   value = resolvedFilter;
 					   },
 					   [&](const PartialString& a_str) {
 						   RuleData<ResolvedFilter>::SetStringData(a_str);
-						   value = string::tolower(a_str);
+						   value = STR::TO_LOWER(a_str);
 					   } },
 			a_from.value);
 	}

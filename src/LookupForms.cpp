@@ -14,7 +14,7 @@ namespace Forms
 			if (dataVec.empty()) {
 				continue;
 			}		
-			logger::info("\t{}", DISTRIBUTION::GetType(type));
+			REX::INFO("\t{}", DISTRIBUTION::GetType(type));
 			for (auto& iniData : dataVec) {
 				RE::BGSKeyword* keyword = iniData.rawForm.to_keyword();
 				if (!keyword) {
@@ -34,26 +34,26 @@ namespace Forms
 
 	bool LookupForms()
 	{
-		logger::info("{:*^50}", "LOOKUP");
+		REX::INFO("{:*^50}", "LOOKUP");
 
-		logger::info("Keywords");
+		REX::INFO("Keywords");
 		
 		CreateKeywords();
 
-		logger::info("Filters");
+		REX::INFO("Filters");
 
 		ForEachDistributable([&]<typename T>(Distributable<T>& a_distributable) {
 			a_distributable.LookupForms();
 		});
 
-		logger::info("Resolution");
+		REX::INFO("Resolution");
 
 		bool empty = true;
 		ForEachDistributable([&]<typename T>(Distributable<T>& a_distributable) {
 			if (!a_distributable) {
 				return;
 			}
-			logger::info("\t{}", a_distributable.GetTypeString());
+			REX::INFO("\t{}", a_distributable.GetTypeString());
 			Dependencies::ResolveKeywords(a_distributable);
 			if (!a_distributable.empty()) {
 				empty = false;
@@ -65,7 +65,7 @@ namespace Forms
 
 	void LogFormLookup()
 	{
-		logger::info("{:*^50}", "PROCESSING");
+		REX::INFO("{:*^50}", "PROCESSING");
 
 		ForEachDistributable([]<typename T>(const Distributable<T>& a_distributable) {
 			const auto type = a_distributable.GetType();
@@ -75,7 +75,7 @@ namespace Forms
 				for (const auto& iniData : rawKeywords) {
 					uniqueRawKeywords.emplace(iniData.rawForm.to_string());
 				}
-				logger::info("Adding {}/{} unique keywords to {} ({} total entries)", a_distributable.size(), uniqueRawKeywords.size(), DISTRIBUTION::form_strings[type], rawKeywords.size());
+				REX::INFO("Adding {}/{} unique keywords to {} ({} total entries)", a_distributable.size(), uniqueRawKeywords.size(), DISTRIBUTION::form_strings[type], rawKeywords.size());
 			}
 		});
 

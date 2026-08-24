@@ -9,7 +9,7 @@ void Distribute::AddKeywords()
 		distribute(a_distributable, hasExclusions);
 	});
 
-	logger::info("{:*^50}", "RESULT");
+	REX::INFO("{:*^50}", "RESULT");
 
 	bool shouldEnableVerboseLogging = Settings::GetSingleton()->ShouldEnableVerboseLogging();
 
