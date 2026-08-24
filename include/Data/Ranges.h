@@ -34,11 +34,11 @@ struct Range
 	[[nodiscard]] bool IsInRange(T value) const { return value >= min && value <= max; }
 	[[nodiscard]] bool IsExact() const { return min == max; }
 
-	[[nodiscard]] T GetRandom(bool a_fixed, RE::FormID a_seed1, RE::FormID a_seed2) const
+[[nodiscard]] T GetRandom(bool a_fixed, RE::FormID a_seed1, RE::FormID a_seed2) const
 	{
 		return IsExact() ? min :
-		       a_fixed   ? REX::TRandom(REX::SZUDZIK_PAIR(a_seed1, a_seed2)).Generate(min, max) :
-		                   REX::TRandom().Generate(min, max);
+		       a_fixed   ? REX::TRandom<T>(REX::SZUDZIK_PAIR(a_seed1, a_seed2)).Generate(min, max) :
+		                   REX::TRandom<T>().Generate(min, max);
 	}
 
 	// members

@@ -227,8 +227,8 @@ bool Chance::Pass(RE::BGSKeyword* a_keyword, const ItemData& a_data) const
 			REX::FNV1A_32<std::string_view>(a_keyword->GetFormEditorID()),
 			a_data.GetFormID());
 
-		auto       RNG = REX::TRandom<std::uint32_t>(seed);
-		const auto randNum = RNG.Generate();
+		auto       RNG = REX::TRandom<double>(seed);
+		const auto randNum = RNG.Generate(0.0, 1.0);
 		if (randNum > value) {
 			return false;
 		}
