@@ -87,6 +87,7 @@ SKSE_PLUGIN_VERSION = []() {
 	v.PluginName("Keyword Item Distributor");
 	v.AuthorName("powerofthree");
 	v.UsesAddressLibrary();
+	v.UsesNoStructs();
 	v.CompatibleVersions({ SKSE::RUNTIME_SSE_LATEST });
 
 	if constexpr (SKSE::RUNTIME_SSE_LATEST < MIN_ADDRESS_LIBRARY_V5_RUNTIME) {
