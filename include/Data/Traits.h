@@ -16,8 +16,8 @@ protected:
 	template <class T>
 	static std::optional<T> extract_single_value(const std::string& a_str)
 	{
-		static const srell::regex re{ R"([-+]?\d*\.?\d+)" };
-		if (srell::smatch m; srell::regex_search(a_str, m, re)) {
+		static const boost::regex re{ R"([-+]?\d*\.?\d+)" };
+		if (boost::smatch m; boost::regex_search(a_str, m, re)) {
 			return STR::TO_NUM<T>(m[0].str());
 		}
 		return std::nullopt;
@@ -273,10 +273,10 @@ public:
 			} else if (trait.contains("R(")) {
 				resistance = extract_single_value<RE::ActorValue>(trait);
 			} else if (trait.contains('(')) {
-				static const srell::regex re{
+				static const boost::regex re{
 					R"([^-+.\d]*([-+]?\d*\.?\d+)[^-+.\d]+([-+]?\d*\.?\d+)(?:[^-+.\d]+([-+]?\d*\.?\d+))?.*)"  // 0(0/25)
 				};
-				if (srell::smatch m; srell::regex_match(trait, m, re)) {
+				if (boost::smatch m; boost::regex_match(trait, m, re)) {
 					auto skillType = STR::TO_NUM<RE::ActorValue>(m[1].str());
 					auto min = STR::TO_NUM<std::int32_t>(m[2].str());
 					if (m[3].matched) {

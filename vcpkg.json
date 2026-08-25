@@ -5,6 +5,7 @@
   "homepage": "https://github.com/powerof3/Keyword-Item-Distributor",
   "license": "MIT",
   "dependencies": [
+    "boost-regex",
     "boost-unordered",
     {
       "name": "commonlib-shared",
@@ -17,8 +18,7 @@
     "clib-util",
     "frozen",
     "mergemapper",
-    "spdlog",
-    "srell"
+    "spdlog"
   ],
   "builtin-baseline": "7f3781e19cc7d4e4882a4caec01668c6f7b5c163"
 }

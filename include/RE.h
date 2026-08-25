@@ -6,13 +6,13 @@ namespace RE
 	{
 		a_string = STR::TO_LOWER(a_string);
 
-		static const srell::regex slashPattern(R"(/+|\\+)");
-		static const srell::regex leadingSlashPattern(R"(^\\+)");
-		static const srell::regex meshesPattern(R"(.*?[^\s]meshes\\|^meshes\\)", srell::regex::icase);
+		static const boost::regex slashPattern(R"(/+|\\+)");
+		static const boost::regex leadingSlashPattern(R"(^\\+)");
+		static const boost::regex meshesPattern(R"(.*?[^\s]meshes\\|^meshes\\)", boost::regex::icase);
 
-		a_string = srell::regex_replace(a_string, slashPattern, R"(\)");
-		a_string = srell::regex_replace(a_string, leadingSlashPattern, "");
-		a_string = srell::regex_replace(a_string, meshesPattern, "");
+		a_string = boost::regex_replace(a_string, slashPattern, R"(\)");
+		a_string = boost::regex_replace(a_string, leadingSlashPattern, "");
+		a_string = boost::regex_replace(a_string, meshesPattern, "");
 	}
 
 	inline RE::EffectSetting* GetCostliestMGEF(RE::TESForm* a_form)

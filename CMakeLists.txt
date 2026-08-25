@@ -153,9 +153,9 @@ else ()
 endif()
 
 find_package(boost_unordered CONFIG REQUIRED)
+find_package(Boost REQUIRED COMPONENTS regex)
 find_package(frozen CONFIG REQUIRED)
 
-find_path(SRELL_INCLUDE_DIRS "srell.hpp")
 find_path(MERGEMAPPER_INCLUDE_DIRS "MergeMapperPluginAPI.h")
 find_path(CLIB_UTIL_INCLUDE_DIRS "ClibUtil/utils.hpp")
 
@@ -210,7 +210,6 @@ target_include_directories(
 	PRIVATE
 		${CMAKE_CURRENT_BINARY_DIR}/include
 		${CMAKE_CURRENT_SOURCE_DIR}/include
-		${SRELL_INCLUDE_DIRS}
 		${MERGEMAPPER_INCLUDE_DIRS}
 		${CLIB_UTIL_INCLUDE_DIRS}
 )
@@ -219,6 +218,7 @@ target_link_libraries(
 	${PROJECT_NAME}
 	PRIVATE
 		${CommonLibName}::${CommonLibName}
+		Boost::regex
 		Boost::unordered
 		frozen::frozen
 		frozen::frozen-headers

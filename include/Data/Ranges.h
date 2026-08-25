@@ -18,11 +18,11 @@ struct Range
 	{}
 	Range(const std::string& a_str)
 	{
-		static const srell::regex re{
+		static const boost::regex re{
 			R"([^-+.\d]*([-+]?\d*\.?\d+)(?:[^-+.\d]+([-+]?\d*\.?\d+))?.*)" // (min/max)
 		};
 		
-		if (srell::smatch m; srell::regex_match(a_str, m, re)) {
+		if (boost::smatch m; boost::regex_match(a_str, m, re)) {
 			min = STR::TO_NUM<T>(m[1].str());
 			max = m[2].matched ? STR::TO_NUM<T>(m[2].str()) : min;
 		}

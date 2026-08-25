@@ -10,10 +10,10 @@ namespace INI
 #ifdef SKYRIMVR
 		// swap dawnguard and dragonborn forms
 		// VR apparently does not load masters in order so the lookup fails
-		static const srell::regex re_dawnguard(R"((0x0*2)([0-9a-f]{6}))", srell::regex_constants::optimize | srell::regex::icase);
+		static const boost::regex re_dawnguard(R"((0x0*2)([0-9a-f]{6}))", boost::regex_constants::optimize | boost::regex::icase);
 		a_value = regex_replace(a_value, re_dawnguard, "0x$2~Dawnguard.esm");
 
-		static const srell::regex re_dragonborn(R"((0x0*4)([0-9a-f]{6}))", srell::regex_constants::optimize | srell::regex::icase);
+		static const boost::regex re_dragonborn(R"((0x0*4)([0-9a-f]{6}))", boost::regex_constants::optimize | boost::regex::icase);
 		a_value = regex_replace(a_value, re_dragonborn, "0x$2~Dragonborn.esm");
 #endif
 

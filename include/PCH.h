@@ -11,7 +11,7 @@
 
 #include "RE/Skyrim.h"
 #include "REX/REX.h"
-#include "SKSE/SKSE.h"
+
 
 #include <MergeMapperPluginAPI.h>
 #include <boost/unordered/concurrent_flat_map.hpp>
@@ -20,7 +20,7 @@
 #include <frozen/bits/elsa_std.h>
 #include <frozen/unordered_map.h>
 #include <spdlog/sinks/basic_file_sink.h>
-#include <srell.hpp>
+#include <boost/regex.hpp>
 
 #include "SimpleINI.h"
 
