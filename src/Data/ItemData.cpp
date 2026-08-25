@@ -40,6 +40,25 @@ const std::string& ItemData::GetModel() const
 	return model;
 }
 
+RE::EffectSetting* ItemData::GetEffectMGEF() const
+{
+	if (!cacheMGEF) {
+		if ((effectMGEF = GetCostliestMGEF(item)) == nullptr) {
+			if (const auto book = item->As<RE::TESObjectBOOK>()) {
+				effectMGEF = GetCostliestMGEF(book->GetSpell());
+
+			} else if (const auto armor = item->As<RE::TESObjectARMO>()) {
+				effectMGEF = GetCostliestMGEF(armor->formEnchanting);
+
+			} else if (const auto weapon = item->As<RE::TESObjectWEAP>()) {
+				effectMGEF = GetCostliestMGEF(weapon->formEnchanting);
+			}
+		}
+		cacheMGEF = true;
+	}
+	return effectMGEF;
+}
+
 bool ItemData::FormFilter(RE::TESForm* a_formFilter) const
 {
 	if (item == a_formFilter) {
@@ -53,23 +72,8 @@ bool ItemData::FormFilter(RE::TESForm* a_formFilter) const
 			if (HasKeyword(keyword)) {
 				return true;
 			}
-			if (auto mgef = GetCostliestMGEF(item)) {
+			if (const auto mgef = GetEffectMGEF()) {
 				return mgef->HasKeyword(keyword);
-			}
-			if (const auto book = item->As<RE::TESObjectBOOK>()) {
-				if (auto mgef = GetCostliestMGEF(book->GetSpell())) {
-					return mgef->HasKeyword(keyword);
-				}
-			}
-			if (const auto armor = item->As<RE::TESObjectARMO>()) {
-				if (auto mgef = GetCostliestMGEF(armor->formEnchanting)) {
-					return mgef->HasKeyword(keyword);
-				}
-			}
-			if (const auto weapon = item->As<RE::TESObjectWEAP>()) {
-				if (auto mgef = GetCostliestMGEF(weapon->formEnchanting)) {
-					return mgef->HasKeyword(keyword);
-				}
 			}
 			return false;
 		}
@@ -308,7 +312,7 @@ bool ItemData::MatchesActorValue(RE::ActorValue a_av) const
 			if (AV::GetAssociatedSkill(magicItem) == a_av) {
 				return true;
 			}
-			if (const auto mgef = GetCostliestMGEF(magicItem)) {
+			if (const auto mgef = GetEffectMGEF()) {
 				const auto& d = mgef->data;
 				return d.associatedSkill == a_av ||
 				       d.primaryAV == a_av ||
@@ -362,4 +366,9 @@ bool ItemData::HasMutuallyExclusiveKeyword(RE::BGSKeyword* a_keyword) const
 void ItemData::AddKeyword(RE::BGSKeyword* a_keyword)
 {
 	addedKeywords.emplace_back(a_keyword);
+}
+
+const std::vector<RE::BGSKeyword*>& ItemData::GetAddedKeywords() const
+{
+	return addedKeywords;
 }

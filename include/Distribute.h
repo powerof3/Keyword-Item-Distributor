@@ -16,9 +16,6 @@ namespace Distribute
 	{
 		ItemData itemData(a_item);
 
-		std::vector<RE::BGSKeyword*> processedKeywords;
-		processedKeywords.reserve(a_keywords.size());
-
 		for (auto& [keyword, criteriaList] : a_keywords) {
 			// Skip if the item already has this keyword.
 			if (itemData.HasKeyword(keyword)) {
@@ -34,7 +31,6 @@ namespace Distribute
 				if (criteria.PassFilters(keyword, itemData)) {
 					a_onKeywordAdded(keyword, a_item);
 
-					processedKeywords.emplace_back(keyword);
 					itemData.AddKeyword(keyword);
 
 					break;
@@ -42,8 +38,8 @@ namespace Distribute
 			}
 		}
 
-		if (!processedKeywords.empty()) {
-			a_item->AddKeywords(processedKeywords);
+		if (const auto& addedKeywords = itemData.GetAddedKeywords(); !addedKeywords.empty()) {
+			a_item->AddKeywords(addedKeywords);
 		}
 	}
 
